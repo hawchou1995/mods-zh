@@ -12,10 +12,9 @@
 
 | 渠道 | 地址 |
 | --- | --- |
-| Greasyfork | 见仓库 Releases 或脚本详情页（提交后回填） |
+| Greasyfork（推荐） | https://greasyfork.org/zh-CN/scripts/601176 |
 | GitHub 直装 | `https://raw.githubusercontent.com/hawchou1995/mods-zh/main/dist/mods-zh.user.js` |
-
-装 Tampermonkey / Violentmonkey / Userscripts(Safari) 任一，打开上面的地址点安装即可。
+| 源码仓库 | https://github.com/hawchou1995/mods-zh |
 
 ## 翻译边界
 
