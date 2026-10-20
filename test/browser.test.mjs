@@ -17,17 +17,25 @@ const DIST = join(ROOT, 'dist', 'mods-zh.user.js');
 const CODE = readFileSync(DIST, 'utf8');
 
 const TS_HTML = `<!DOCTYPE html><html><body>
-  <nav><a>Communities</a><button>Upload package</button></nav>
-  <form><input placeholder="Search"></form>
+  <nav>
+    <a>Communities</a><a>Developers</a><a>Switch to legacy</a>
+    <a>Get Manager</a><button>Upload</button><button>Upload package</button>
+    <div class="account-menu"><a>Settings</a><a>Teams</a><a>Log Out</a></div>
+  </nav>
+  <form><input placeholder="Search Mods..."></form>
   <section>
-    <div>Sections</div><div>All</div><div>Asset Replacements</div>
-    <div>Modpacks</div><div>Other filters</div><div>Deprecated</div>
-    <div>1-20 of 19588 results</div><div>4 weeks ago</div>
+    <div>Sections</div><div>All</div>
+    <div>Categories</div><div>Client Mods</div><div>Dev Tools</div>
+    <div>Libraries</div><div>Modpacks</div><div>Rundown Mods</div><div>Rundowns</div>
+    <div>Other filters</div><div>Deprecated</div><div>NSFW</div>
+    <div>Last updated</div>
+    <div class="result-count"><strong>1-20</strong> of <strong>868</strong> results</div>
+    <div>4 weeks ago</div>
   </section>
   <div class="package-description">A simple and easy to use mod manager</div>
+  <div class="author-byline">by <a href="#author">ebkr</a></div>
   <div id="later"></div>
 </body></html>`;
-
 const NX_HTML = `<!DOCTYPE html><html><body>
   <nav><a>MODS</a><a>COLLECTIONS</a></nav>
   <button aria-label="Show search"></button>
@@ -58,18 +66,33 @@ async function test(name, fn) {
     }
 }
 
-console.log('\n[jsdom · Thunderstore]');
+console.log('[jsdom · Thunderstore]');
 
 await test('页面文本被替换且 UGC 原文保留', async () => {
-    const dom = boot(TS_HTML, 'https://thunderstore.io/c/lethal-company/');
+    const dom = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/');
     const d = dom.window.document;
     const t = d.body.textContent;
     assert.ok(t.includes('社区'), 'Communities 未翻译：' + t);
+    assert.ok(t.includes('上传'), 'Upload 未翻译');
     assert.ok(t.includes('上传包'), 'Upload package 未翻译');
-    assert.ok(t.includes('资源替换'), 'Asset Replacements 未翻译');
+    assert.ok(t.includes('开发者'), 'Developers 未翻译');
+    assert.ok(t.includes('切换到旧版'), 'Switch to legacy 未翻译');
+    assert.ok(t.includes('获取管理器'), 'Get Manager 未翻译');
+    assert.ok(t.includes('设置'), 'Settings 未翻译');
+    assert.ok(t.includes('团队'), 'Teams 未翻译');
+    assert.ok(t.includes('退出登录'), 'Log Out 未翻译');
+    assert.ok(t.includes('分类'), 'Categories 未翻译');
+    assert.ok(t.includes('客户端模组'), 'Client Mods 未翻译');
+    assert.ok(t.includes('开发工具'), 'Dev Tools 未翻译');
+    assert.ok(t.includes('库'), 'Libraries 未翻译');
     assert.ok(t.includes('整合包'), 'Modpacks 未翻译');
-    assert.ok(t.includes('1-20，共 19588 条结果'), '结果计数未翻译');
+    assert.ok(t.includes('远征序列模组'), 'Rundown Mods 未翻译');
+    assert.ok(t.includes('远征序列'), 'Rundowns 未翻译');
+    assert.ok(t.includes('最后更新'), 'Last updated 未翻译');
+    assert.ok(t.includes('1-20， 共 868 条结果') || t.includes('1-20，共 868 条结果'), '拆分节点结果计数未翻译：' + t);
     assert.ok(t.includes('4 周前'), '相对时间未翻译');
+    assert.strictEqual(d.querySelector('.author-byline').textContent, '作者 ebkr', '作者前缀 by 未翻译');
+    assert.strictEqual(d.querySelector('.author-byline a').textContent, 'ebkr', '作者名不应翻译');
     assert.strictEqual(
         d.querySelector('.package-description').textContent,
         'A simple and easy to use mod manager'
@@ -78,13 +101,13 @@ await test('页面文本被替换且 UGC 原文保留', async () => {
 });
 
 await test('placeholder 属性被翻译', async () => {
-    const dom = boot(TS_HTML, 'https://thunderstore.io/c/lethal-company/');
-    assert.strictEqual(dom.window.document.querySelector('input').getAttribute('placeholder'), '搜索');
+    const dom = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/');
+    assert.strictEqual(dom.window.document.querySelector('input').getAttribute('placeholder'), '搜索模组…');
     dom.window.close();
 });
 
 await test('动态插入节点被 MutationObserver 接管', async () => {
-    const dom = boot(TS_HTML, 'https://thunderstore.io/c/lethal-company/');
+    const dom = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/');
     const d = dom.window.document;
     const later = d.getElementById('later');
     later.innerHTML = '<div>Filters</div><div>Pinned</div><div>2 hours ago</div>';
@@ -97,20 +120,20 @@ await test('动态插入节点被 MutationObserver 接管', async () => {
 });
 
 await test('关闭开关后原文逐字还原', async () => {
-    const dom = boot(TS_HTML, 'https://thunderstore.io/c/lethal-company/');
+    const dom = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/');
     const d = dom.window.document;
     const api = dom.window.__MODS_ZH__;
     assert.ok(api, '调试出口 __MODS_ZH__ 缺失');
     assert.ok(d.body.textContent.includes('社区'));
     api.setEnabled(false);
     assert.ok(d.body.textContent.includes('Communities'), '还原失败');
-    assert.strictEqual(d.querySelector('input').getAttribute('placeholder'), 'Search');
+    assert.strictEqual(d.querySelector('input').getAttribute('placeholder'), 'Search Mods...');
     api.setEnabled(true);
     assert.ok(d.body.textContent.includes('社区'));
     dom.window.close();
 });
 
-console.log('\n[jsdom · Nexus Mods]');
+console.log('[jsdom · Nexus Mods]');
 
 await test('导航、统计标签、日期与计数被替换', async () => {
     const dom = boot(NX_HTML, 'https://www.nexusmods.com/skyrimspecialedition/mods/266');
@@ -146,7 +169,7 @@ await test('页面类型按 URL 判定', async () => {
     assert.strictEqual(browse.window.__MODS_ZH__.page, 'browse');
     browse.window.close();
 
-    const ts = boot(TS_HTML, 'https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/');
+    const ts = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/p/BepInEx/BepInExPack_GTFO/');
     assert.strictEqual(ts.window.__MODS_ZH__.page, 'package');
     ts.window.close();
 });

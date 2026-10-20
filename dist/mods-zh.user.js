@@ -2,9 +2,9 @@
 // @name         Thunderstore & Nexus Mods 中文化
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
-// @version      1.0.0
-// @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。
-// @description:en  Localize Thunderstore and Nexus Mods UI elements (navigation, buttons, filters, categories, sorting, download panels, relative dates) into Simplified Chinese. Mod names, authors, descriptions and comments stay untranslated.
+// @version      1.0.1
+// @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
+// @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
 // @license      GPL-3.0
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=thunderstore.io
@@ -27,7 +27,7 @@
 (function () {
     'use strict';
 
-    const VERSION = "1.0.0";
+    const VERSION = "1.0.1";
 
 /* =============================================================================
  * _registry.js —— 站点注册表
@@ -97,7 +97,15 @@ SITES.push({
         global: {
             'Communities': '社区',
             'Upload package': '上传包',
+            'Search Mods...': '搜索模组…',
             'Search': '搜索',
+            'Developers': '开发者',
+            'Switch to legacy': '切换到旧版',
+            'Get Manager': '获取管理器',
+            'Upload': '上传',
+            'Teams': '团队',
+            'Log Out': '退出登录',
+            'Last updated': '最后更新',
             'Mods': '模组',
             'Download': '下载',
             'Details': '详情',
@@ -150,6 +158,12 @@ SITES.push({
             'Modding Discord': '模组 Discord',
             'Thunderstore development is made possible with ads. Please consider making an exception to your adblock.':
                 'Thunderstore 依靠广告维持开发，请考虑对本站关闭广告拦截。',
+
+            /* GTFO 分类枚举（GTFO 社区页与截图核对） */
+            'Client Mods': '客户端模组',
+            'Dev Tools': '开发工具',
+            'Rundown Mods': '远征序列模组',
+            'Rundowns': '远征序列',
 
             /* 分类枚举（Lethal Company 社区全量 31 项，各社区分类集合不同但同名同义） */
             'AI Generated': 'AI 生成',
@@ -743,15 +757,35 @@ function translateTextNode(node) {
     if (!raw) return false;
     const key = normalize(raw);
     if (!key) return false;
-    const hit = lookup(key);
-    if (!hit || hit === key) return false;
-    if (isIgnored(node.parentElement)) return false;
+
+    let hit = lookup(key);
+    let authorPrefix = false;
+    const parent = node.parentElement;
+
+    // Thunderstore 的卡片常把静态 "by" 前缀包在 author 容器里；
+    // 保留作者链接原文，只翻前缀，避免 ignore 规则连 UI 一起吞掉。
+    if (State.site && State.site.id === 'thunderstore' && parent) {
+        let authorContainer = null;
+        try { authorContainer = parent.closest('[class*="author"],[class*="Author"]'); } catch (e) { /* ignore */ }
+        if (authorContainer) {
+            let authorLink = null;
+            try { authorLink = parent.closest('a'); } catch (e) { /* ignore */ }
+            if (authorLink) return false;
+            const prefix = raw.match(/^(\s*)by(?=\s|$)/i);
+            if (!prefix) return false;
+            hit = prefix[1] + '作者' + raw.slice(prefix[0].length);
+            authorPrefix = true;
+        }
+    }
+
+    if (!hit || (!authorPrefix && hit === key)) return false;
+    if (isIgnored(parent) && !authorPrefix) return false;
 
     if (!State.originals.has(node)) State.originals.set(node, raw);
     const lead = raw.match(/^\s*/)[0];
     const trail = raw.match(/\s*$/)[0];
     State.writing = true;
-    node.nodeValue = lead + hit + trail;
+    node.nodeValue = authorPrefix ? hit : lead + hit + trail;
     State.writing = false;
     State.stats.nodes++;
     return true;
@@ -775,6 +809,41 @@ function translateAttributes(el) {
     return changed;
 }
 
+/* 统计文案常由 <strong> 数字 + 普通文本节点组成，整句正则无法命中。
+ * 只在拼起来完整匹配结果计数的最小容器内翻译分隔词，保留数字及其加粗结构。 */
+function translateSplitResultCounter(root) {
+    if (!root || !root.querySelectorAll) return;
+    const resultRe = /^[\d,]+\s*-\s*[\d,]+ of [\d,]+ results$/i;
+    const doc = root.ownerDocument || root;
+
+    for (const el of root.querySelectorAll('*')) {
+        if (isIgnored(el) || !resultRe.test(normalize(el.textContent || ''))) continue;
+
+        // 只处理最小匹配容器，避免同一组文本被父容器重复改写。
+        let nestedMatch = false;
+        for (const child of el.children) {
+            if (resultRe.test(normalize(child.textContent || ''))) {
+                nestedMatch = true;
+                break;
+            }
+        }
+        if (nestedMatch) continue;
+
+        const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+        const textNodes = [];
+        let node = walker.nextNode();
+        while (node) { textNodes.push(node); node = walker.nextNode(); }
+
+        for (const textNode of textNodes) {
+            const token = normalize(textNode.nodeValue || '').toLowerCase();
+            if (token !== 'of' && token !== 'results') continue;
+            if (!State.originals.has(textNode)) State.originals.set(textNode, textNode.nodeValue);
+            textNode.nodeValue = token === 'of' ? '，共 ' : ' 条结果';
+            State.stats.nodes++;
+        }
+    }
+}
+
 /* ------------------------------------------------------------------ DOM 遍历 */
 
 function scanRoot(root) {
@@ -788,6 +857,7 @@ function scanRoot(root) {
         n = walker.nextNode();
     }
     for (const node of batch) translateTextNode(node);
+    translateSplitResultCounter(root);
 
     if (root.querySelectorAll) {
         const sel = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');

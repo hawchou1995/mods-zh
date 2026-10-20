@@ -117,15 +117,35 @@ function translateTextNode(node) {
     if (!raw) return false;
     const key = normalize(raw);
     if (!key) return false;
-    const hit = lookup(key);
-    if (!hit || hit === key) return false;
-    if (isIgnored(node.parentElement)) return false;
+
+    let hit = lookup(key);
+    let authorPrefix = false;
+    const parent = node.parentElement;
+
+    // Thunderstore 的卡片常把静态 "by" 前缀包在 author 容器里；
+    // 保留作者链接原文，只翻前缀，避免 ignore 规则连 UI 一起吞掉。
+    if (State.site && State.site.id === 'thunderstore' && parent) {
+        let authorContainer = null;
+        try { authorContainer = parent.closest('[class*="author"],[class*="Author"]'); } catch (e) { /* ignore */ }
+        if (authorContainer) {
+            let authorLink = null;
+            try { authorLink = parent.closest('a'); } catch (e) { /* ignore */ }
+            if (authorLink) return false;
+            const prefix = raw.match(/^(\s*)by(?=\s|$)/i);
+            if (!prefix) return false;
+            hit = prefix[1] + '作者' + raw.slice(prefix[0].length);
+            authorPrefix = true;
+        }
+    }
+
+    if (!hit || (!authorPrefix && hit === key)) return false;
+    if (isIgnored(parent) && !authorPrefix) return false;
 
     if (!State.originals.has(node)) State.originals.set(node, raw);
     const lead = raw.match(/^\s*/)[0];
     const trail = raw.match(/\s*$/)[0];
     State.writing = true;
-    node.nodeValue = lead + hit + trail;
+    node.nodeValue = authorPrefix ? hit : lead + hit + trail;
     State.writing = false;
     State.stats.nodes++;
     return true;
@@ -149,6 +169,41 @@ function translateAttributes(el) {
     return changed;
 }
 
+/* 统计文案常由 <strong> 数字 + 普通文本节点组成，整句正则无法命中。
+ * 只在拼起来完整匹配结果计数的最小容器内翻译分隔词，保留数字及其加粗结构。 */
+function translateSplitResultCounter(root) {
+    if (!root || !root.querySelectorAll) return;
+    const resultRe = /^[\d,]+\s*-\s*[\d,]+ of [\d,]+ results$/i;
+    const doc = root.ownerDocument || root;
+
+    for (const el of root.querySelectorAll('*')) {
+        if (isIgnored(el) || !resultRe.test(normalize(el.textContent || ''))) continue;
+
+        // 只处理最小匹配容器，避免同一组文本被父容器重复改写。
+        let nestedMatch = false;
+        for (const child of el.children) {
+            if (resultRe.test(normalize(child.textContent || ''))) {
+                nestedMatch = true;
+                break;
+            }
+        }
+        if (nestedMatch) continue;
+
+        const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+        const textNodes = [];
+        let node = walker.nextNode();
+        while (node) { textNodes.push(node); node = walker.nextNode(); }
+
+        for (const textNode of textNodes) {
+            const token = normalize(textNode.nodeValue || '').toLowerCase();
+            if (token !== 'of' && token !== 'results') continue;
+            if (!State.originals.has(textNode)) State.originals.set(textNode, textNode.nodeValue);
+            textNode.nodeValue = token === 'of' ? '，共 ' : ' 条结果';
+            State.stats.nodes++;
+        }
+    }
+}
+
 /* ------------------------------------------------------------------ DOM 遍历 */
 
 function scanRoot(root) {
@@ -162,6 +217,7 @@ function scanRoot(root) {
         n = walker.nextNode();
     }
     for (const node of batch) translateTextNode(node);
+    translateSplitResultCounter(root);
 
     if (root.querySelectorAll) {
         const sel = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');

@@ -25,8 +25,8 @@ const HEADER = `// ==UserScript==
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
 // @version      ${pkg.version}
-// @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。
-// @description:en  Localize Thunderstore and Nexus Mods UI elements (navigation, buttons, filters, categories, sorting, download panels, relative dates) into Simplified Chinese. Mod names, authors, descriptions and comments stay untranslated.
+// @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
+// @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
 // @license      GPL-3.0
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=thunderstore.io

@@ -43,7 +43,15 @@ SITES.push({
         global: {
             'Communities': '社区',
             'Upload package': '上传包',
+            'Search Mods...': '搜索模组…',
             'Search': '搜索',
+            'Developers': '开发者',
+            'Switch to legacy': '切换到旧版',
+            'Get Manager': '获取管理器',
+            'Upload': '上传',
+            'Teams': '团队',
+            'Log Out': '退出登录',
+            'Last updated': '最后更新',
             'Mods': '模组',
             'Download': '下载',
             'Details': '详情',
@@ -96,6 +104,12 @@ SITES.push({
             'Modding Discord': '模组 Discord',
             'Thunderstore development is made possible with ads. Please consider making an exception to your adblock.':
                 'Thunderstore 依靠广告维持开发，请考虑对本站关闭广告拦截。',
+
+            /* GTFO 分类枚举（GTFO 社区页与截图核对） */
+            'Client Mods': '客户端模组',
+            'Dev Tools': '开发工具',
+            'Rundown Mods': '远征序列模组',
+            'Rundowns': '远征序列',
 
             /* 分类枚举（Lethal Company 社区全量 31 项，各社区分类集合不同但同名同义） */
             'AI Generated': 'AI 生成',

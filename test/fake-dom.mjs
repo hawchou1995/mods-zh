@@ -17,6 +17,8 @@ export class TextNode {
 function matchToken(el, token) {
     const t = token.trim();
     if (!t) return false;
+    if (t === '*') return true;
+    if (t === '*') return true;
     if (t.startsWith('#')) return (el.getAttribute('id') || '') === t.slice(1);
     const attrRe = /^\[([\w-]+)(?:([*^$]?=)"([^"]*)")?\]$/;
     const m = t.match(attrRe);

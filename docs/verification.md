@@ -1,12 +1,12 @@
 # 验证记录
 
-本文件记录 v1.0.0 实际做了什么验证、用什么方式验证、以及哪些没验证。没验证的如实写在这里，不写进 README 当卖点。
+本文件记录 v1.0.0 首发与 v1.0.1 截图补漏的验证证据；没验证的如实写在这里，不写进 README 当卖点。
 
 ## 1. 词条取证（真实页面，2026-10-20）
 
 | 站点 | 页面 | 方式 | 落盘 |
 | --- | --- | --- | --- |
-| Thunderstore | `/`、`/communities/`、`/c/lethal-company/`、`/c/lethal-company/p/BepInEx/BepInExPack/` | HTTP 抓取后抽取正文 | `docs/evidence/thunderstore.txt` |
+| Thunderstore | `/`、`/communities/`、`/c/lethal-company/`、`/c/lethal-company/p/BepInEx/BepInExPack/`、`/c/gtfo/` | Anysearch 页面抽取 + HawChow 提供的 GTFO 已登录页截图交叉核对 | `docs/evidence/thunderstore.txt` |
 | Nexus Mods | `/skyrimspecialedition/mods/266`（模组详情页）、`/games/skyrimspecialedition/mods`（浏览页） | Chromium 实机 DOM 读取（`innerText` + `placeholder` / `aria-label` 原值） | `docs/evidence/nexus.txt` |
 
 Nexus 站点在抓取时经过 Cloudflare 校验，验证通过后取到的是 **2026 版新前端**页面（导航为 `GAMES / MODS / MOD UPDATES / COLLECTIONS / MEDIA / COMMUNITY / SUPPORT`）。旧版路径 `/<game>/mods/<id>` 仍可访问，字典对两套页面共用的文案一并覆盖，页型判定对两种 URL 都识别为 `mod`。
@@ -15,7 +15,7 @@ Nexus 站点在抓取时经过 Cloudflare 校验，验证通过后取到的是 *
 
 ```
 $ npm run coverage
-站点     : thunderstore   快照行数 : 77   命中 : 77 (100.0%)   未命中 : 0
+站点     : thunderstore   快照行数 : 91   命中 : 91 (100.0%)   未命中 : 0
 站点     : nexus          快照行数 : 230  命中 : 230 (100.0%)  未命中 : 0
 ```
 
@@ -35,11 +35,13 @@ jsdom（test/browser.test.mjs）： 7 条，全通过
 | --- | --- | --- |
 | 词条总数 / 跨页型同键译法冲突 / 译文等于原文 | ✅ | |
 | 字典命中（导航、分类、按钮、标签页） | ✅ | ✅ |
-| 正则命中（结果计数、相对时间、两种日期格式、`Required (N)`、`Go to page N`） | ✅ | ✅ |
+| 正则 / 上下文计数（结果计数、相对时间、两种日期、`Required (N)`、`Go to page N`） | ✅ | ✅ |
 | UGC 区域保持原文（`.package-description`、`.mod-description`） | ✅ | ✅ |
 | Cookiebot 弹窗整棵子树跳过 | ✅ | |
 | 属性翻译（`placeholder` / `aria-label`） | ✅ | ✅ |
 | 动态插入节点被 MutationObserver 接管 | | ✅ |
+| 统计文案拆在 `<strong>` 与普通文本节点间仍能翻译，且保留数字加粗结构 | | ✅ |
+| `by` 静态前缀翻译为“作者”，作者名链接保持原文 | | ✅ |
 | 开关关闭后逐字还原原文 | ✅ | ✅ |
 | 页型判定（`mod` / `browse` / `package`） | | ✅ |
 
@@ -75,3 +77,11 @@ npm run verify
 | Greasyfork 上的代码 | 回抓 `/scripts/601176/code/mods-zh.user.js`，与本地产物逐行比对：1010 行全一致，**仅 `@downloadURL` / `@updateURL` 两行被 Greasyfork 重写**（指向 update.greasyfork.org，属站点预期行为），其余字节未改 |
 
 发布流程：Greasyfork 无公开 API，本次通过浏览器实机会话在 `/zh-CN/script_versions/new` 提交 —— 代码走 `code_upload` 文件通道（39473 字节，站点侧自动解析出元数据），脚本名、描述、语言（`zh-CN`）填写后提交，落库 ID 601176。
+
+## 7. v1.0.1 截图补漏
+
+依据 `https://thunderstore.io/c/gtfo/` 页面抽取与用户提供的已登录 GTFO 截图，补齐：`Developers`、`Switch to legacy`、`Get Manager`、`Upload`、`Teams`、`Log Out`、`Search Mods...`、`Last updated`，以及 GTFO 分类 `Client Mods` / `Dev Tools` / `Rundown Mods` / `Rundowns`。已存在的 `Settings`、`Sections`、`All`、`Libraries`、`Modpacks`、`Other filters`、`Deprecated`、`Pinned` 保持原词条。
+
+截图里的 `1-20 of 868 results` 实际由加粗数字与普通文本节点拼成，整句正则单独匹配不到；v1.0.1 在**完整计数容器确认匹配**后，只改 `of` / `results` 两个文本节点，保留数字和 `<strong>` 结构。卡片作者区的忽略规则也改为只翻静态 `by` 前缀，作者名链接仍保持原文。
+
+`npm run verify`：15 条 smoke + 7 条 jsdom 全过；覆盖率 Thunderstore 91/91、Nexus 230/230。README 与 userscript 元数据均加入青橘反馈入口 `https://qingju.me/`。

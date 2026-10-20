@@ -4,9 +4,10 @@
 
 只翻界面，不碰内容：模组名称、作者、描述正文、评论、文件名一律保持英文原样 —— 这些是你要复制去搜索、对比、报错的东西，翻了只会碍事。
 
-- 词条：**337 条**（Thunderstore 89 / Nexus Mods 248），**34 组**正则（结果计数、相对时间、两种日期格式、带数字的状态标签）
+- 词条：**354 条**（Thunderstore 101 / Nexus Mods 253），**34 组**正则；含 GTFO 分类、登录菜单、搜索/排序文案和跨节点结果计数处理
 - 覆盖：`thunderstore.io`、`www.nexusmods.com`、`nexusmods.com`、`users.nexusmods.com`
 - 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
+- 当前发布版本：`v1.0.1`
 
 ## 安装
 
@@ -33,7 +34,7 @@
 
 - **界面中文化：已开启 / 已关闭** —— 一键切回英文原文（原文逐字存于 WeakMap，关闭即还原），状态会记住
 - **重新扫描当前页面** —— 站点改版后手动补扫
-- **版本 v1.0.0（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
+- **版本 v1.0.1（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
 
 ## 项目结构
 
@@ -107,4 +108,9 @@ GPL-3.0（见 `LICENSE`）。引擎架构参考了 [maboloshi/github-chinese](ht
 
 ## 反馈
 
-问题与词条补充走 [Issues](https://github.com/hawchou1995/mods-zh/issues)，带上页面 URL、截图和未翻译的原文。
+脚本问题与词条补充：
+
+- [青橘社区](https://qingju.me/)
+- [GitHub Issues](https://github.com/hawchou1995/mods-zh/issues)
+
+请附页面 URL、截图和未翻译的原文，方便复现。
