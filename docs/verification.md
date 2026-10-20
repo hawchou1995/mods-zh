@@ -64,31 +64,32 @@ npm install
 npm run verify
 ```
 
-## 6. 首发 v1.0.0 线上发布验收
+## 6. v1.0.0 首发线上验收（历史记录）
 
-## 6. 线上发布验收
-
-| 项 | 结果 |
+| 项 | 首发结果 |
 | --- | --- |
-| GitHub 仓库 | https://github.com/hawchou1995/mods-zh （PUBLIC，默认分支 main，topics 已设） |
-| raw 产物可达 | `https://raw.githubusercontent.com/hawchou1995/mods-zh/main/dist/mods-zh.user.js` → HTTP 200，39473 字节，与本机构建一致 |
-| 构建可复现 | 提交后重新 `node build.mjs`，`git status` 无差异 |
-| Greasyfork | https://greasyfork.org/zh-CN/scripts/601176 已发布，版本 1.0.0，语言 zh-CN |
-| Greasyfork 上的代码 | 回抓 `/scripts/601176/code/mods-zh.user.js`，与本地产物逐行比对：1010 行全一致，**仅 `@downloadURL` / `@updateURL` 两行被 Greasyfork 重写**（指向 update.greasyfork.org，属站点预期行为），其余字节未改 |
+| GitHub 仓库 | https://github.com/hawchou1995/mods-zh （PUBLIC，默认分支 main） |
+| raw 产物 | HTTP 200，39473 字节 |
+| Greasyfork | https://greasyfork.org/zh-CN/scripts/601176 ，版本 1.0.0 |
+| 首发代码回抓 | 1010 行；除 Greasyfork 重写 `@downloadURL` / `@updateURL` 外，其余与本地一致 |
 
-## 7. v1.0.1 本地验收
-
-- `npm run verify`：15 条 smoke、7 条 jsdom 全过；Thunderstore 91/91、Nexus 230/230 覆盖。
-- GTFO 截图复测：导航、账号菜单、`Search Mods...`、`Last updated`、GTFO 分类、跨 `<strong>` 的结果计数均有回归断言。
-- UGC 边界复测：作者行的 `by` 翻成“作者”，作者链接文本保持原文；模组描述继续保持原文。
-- README 与 userscript `@description` 增加青橘反馈链接 `https://qingju.me/`；Greasyfork v1.0.1 线上回抓验收结果待发布后补记。
-
-发布流程：Greasyfork 无公开 API，本次通过浏览器实机会话在 `/zh-CN/script_versions/new` 提交 —— 代码走 `code_upload` 文件通道（39473 字节，站点侧自动解析出元数据），脚本名、描述、语言（`zh-CN`）填写后提交，落库 ID 601176。
-
-## 7. v1.0.1 截图补漏
+## 7. v1.0.1 截图补漏与本地验收
 
 依据 `https://thunderstore.io/c/gtfo/` 页面抽取与用户提供的已登录 GTFO 截图，补齐：`Developers`、`Switch to legacy`、`Get Manager`、`Upload`、`Teams`、`Log Out`、`Search Mods...`、`Last updated`，以及 GTFO 分类 `Client Mods` / `Dev Tools` / `Rundown Mods` / `Rundowns`。已存在的 `Settings`、`Sections`、`All`、`Libraries`、`Modpacks`、`Other filters`、`Deprecated`、`Pinned` 保持原词条。
 
-截图里的 `1-20 of 868 results` 实际由加粗数字与普通文本节点拼成，整句正则单独匹配不到；v1.0.1 在**完整计数容器确认匹配**后，只改 `of` / `results` 两个文本节点，保留数字和 `<strong>` 结构。卡片作者区的忽略规则也改为只翻静态 `by` 前缀，作者名链接仍保持原文。
+截图里的 `1-20 of 868 results` 实际由加粗数字与普通文本节点拼成，整句正则单独匹配不到；v1.0.1 在完整计数容器确认匹配后，只改 `of` / `results` 文本节点，保留数字加粗结构。作者行只翻静态 `by` 前缀，作者名链接与模组描述仍原样。
 
-`npm run verify`：15 条 smoke + 7 条 jsdom 全过；覆盖率 Thunderstore 91/91、Nexus 230/230。README 与 userscript 元数据均加入青橘反馈入口 `https://qingju.me/`。
+- `npm run verify`：15 条 smoke、7 条 jsdom 全过；Thunderstore 91/91、Nexus 230/230 覆盖。
+- README 和 userscript `@description` 加入青橘反馈链接 `https://qingju.me/`。
+- 脚本介绍页已回读到该链接；当前显示版本 1.0.1，版本历史页包含 1.0.1。
+
+## 8. v1.0.1 线上产物验收
+
+| 项 | 结果 |
+| --- | --- |
+| GitHub raw | HTTP 200，42496 字节，SHA-256 `EA91B595493359767ECA3C1506F80956FD31E9E95D5377170F769A4447052A1F`；与本地产物一致 |
+| Greasyfork 版本历史 | `1.0.1` 命中 |
+| Greasyfork CDN | 42560 字节，版本 `1.0.1`，介绍含 `https://qingju.me/`；忽略站点重写的两条更新 URL 后，与本地产物逐行一致 |
+| Greasyfork CDN SHA-256 | `69AE151610138D7F656B34A4FFCBCEF41AE51820B6F3D4085792C877FFB5C9AE`；比本地产物多的 64 字节来自 `@downloadURL` / `@updateURL` 的站点重写 |
+
+更新通过已登录浏览器在既有脚本 `/zh-CN/scripts/601176/versions/new` 提交，走 `code_upload` 上传源码；更新说明为 v1.0.1，不新建脚本。
