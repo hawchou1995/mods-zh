@@ -82,14 +82,14 @@ function normalize(text) {
  */
 function lookup(key) {
     if (State.cache.has(key)) return State.cache.get(key);
-    if (key.length > CONFIG.MAX_LEN) { State.cache.set(key, null); return null; }
     if (CONFIG.CJK.test(key)) { State.cache.set(key, null); return null; } // 已是中日文
     if (/^[\s\d.,:%+\-/()（）]+$/.test(key)) { State.cache.set(key, null); return null; } // 纯数字符号
 
     let result = null;
     if (State.dict.has(key)) {
+        // 精确白名单允许翻译长的静态帮助文案；未知长文本仍按 MAX_LEN 跳过。
         result = State.dict.get(key);
-    } else {
+    } else if (key.length <= CONFIG.MAX_LEN) {
         for (const [re, to] of State.patterns) {
             if (!re.test(key)) continue;
             const out = typeof to === 'function' ? key.replace(re, to) : key.replace(re, to);
@@ -204,6 +204,59 @@ function translateSplitResultCounter(root) {
     }
 }
 
+/* Required 计数在 React SSR 中被注释拆成 "Required (" / 数字 / ")"；
+ * 仅在完整计数容器吻合时翻译，避免误碰 UGC 里的普通单词。 */
+function translateSplitRequiredCounter(root) {
+    if (!root || !root.querySelectorAll) return;
+    const requiredRe = /^(?:Required|必需依赖)\s*\(\s*[\d,]+\s*\)$/i;
+    const doc = root.ownerDocument || root;
+
+    for (const el of root.querySelectorAll('*')) {
+        if (isIgnored(el) || !requiredRe.test(normalize(el.textContent || ''))) continue;
+        let nestedMatch = false;
+        for (const child of el.children) {
+            if (requiredRe.test(normalize(child.textContent || ''))) { nestedMatch = true; break; }
+        }
+        if (nestedMatch) continue;
+
+        const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+        const nodes = [];
+        let node = walker.nextNode();
+        while (node) { nodes.push(node); node = walker.nextNode(); }
+        const write = (target, value) => {
+            if (target.nodeValue === value) return;
+            if (!State.originals.has(target)) State.originals.set(target, target.nodeValue);
+            State.writing = true;
+            target.nodeValue = value;
+            State.writing = false;
+            State.stats.nodes++;
+        };
+
+        for (const textNode of nodes) {
+            const raw = textNode.nodeValue || '';
+            const value = raw
+                .replace(/\bRequired\b/i, '必需依赖')
+                .replace(/(必需依赖)\s*\(/, '$1（')
+                .replace(/\s*\)/g, '）');
+            write(textNode, value);
+        }
+
+        // React 也可能把标签、空格与括号分成三个不同文本节点。
+        for (let i = 0; i < nodes.length - 1; i++) {
+            const left = nodes[i];
+            const right = nodes[i + 1];
+            if (/必需依赖\s+$/.test(left.nodeValue || '') && /^\s*（/.test(right.nodeValue || '')) {
+                write(left, left.nodeValue.replace(/\s+$/, ''));
+                write(right, right.nodeValue.replace(/^\s+/, ''));
+            }
+            if (/[\d,]+\s+$/.test(left.nodeValue || '') && /^\s*）/.test(right.nodeValue || '')) {
+                write(left, left.nodeValue.replace(/\s+$/, ''));
+                write(right, right.nodeValue.replace(/^\s+/, ''));
+            }
+        }
+    }
+}
+
 /* ------------------------------------------------------------------ DOM 遍历 */
 
 function scanRoot(root) {
@@ -218,6 +271,7 @@ function scanRoot(root) {
     }
     for (const node of batch) translateTextNode(node);
     translateSplitResultCounter(root);
+    translateSplitRequiredCounter(root);
 
     if (root.querySelectorAll) {
         const sel = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');

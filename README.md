@@ -4,10 +4,10 @@
 
 只翻界面，不碰内容：模组名称、作者、描述正文、评论、文件名一律保持英文原样 —— 这些是你要复制去搜索、对比、报错的东西，翻了只会碍事。
 
-- 词条：**354 条**（Thunderstore 101 / Nexus Mods 253），**34 组**正则；含 GTFO 分类、登录菜单、搜索/排序文案和跨节点结果计数处理
+- 词条：**408 条分组映射**（Thunderstore 155 / Nexus Mods 253），**34 组**正则；覆盖社区、上传、详情与 Required 依赖页
 - 覆盖：`thunderstore.io`、`www.nexusmods.com`、`nexusmods.com`、`users.nexusmods.com`
 - 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
-- 当前发布版本：`v1.0.1`
+- 当前发布版本：`v1.0.2`
 
 ## 安装
 
@@ -34,7 +34,7 @@
 
 - **界面中文化：已开启 / 已关闭** —— 一键切回英文原文（原文逐字存于 WeakMap，关闭即还原），状态会记住
 - **重新扫描当前页面** —— 站点改版后手动补扫
-- **版本 v1.0.1（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
+- **版本 v1.0.2（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
 
 ## 项目结构
 
@@ -77,7 +77,7 @@ mods-zh/
 ```bash
 npm install
 npm run build      # src/ → dist/mods-zh.user.js
-npm test           # 15 条最小 DOM 测试 + 7 条 jsdom 测试
+npm test           # 15 条最小 DOM 测试 + 9 条 jsdom 测试
 npm run coverage   # 对照 docs/evidence/ 快照算词条覆盖率
 npm run verify     # 以上全套
 ```

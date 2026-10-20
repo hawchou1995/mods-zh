@@ -2,7 +2,7 @@
 // @name         Thunderstore & Nexus Mods 中文化
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
-// @version      1.0.1
+// @version      1.0.2
 // @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
 // @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
@@ -27,7 +27,7 @@
 (function () {
     'use strict';
 
-    const VERSION = "1.0.1";
+    const VERSION = "1.0.2";
 
 /* =============================================================================
  * _registry.js —— 站点注册表
@@ -118,6 +118,60 @@ SITES.push({
             'Settings': '设置',
             'Loading...': '加载中…',
             'Something went wrong': '出错了',
+            'Log In': '登录',
+            'Home': '首页',
+            'API Docs': 'API 文档',
+            'API Documentation': 'API 文档',
+            'Package Format Docs': '软件包格式文档',
+            'Manifest Validator': '清单校验器',
+            'Markdown Preview': 'Markdown 预览',
+            'Contact Us': '联系我们',
+            'Privacy Policy': '隐私政策',
+            'News': '新闻',
+            'GitHub': 'GitHub',
+            'Get Thunderstore Mod Manager App': '获取 Thunderstore Mod Manager 应用',
+            'Header': '页眉',
+            'Main': '主要内容',
+            'Menu': '菜单',
+            'Close menu': '关闭菜单',
+            'Back to previous menu': '返回上级菜单',
+            'Mobile main menu': '移动端主菜单',
+            'Mobile developer menu': '移动端开发者菜单',
+            'Developer links': '开发者链接',
+            'Invite link to Thunderstores Discord server': '邀请加入 Thunderstore Discord 服务器',
+            'Link to Thunderstores Github': 'Thunderstore GitHub 链接',
+            'This page is open source, link to Thunderstore UIs Github page': '本页面为开源项目，查看 Thunderstore UI 的 GitHub 页面',
+            'Toggle options': '切换选项',
+            'open-source ❤': '开源 ❤',
+            'Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.':
+                '下载 Windows 版 Thunderstore 模组管理器，轻松安装、更新和管理你的模组。',
+            'Log In': '登录',
+            'Home': '首页',
+            'API Docs': 'API 文档',
+            'API Documentation': 'API 文档',
+            'Package Format Docs': '软件包格式文档',
+            'Manifest Validator': '清单校验器',
+            'Markdown Preview': 'Markdown 预览',
+            'Contact Us': '联系我们',
+            'Privacy Policy': '隐私政策',
+            'News': '新闻',
+            'GitHub': 'GitHub',
+            'Get Thunderstore Mod Manager App': '获取 Thunderstore Mod Manager 应用',
+            'Header': '页眉',
+            'Main': '主要内容',
+            'Menu': '菜单',
+            'Close menu': '关闭菜单',
+            'Back to previous menu': '返回上级菜单',
+            'Mobile main menu': '移动端主菜单',
+            'Mobile developer menu': '移动端开发者菜单',
+            'Developer links': '开发者链接',
+            'Invite link to Thunderstores Discord server': '邀请加入 Thunderstore Discord 服务器',
+            'Link to Thunderstores Github': 'Thunderstore GitHub 链接',
+            'This page is open source, link to Thunderstore UIs Github page': '本页面为开源项目，查看 Thunderstore UI 的 GitHub 页面',
+            'Toggle options': '切换选项',
+            'open-source ❤': '开源 ❤',
+            'Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.':
+                '下载 Windows 版 Thunderstore 模组管理器，轻松安装、更新和管理你的模组。',
         },
 
         /* ---------------- 首页 ---------------- */
@@ -213,6 +267,9 @@ SITES.push({
             'Optional': '可选依赖',
             'Total downloads': '总下载量',
             'Report': '举报',
+            'No dependencies': '没有依赖项',
+            'This package does not require any other packages to work.': '此软件包无需依赖其他软件包即可运行。',
+            'Dependencies': '依赖项',
         },
 
         /* ---------------- 上传页 /package/create/ ---------------- */
@@ -222,6 +279,31 @@ SITES.push({
             'Community': '社区',
             'Submit': '提交',
             'Cancel': '取消',
+            'Upload file': '上传文件',
+            'Upload your package as a ZIP file.': '请将软件包以 ZIP 文件格式上传。',
+            'Need help formatting your package? Check out the': '需要帮助格式化软件包？请查看',
+            'Thunderstore wiki': 'Thunderstore Wiki',
+            'Review your readme before upload using the': '上传前请先检查 README，并使用',
+            'markdown preview tool': 'Markdown 预览工具',
+            'Uploading a large file? Check your package manifest first with the': '上传大文件前，请先使用',
+            'package manifest validator': '软件包清单校验器',
+            'Choose or drag ZIP file here': '选择或将 ZIP 文件拖到此处',
+            '10GB max': '最大 10 GB',
+            'Team': '团队',
+            'Select the team you want your package to be associated with.': '选择要与此软件包关联的团队。',
+            'Select team': '选择团队',
+            'Select communities you want your package to be listed under.': '选择要列出此软件包的社区。',
+            'Select communities': '选择社区',
+            'Select descriptive categories to help people discover your package.': '选择描述性分类，方便其他人发现你的软件包。',
+            'Contains NSFW content': '包含 NSFW 内容',
+            'Select if your package contains NSFW material. An "NSFW" -tag will be applied to your package.': '请选择软件包是否包含 NSFW 内容；选中后将为软件包添加“NSFW”标签。',
+            'No': '否',
+            'Yes': '是',
+            'No teams available?': '没有可用的团队？',
+            'Create team': '创建团队',
+            'Select a community to view available categories': '选择一个社区以查看可用分类',
+            'Double-check your selections and hit "Submit" when you\'re ready!': '请仔细核对所选内容，确认无误后点击“提交”！',
+            'Reset': '重置',
         },
     },
 
@@ -232,7 +314,7 @@ SITES.push({
         // "19588 results"
         [/^([\d,]+) results$/, '共 $1 条结果'],
         // "Required (0)"
-        [/^Required \((\d+)\)$/, '必需依赖（$1）'],
+        [/^Required\s*\(\s*(\d+)\s*\)$/i, '必需依赖（$1）'],
         // 相对时间
         [/^just now$/i, '刚刚'],
         [/^(\d+)\s*second(s)? ago$/i, '$1 秒前'],
@@ -722,14 +804,14 @@ function normalize(text) {
  */
 function lookup(key) {
     if (State.cache.has(key)) return State.cache.get(key);
-    if (key.length > CONFIG.MAX_LEN) { State.cache.set(key, null); return null; }
     if (CONFIG.CJK.test(key)) { State.cache.set(key, null); return null; } // 已是中日文
     if (/^[\s\d.,:%+\-/()（）]+$/.test(key)) { State.cache.set(key, null); return null; } // 纯数字符号
 
     let result = null;
     if (State.dict.has(key)) {
+        // 精确白名单允许翻译长的静态帮助文案；未知长文本仍按 MAX_LEN 跳过。
         result = State.dict.get(key);
-    } else {
+    } else if (key.length <= CONFIG.MAX_LEN) {
         for (const [re, to] of State.patterns) {
             if (!re.test(key)) continue;
             const out = typeof to === 'function' ? key.replace(re, to) : key.replace(re, to);
@@ -844,6 +926,59 @@ function translateSplitResultCounter(root) {
     }
 }
 
+/* Required 计数在 React SSR 中被注释拆成 "Required (" / 数字 / ")"；
+ * 仅在完整计数容器吻合时翻译，避免误碰 UGC 里的普通单词。 */
+function translateSplitRequiredCounter(root) {
+    if (!root || !root.querySelectorAll) return;
+    const requiredRe = /^(?:Required|必需依赖)\s*\(\s*[\d,]+\s*\)$/i;
+    const doc = root.ownerDocument || root;
+
+    for (const el of root.querySelectorAll('*')) {
+        if (isIgnored(el) || !requiredRe.test(normalize(el.textContent || ''))) continue;
+        let nestedMatch = false;
+        for (const child of el.children) {
+            if (requiredRe.test(normalize(child.textContent || ''))) { nestedMatch = true; break; }
+        }
+        if (nestedMatch) continue;
+
+        const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+        const nodes = [];
+        let node = walker.nextNode();
+        while (node) { nodes.push(node); node = walker.nextNode(); }
+        const write = (target, value) => {
+            if (target.nodeValue === value) return;
+            if (!State.originals.has(target)) State.originals.set(target, target.nodeValue);
+            State.writing = true;
+            target.nodeValue = value;
+            State.writing = false;
+            State.stats.nodes++;
+        };
+
+        for (const textNode of nodes) {
+            const raw = textNode.nodeValue || '';
+            const value = raw
+                .replace(/\bRequired\b/i, '必需依赖')
+                .replace(/(必需依赖)\s*\(/, '$1（')
+                .replace(/\s*\)/g, '）');
+            write(textNode, value);
+        }
+
+        // React 也可能把标签、空格与括号分成三个不同文本节点。
+        for (let i = 0; i < nodes.length - 1; i++) {
+            const left = nodes[i];
+            const right = nodes[i + 1];
+            if (/必需依赖\s+$/.test(left.nodeValue || '') && /^\s*（/.test(right.nodeValue || '')) {
+                write(left, left.nodeValue.replace(/\s+$/, ''));
+                write(right, right.nodeValue.replace(/^\s+/, ''));
+            }
+            if (/[\d,]+\s+$/.test(left.nodeValue || '') && /^\s*）/.test(right.nodeValue || '')) {
+                write(left, left.nodeValue.replace(/\s+$/, ''));
+                write(right, right.nodeValue.replace(/^\s+/, ''));
+            }
+        }
+    }
+}
+
 /* ------------------------------------------------------------------ DOM 遍历 */
 
 function scanRoot(root) {
@@ -858,6 +993,7 @@ function scanRoot(root) {
     }
     for (const node of batch) translateTextNode(node);
     translateSplitResultCounter(root);
+    translateSplitRequiredCounter(root);
 
     if (root.querySelectorAll) {
         const sel = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');

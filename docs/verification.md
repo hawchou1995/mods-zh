@@ -1,6 +1,6 @@
 # 验证记录
 
-本文件记录 v1.0.0 首发与 v1.0.1 截图补漏的验证证据；没验证的如实写在这里，不写进 README 当卖点。
+本文件记录 v1.0.0 首发、v1.0.1 GTFO 截图补漏与 v1.0.2 上传/详情补全的验证证据；没验证的如实写在这里。
 
 ## 1. 词条取证（真实页面，2026-10-20）
 
@@ -15,7 +15,7 @@ Nexus 站点在抓取时经过 Cloudflare 校验，验证通过后取到的是 *
 
 ```
 $ npm run coverage
-站点     : thunderstore   快照行数 : 91   命中 : 91 (100.0%)   未命中 : 0
+站点     : thunderstore   快照行数 : 203  命中 : 203 (100.0%)  未命中 : 0
 站点     : nexus          快照行数 : 230  命中 : 230 (100.0%)  未命中 : 0
 ```
 
@@ -26,7 +26,7 @@ $ npm run coverage
 ```
 $ npm test
 最小 DOM（test/smoke.test.mjs）：15 条，全通过
-jsdom（test/browser.test.mjs）： 7 条，全通过
+jsdom（test/browser.test.mjs）： 9 条，全通过
 ```
 
 覆盖的行为：
@@ -93,3 +93,11 @@ npm run verify
 | Greasyfork CDN SHA-256 | `69AE151610138D7F656B34A4FFCBCEF41AE51820B6F3D4085792C877FFB5C9AE`；比本地产物多的 64 字节来自 `@downloadURL` / `@updateURL` 的站点重写 |
 
 更新通过已登录浏览器在既有脚本 `/zh-CN/scripts/601176/versions/new` 提交，走 `code_upload` 上传源码；更新说明为 v1.0.1，不新建脚本。
+
+## 9. v1.0.2 上传页与 Required 漏译修复
+
+- `/package/create/` 原始 DOM 取证覆盖帮助说明、三段内联链接、上传区、10GB 限制、Team/Communities/Categories 区块、NSFW 说明、No/Yes、Reset/Submit、占位符、ARIA 标签与页脚导航。
+- 详情页源 HTML 的标签实际是 `Required (<!-- -->0<!-- -->)`：React 注释把标签、计数和括号拆成独立文本节点，导致整句正则和单词字典都可能漏掉。v1.0.2 在完整 `Required (N)` 容器匹配后改标签和括号，保留数字节点；`/required` 空态文案也一并翻译。
+- `lookup()` 改为先查精确白名单、再对未知长文本应用长度门。已验证精确的 NSFW 帮助文案和页脚说明会翻译，未收录长句仍保持原文。
+- `npm run verify`：15 条 smoke + 9 条 jsdom 全过；覆盖率 Thunderstore 203/203、Nexus 230/230。
+- 发布目标：既有 GitHub 仓库和 Greasyfork 脚本 601176，目标版本 1.0.2；本节线上回抓结果待发布后补记。

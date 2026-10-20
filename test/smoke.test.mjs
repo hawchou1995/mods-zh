@@ -111,7 +111,7 @@ test('同站跨页型同键不得给出不同译法', () => {
     }
 });
 test('词条值不含英文 UI 原文（未翻译残留的显式占位除外）', () => {
-    const allowSame = new Set(['API', 'WIKI', 'VORTEX', 'DMCA', 'Discord', 'Wiki', 'NPC', 'VR',
+    const allowSame = new Set(['API', 'WIKI', 'VORTEX', 'DMCA', 'Discord', 'Wiki', 'GitHub', 'NPC', 'VR',
         'BepInEx', 'MelonLoader', 'NEXUS MODS', 'Vortex']);
     for (const s of sites) {
         for (const group of Object.values(s.dict)) {

@@ -108,3 +108,123 @@ Client Mods
 Dev Tools
 Rundown Mods
 Rundowns
+
+# --- 上传页 /package/create/（服务端 HTML 的文本节点与属性值） ---
+Upload package
+Need help formatting your package? Check out the
+Thunderstore wiki
+Review your readme before upload using the
+markdown preview tool
+Uploading a large file? Check your package manifest first with the
+package manifest validator
+Upload file
+Upload your package as a ZIP file.
+Choose or drag ZIP file here
+10GB max
+Team
+Select the team you want your package to be associated with.
+Select team
+No teams available?
+Create team
+Communities
+Select communities you want your package to be listed under.
+Select communities
+Categories
+Select descriptive categories to help people discover your package.
+Select a community to view available categories
+Contains NSFW content
+Select if your package contains NSFW material. An "NSFW" -tag will be applied to your package.
+No
+Yes
+Submit
+Double-check your selections and hit "Submit" when you're ready!
+Reset
+Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.
+Header
+Main
+Home
+Menu
+Close menu
+Back to previous menu
+Mobile main menu
+Mobile developer menu
+Toggle options
+Get Thunderstore Mod Manager App
+Developer links
+API Docs
+API Documentation
+Package Format Docs
+Manifest Validator
+Markdown Preview
+GitHub
+Contact Us
+Privacy Policy
+News
+Invite link to Thunderstores Discord server
+Link to Thunderstores Github
+This page is open source, link to Thunderstore UIs Github page
+open-source ❤
+
+# --- GTFO 包详情 /required 子页（DOM 有 React 注释节点分隔 Required / 数字 / 括号） ---
+Required (0)
+Dependencies
+No dependencies
+This package does not require any other packages to work.
+
+# --- /package/create/ 服务端 HTML 文本节点（帮助链接前后文本拆分） ---
+Log In
+Home
+Header
+Main
+Menu
+Close menu
+Back to previous menu
+Mobile main menu
+Mobile developer menu
+Get Thunderstore Mod Manager App
+Developer links
+Invite link to Thunderstores Discord server
+Link to Thunderstores Github
+This page is open source, link to Thunderstore UIs Github page
+open-source ❤
+API Docs
+API Documentation
+Package Format Docs
+Manifest Validator
+Markdown Preview
+GitHub
+Contact Us
+Privacy Policy
+News
+Toggle options
+Upload file
+Upload your package as a ZIP file.
+Need help formatting your package? Check out the
+Thunderstore wiki
+Review your readme before upload using the
+markdown preview tool
+Uploading a large file? Check your package manifest first with the
+package manifest validator
+Choose or drag ZIP file here
+10GB max
+Team
+Select the team you want your package to be associated with.
+Select team
+No teams available?
+Create team
+Select communities you want your package to be listed under.
+Select communities
+Select descriptive categories to help people discover your package.
+Contains NSFW content
+Select if your package contains NSFW material. An "NSFW" -tag will be applied to your package.
+No
+Yes
+Double-check your selections and hit "Submit" when you're ready!
+Reset
+Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.
+
+# --- /c/gtfo/p/BepInEx/BepInExPack_GTFO/required 空态与分段 tab 计数 ---
+Required (0)
+Dependencies
+No dependencies
+This package does not require any other packages to work.

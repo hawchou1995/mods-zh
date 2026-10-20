@@ -36,6 +36,31 @@ const TS_HTML = `<!DOCTYPE html><html><body>
   <div class="author-byline">by <a href="#author">ebkr</a></div>
   <div id="later"></div>
 </body></html>`;
+const TS_UPLOAD_HTML = `<!DOCTYPE html><html><body>
+  <header aria-label="Header"><nav aria-label="Main"><a href="/" aria-label="Home">Home</a></nav></header>
+  <main>
+    <h1>Upload package</h1>
+    <p class="upload__helper-text">Need help formatting your package? Check out the<!-- --> <a href="https://wiki.thunderstore.io/mods/creating-a-package">Thunderstore wiki</a>.</p>
+    <p class="upload__helper-text">Review your readme before upload using the<!-- --> <a href="/tools/markdown-preview/">markdown preview tool</a>.</p>
+    <p class="upload__helper-text">Uploading a large file? Check your package manifest first with the<!-- --> <a href="/tools/manifest-v1-validator/">package manifest validator</a>.</p>
+    <h3>Upload file</h3><p>Upload your package as a ZIP file.</p>
+    <label>Choose or drag ZIP file here<span>10GB max</span></label>
+    <h3>Team</h3><p>Select the team you want your package to be associated with.</p><input placeholder="Select team"><button aria-label="Toggle options"></button><p>No teams available?</p><a>Create team</a>
+    <h3>Communities</h3><p>Select communities you want your package to be listed under.</p><input placeholder="Select communities"><button aria-label="Toggle options"></button>
+    <h3>Categories</h3><p>Select descriptive categories to help people discover your package.</p><p>Select a community to view available categories</p>
+    <h3>Contains NSFW content</h3><p>Select if your package contains NSFW material. An "NSFW" -tag will be applied to your package.</p><button>No</button><button>Yes</button>
+    <h3>Submit</h3><p>Double-check your selections and hit "Submit" when you're ready!</p><button>Reset</button><button>Submit</button>
+    <p class="footer-manager__desc">Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.</p>
+    <p id="long-unmapped">This long static-looking sentence has no approved dictionary entry and must remain unchanged in the localization engine.</p>
+    <footer aria-label="Developer links"><a>API Documentation</a><a>Package Format Docs</a><a>Manifest Validator</a><a>Markdown Preview</a><a>Contact Us</a><a>Privacy Policy</a><a>News</a><a>GitHub</a></footer>
+  </main>
+</body></html>`;
+
+const TS_REQUIRED_HTML = `<!DOCTYPE html><html><body>
+  <a class="tabs-item"><span>Required (</span><!-- react text -->0<!-- react text --><span>)</span></a>
+  <div class="empty-state"><span>No dependencies</span><span>This package does not require any other packages to work.</span></div>
+</body></html>`;
+
 const NX_HTML = `<!DOCTYPE html><html><body>
   <nav><a>MODS</a><a>COLLECTIONS</a></nav>
   <button aria-label="Show search"></button>
@@ -103,6 +128,50 @@ await test('页面文本被替换且 UGC 原文保留', async () => {
 await test('placeholder 属性被翻译', async () => {
     const dom = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/');
     assert.strictEqual(dom.window.document.querySelector('input').getAttribute('placeholder'), '搜索模组…');
+    dom.window.close();
+});
+
+await test('上传页静态文案、控件属性与链接均本地化', async () => {
+    const dom = boot(TS_UPLOAD_HTML, 'https://thunderstore.io/package/create/');
+    const d = dom.window.document;
+    const text = d.body.textContent.replace(/\s+/g, ' ');
+
+    assert.ok(text.includes('上传包'), 'Upload package 标题');
+    assert.ok(text.includes('需要帮助格式化软件包？请查看'), '格式帮助说明');
+    assert.ok(text.includes('Thunderstore Wiki'), 'Wiki 链接文字');
+    assert.ok(text.includes('上传前请先检查 README，并使用'), 'README 帮助说明');
+    assert.ok(text.includes('Markdown 预览工具'), 'Markdown 工具链接文字');
+    assert.ok(text.includes('上传大文件前，请先使用'), '大文件帮助说明');
+    assert.ok(text.includes('软件包清单校验器'), 'manifest validator 链接文字');
+    assert.ok(text.includes('上传文件') && text.includes('ZIP 文件'), '上传文件区');
+    assert.ok(text.includes('最大 10 GB'), '文件大小限制');
+    assert.ok(text.includes('选择要与此软件包关联的团队'), 'Team 说明');
+    assert.ok(text.includes('没有可用的团队？') && text.includes('创建团队'), '团队空态');
+    assert.ok(text.includes('选择要列出此软件包的社区'), 'Communities 说明');
+    assert.ok(text.includes('选择描述性分类'), 'Categories 说明');
+    assert.ok(text.includes('包含 NSFW 内容') && text.includes('添加“NSFW”标签'), 'NSFW 说明');
+    assert.ok(text.includes('否') && text.includes('是'), 'No/Yes 开关');
+    assert.ok(text.includes('重置') && text.includes('提交'), 'Reset/Submit 按钮');
+    assert.ok(text.includes('下载 Windows 版 Thunderstore 模组管理器，轻松安装、更新和管理你的模组。'), '超过长度阈值的精确 UI 词条应翻译');
+    assert.strictEqual(d.querySelector('#long-unmapped').textContent, 'This long static-looking sentence has no approved dictionary entry and must remain unchanged in the localization engine.');
+
+    assert.strictEqual(d.querySelectorAll('input')[0].getAttribute('placeholder'), '选择团队');
+    assert.strictEqual(d.querySelectorAll('input')[1].getAttribute('placeholder'), '选择社区');
+    assert.strictEqual(d.querySelector('button[aria-label="切换选项"]')?.getAttribute('aria-label'), '切换选项');
+    assert.strictEqual(d.querySelector('header').getAttribute('aria-label'), '页眉');
+    assert.strictEqual(d.querySelector('nav').getAttribute('aria-label'), '主要内容');
+    assert.strictEqual(d.querySelector('a[aria-label="首页"]').getAttribute('href'), '/');
+    assert.strictEqual(d.querySelector('a[href="https://wiki.thunderstore.io/mods/creating-a-package"]').getAttribute('href'), 'https://wiki.thunderstore.io/mods/creating-a-package');
+    dom.window.close();
+});
+
+await test('Required React 分段计数与 /required 空态被翻译', async () => {
+    const dom = boot(TS_REQUIRED_HTML, 'https://thunderstore.io/c/gtfo/p/BepInEx/BepInExPack_GTFO/required');
+    const d = dom.window.document;
+    assert.strictEqual(dom.window.__MODS_ZH__.page, 'package');
+    assert.strictEqual(d.querySelector('.tabs-item').textContent, '必需依赖（0）');
+    assert.ok(d.body.textContent.includes('没有依赖项'));
+    assert.ok(d.body.textContent.includes('此软件包无需依赖其他软件包即可运行。'));
     dom.window.close();
 });
 
