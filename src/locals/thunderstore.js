@@ -1,0 +1,178 @@
+/* =============================================================================
+ * thunderstore.js —— thunderstore.io 词条
+ *
+ * 取证来源（2026-10-20 抓取，文本见 docs/evidence/thunderstore-*.txt）：
+ *   首页           https://thunderstore.io/
+ *   社区包列表     https://thunderstore.io/c/lethal-company/
+ *   社区总览       https://thunderstore.io/communities/
+ *   包详情页       https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/
+ * ========================================================================== */
+
+SITES.push({
+    id: 'thunderstore',
+    name: 'Thunderstore',
+    match: /(^|\.)thunderstore\.io$/,
+
+    /* 忽略区域：mod 名称 / 作者名 / 描述正文 / 代码块 / 用户输入
+     * Thunderstore 前端为 React，类名是编译哈希，因此按语义类名片段与标签名过滤，
+     * 另外用 role/lang 兜底。命中即整棵子树跳过。 */
+    ignore: [
+        'pre', 'code', 'kbd', 'textarea', '[contenteditable="true"]',
+        '[class*="markdown"]', '[class*="Markdown"]',
+        '[class*="package-name"]', '[class*="PackageName"]',
+        '[class*="author"]', '[class*="Author"]',
+        '[class*="description"]', '[class*="Description"]',
+        '[class*="changelog"]', '[class*="Changelog"]',
+        'script', 'style', 'noscript',
+    ].join(','),
+
+    detect(path) {
+        if (path === '/' || path === '') return 'home';
+        if (path.indexOf('/communities') === 0) return 'communities';
+        if (path.indexOf('/package/create') === 0) return 'upload';
+        // 包相关页：/c/<社区>/p/<作者>/<包名>[/required|/wiki|/changelog|/versions|/source|/dependants]
+        if (/^\/c\/[^/]+\/p\/[^/]+\/[^/]+\//.test(path) ||
+            /^\/c\/[^/]+\/p\/[^/]+\/[^/]+$/.test(path)) return 'package';
+        // 社区页与其包列表
+        if (/^\/c\/[^/]+\/(packages)?$/.test(path)) return 'community';
+        return 'global';
+    },
+
+    dict: {
+        /* ---------------- 全站：顶栏 / 页脚 / 通用按钮 ---------------- */
+        global: {
+            'Communities': '社区',
+            'Upload package': '上传包',
+            'Search': '搜索',
+            'Mods': '模组',
+            'Download': '下载',
+            'Details': '详情',
+            'Categories': '分类',
+            'Wiki': 'Wiki',
+            'Sign in': '登录',
+            'Sign up': '注册',
+            'Log in': '登录',
+            'Logout': '退出登录',
+            'Settings': '设置',
+            'Loading...': '加载中…',
+            'Something went wrong': '出错了',
+        },
+
+        /* ---------------- 首页 ---------------- */
+        home: {
+            'The Mod Database': '模组数据库',
+            'What are you playing today?': '今天玩点什么？',
+            'Choose from over 110,000 mods across 300+ games': '300+ 款游戏、超过 110,000 个模组',
+            'Top Communities': '热门社区',
+            'New Communities': '新社区',
+            'See all': '查看全部',
+            'Managing Mods': '管理模组',
+            'Just Got Better': '现在更省心了',
+            'Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.':
+                '下载 Windows 版 Thunderstore 模组管理器，轻松安装、更新和管理你的模组。',
+            'Get Manager': '获取管理器',
+        },
+
+        /* ---------------- 社区总览 /communities/ ---------------- */
+        communities: {
+            'Popular': '热门',
+            'Communities': '社区',
+        },
+
+        /* ---------------- 社区包列表 /c/<社区>/ ---------------- */
+        community: {
+            'Sections': '分区',
+            'All': '全部',
+            'Asset Replacements': '资源替换',
+            'APIs & Libraries': 'API 与库',
+            'Modpacks': '整合包',
+            'Other filters': '其他筛选',
+            'Deprecated': '已弃用',
+            'NSFW': '成人内容',
+            'Filters': '筛选器',
+            'Pinned': '置顶',
+            'by': '作者',
+            'Modding Wiki': '模组 Wiki',
+            'Modding Discord': '模组 Discord',
+            'Thunderstore development is made possible with ads. Please consider making an exception to your adblock.':
+                'Thunderstore 依靠广告维持开发，请考虑对本站关闭广告拦截。',
+
+            /* 分类枚举（Lethal Company 社区全量 31 项，各社区分类集合不同但同名同义） */
+            'AI Generated': 'AI 生成',
+            'Audio': '音频',
+            'BepInEx': 'BepInEx',
+            'Boombox Music': '音箱音乐',
+            'Bug Fixes': '缺陷修复',
+            'Client-side': '客户端',
+            'Cosmetics': '外观',
+            'Emotes': '表情动作',
+            'Equipment': '装备',
+            'Furniture': '家具',
+            'Hazards': '危险',
+            'Interiors': '室内',
+            'Items': '物品',
+            'Libraries': '库',
+            'MelonLoader': 'MelonLoader',
+            'Misc': '杂项',
+            'Monsters': '怪物',
+            'Moons': '星球',
+            'Performance': '性能',
+            'Posters': '海报',
+            'Server-side': '服务端',
+            'Suits': '服装',
+            'Tools': '工具',
+            'Translations': '翻译',
+            'Tweaks & Quality Of Life': '调整与体验优化',
+            'Vehicles': '载具',
+            'TV Videos': '电视视频',
+            'Weather': '天气',
+        },
+
+        /* ---------------- 包详情页 ---------------- */
+        package: {
+            'Install with App': '使用 App 安装',
+            'Latest version': '最新版本',
+            'Last Updated': '最后更新',
+            'First Uploaded': '首次上传',
+            'Downloads': '下载量',
+            'Likes': '点赞',
+            'Size': '大小',
+            'Dependants': '被依赖',
+            'Changelog': '更新日志',
+            'Versions': '版本',
+            'Analysis': '分析',
+            'Required': '必需依赖',
+            'Optional': '可选依赖',
+            'Total downloads': '总下载量',
+            'Report': '举报',
+        },
+
+        /* ---------------- 上传页 /package/create/ ---------------- */
+        upload: {
+            'Upload': '上传',
+            'Package name': '包名',
+            'Community': '社区',
+            'Submit': '提交',
+            'Cancel': '取消',
+        },
+    },
+
+    /* ---------------- 正则组 ---------------- */
+    patterns: [
+        // "1-20 of 19588 results"
+        [/^(\d[\d,]*)-(\d[\d,]*) of ([\d,]+) results$/, '$1-$2，共 $3 条结果'],
+        // "19588 results"
+        [/^([\d,]+) results$/, '共 $1 条结果'],
+        // "Required (0)"
+        [/^Required \((\d+)\)$/, '必需依赖（$1）'],
+        // 相对时间
+        [/^just now$/i, '刚刚'],
+        [/^(\d+)\s*second(s)? ago$/i, '$1 秒前'],
+        [/^(\d+)\s*minute(s)? ago$/i, '$1 分钟前'],
+        [/^(\d+)\s*hour(s)? ago$/i, '$1 小时前'],
+        [/^(\d+)\s*day(s)? ago$/i, '$1 天前'],
+        [/^(\d+)\s*week(s)? ago$/i, '$1 周前'],
+        [/^(\d+)\s*month(s)? ago$/i, '$1 个月前'],
+        [/^(\d+)\s*year(s)? ago$/i, '$1 年前'],
+    ],
+});

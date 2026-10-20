@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>mods-zh 本地复现页</title>
+<style>
+    body { font: 14px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; margin: 0; padding: 20px 24px; color: #1f2328; background: #fff; }
+    h1 { font-size: 16px; margin: 0 0 4px; }
+    .hint { color: #59636e; font-size: 12px; margin-bottom: 16px; }
+    .bar { display: flex; gap: 16px; padding: 8px 0; border-bottom: 1px solid #d1d9e0; }
+    .card { border: 1px solid #d1d9e0; border-radius: 6px; padding: 10px 12px; margin: 10px 0; }
+    .muted { color: #59636e; }
+    .row { display: flex; gap: 18px; font-size: 12px; color: #59636e; }
+    .tab { padding: 4px 8px; border: 1px solid #d1d9e0; border-radius: 4px; display: inline-block; margin-right: 6px; }
+    button { font: inherit; padding: 4px 10px; }
+    #status { margin-top: 14px; padding: 8px 10px; background: #f6f8fa; border-radius: 6px; font-family: Consolas, monospace; font-size: 12px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>mods-zh 本地复现页</h1>
+<div class="hint">用真实 Chromium 验证引擎：?site=thunderstore|nexus&amp;page=community|mod 可指定站点与页型。下方“动态插入”按钮用于验证 MutationObserver 对后插入节点的接管。</div>
+
+<div class="bar">
+    <a href="#">Communities</a>
+    <button>Upload package</button>
+    <input placeholder="Search" aria-label="Show search">
+</div>
+
+<div class="card">
+    <div><strong>Endorsements</strong> 479,848 · <strong>Unique DLs</strong> 6,481,286 · <strong>Total views</strong> 33,388,258</div>
+    <div class="row"><span>Virus scan</span><span>Safe to use</span><span>Version 4.3.9c</span></div>
+    <div class="row"><span>Last updated 06 September 2026, 6:22AM</span></div>
+    <div class="row"><span>20 Oct 2026</span><span>4 weeks ago</span><span>1-20 of 19588 results</span></div>
+    <div><span class="tab">DESCRIPTION</span><span class="tab">FILES</span><span class="tab">POSTS</span><span class="tab">STATS</span></div>
+    <div><a href="#">Requirements</a> · <a href="#">Permissions and credits</a> · <a href="#">Mirrors</a></div>
+    <div><span>Sections</span> · <span>Asset Replacements</span> · <span>Tweaks &amp; Quality Of Life</span> · <span>Filters</span></div>
+</div>
+
+<div class="card package-description">
+    A simple and easy to use mod manager for many games using Thunderstore —— 这段属于 UGC，脚本不应改动它。
+</div>
+
+<div class="card" id="dynamic"></div>
+
+<p><button id="insert">动态插入（验证 MutationObserver）</button></p>
+<div id="status">等待脚本执行…</div>
+
+<script>
+    const q = new URLSearchParams(location.search);
+    window.__MODS_ZH_FORCE_SITE__ = q.get('site') || 'thunderstore';
+    window.__MODS_ZH_FORCE_PAGE__ = q.get('page') || 'community';
+</script>
+<script src="../../dist/mods-zh.user.js"></script>
+<script>
+    const before = document.body.innerText;
+    const api = window.__MODS_ZH__;
+
+    document.getElementById('insert').addEventListener('click', () => {
+        const box = document.getElementById('dynamic');
+        box.innerHTML = '<div><strong>Downloads</strong> 122,730 results · <span>Most endorsed</span> · <span>Hide filters</span></div>';
+        setTimeout(report, 400);
+    });
+
+    function report() {
+        const text = document.body.innerText;
+        const ucg = document.querySelector('.package-description').innerText;
+        const lines = [
+            '站点      : ' + (api ? api.site : '未加载'),
+            '页型      : ' + (api ? api.page : '-'),
+            '词条      : ' + (api ? api.entries() : '-') + ' 条',
+            '已替换    : 文本 ' + (api ? api.stats.nodes : '-') + ' 处 / 属性 ' + (api ? api.stats.attrs : '-') + ' 处',
+            'UGC 保持  : ' + (ucg.indexOf('A simple and easy') === 0 ? '是' : '否'),
+            '',
+            '抽样：' + text.replace(/\s+/g, ' ').slice(0, 220),
+        ];
+        document.getElementById('status').textContent = lines.join('\n');
+    }
+    setTimeout(report, 300);
+</script>
+</body>
+</html>

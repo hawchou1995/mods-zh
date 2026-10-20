@@ -1,0 +1,42 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: 构建 + 测试 + 覆盖率
+        run: npm run verify
+
+      - name: dist 必须与源码一致
+        run: |
+          git diff --exit-code -- dist/ || {
+            echo "::error::dist/mods-zh.user.js 与 src/ 不同步，请本地执行 npm run build 后提交";
+            exit 1;
+          }
+
+      - name: 头部关键字段检查
+        run: |
+          set -e
+          F=dist/mods-zh.user.js
+          grep -q '^// ==UserScript==' "$F"
+          grep -q '^// @match        https://thunderstore.io/\*' "$F"
+          grep -q '^// @match        https://www.nexusmods.com/\*' "$F"
+          grep -q '^// @license      GPL-3.0' "$F"
+          V=$(node -p "require('./package.json').version")
+          grep -q "^// @version      $V\$" "$F"
+          echo "头部检查通过，版本 $V"

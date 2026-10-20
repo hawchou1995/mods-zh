@@ -1,0 +1,251 @@
+# Nexus Mods UI 文本快照 —— 2026-10-20 抓取
+# 来源页（PI 内置浏览器实机 DOM 读取）：
+#   https://www.nexusmods.com/skyrimspecialedition/mods/266   （模组详情页）
+#   https://www.nexusmods.com/games/skyrimspecialedition/mods （模组浏览页）
+# 只登录取证到的界面元素文本；mod 名称/作者/描述属 UGC，不入快照。
+
+# --- 顶部导航 ---
+GAMES
+MODS
+MOD UPDATES
+COLLECTIONS
+MEDIA
+IMAGES
+VIDEOS
+COMMUNITY
+NEWS
+SUPPORT
+All games
+All mods
+New
+Trending
+Most endorsed
+Top files
+Mod categories
+Mods of the month
+Recent activity
+All collections
+Highest rated
+Latest
+Forums
+Wiki
+Support authors
+All news
+Site news
+Competitions
+Interviews
+Help
+Contact
+Give feedback
+FAQ
+API
+Game guides
+Tutorial
+Collections
+Tools
+Vortex help
+Install Vortex
+Please log in
+Log in
+Go premium
+Premium features
+Notifications
+Mark all as read
+You're up to date
+See All
+Games
+Mods
+Back
+Close
+Recently added
+Your favourited games will be displayed here
+
+# --- 无障碍标签 ---
+Show search
+Open navigation menu
+Close navigation menu
+Open profile menu
+Breadcrumb navigation
+Filters panel
+Show Tags
+Pagination navigation
+Clear game filter
+Go to previous page
+Go to next page
+Jump to page
+Go to page 2
+
+# --- 模组详情页 ---
+Details
+Endorsements
+Unique DLs
+Total DLs
+Total views
+Version
+Download:
+Last updated
+Original upload
+Created by
+Uploaded by
+Virus scan
+Safe to use
+Tags for this mod
+View more...
+DESCRIPTION
+FILES
+ARTICLES
+POSTS
+LOGS
+STATS
+About this mod
+Share
+Requirements
+Permissions and credits
+Translations
+Mirrors
+Donations
+Mods using this mod
+Collections containing this mod
+LEARN MORE
+20 Oct 2026
+06 September 2026, 6:22AM
+
+# --- 模组浏览页 ---
+Home
+Browse the internet's best mods
+Hide filters
+CATEGORY
+TAGS
+Includes
+Excludes
+SEARCH PARAMETERS
+Title
+Description
+Author
+Uploader
+Apply
+LANGUAGE SUPPORT
+Hide translations
+CONTENT OPTIONS
+Hide adult content
+Show only adult content
+Supported by Vortex
+Show only updated mods
+FILE SIZE
+No min
+No max
+DOWNLOADS
+ENDORSEMENTS
+Sort
+Previous page
+Next page
+Go
+Make mods.
+Earn rewards.
+Learn More
+122,730 results
+
+# --- 搜索参数输入框占位符 ---
+Title contains
+Description contains
+Author contains
+Uploader contains
+
+# --- 语言枚举 ---
+Afrikaans
+Arabic
+Czech
+Dutch
+English
+French
+German
+Hungarian
+Indonesian
+Italian
+Japanese
+Korean
+Polish
+Portuguese (Brazil)
+Portuguese (Portugal)
+Russian
+Simplified Chinese
+Spanish (Latin America)
+Spanish (Spain)
+Traditional Chinese
+Turkish
+Ukrainian
+Vietnamese
+
+# --- 分类枚举（Skyrim SE） ---
+Alchemy
+Animation
+Armour
+Armour - Shields
+Audio
+Body, Face, and Hair
+Bug Fixes
+Buildings
+Cheats and God items
+Cities, Towns, Villages, and Hamlets
+Clothing and Accessories
+Collectables, Treasure Hunts, and Puzzles
+Combat
+Crafting
+Creatures and Mounts
+Dungeons
+Environmental
+Followers & Companions
+Followers & Companions - Creatures
+Gameplay
+Guilds/Factions
+Immersion
+Items and Objects - Player
+Items and Objects - World
+Locations - New
+Locations - Vanilla
+Magic - Gameplay
+Magic - Spells & Enchantments
+Miscellaneous
+Modders Resources
+Models and Textures
+Overhauls
+Patches
+Player homes
+Presets - ENB and ReShade
+Quests and Adventures
+Races, Classes, and Birthsigns
+Save Games
+Shouts
+Skills and Leveling
+Stealth
+User Interface
+Utilities
+Visuals and Graphics
+Weapons
+Weapons and Armour
+
+# --- 页脚 ---
+News
+Statistics
+Careers
+About us
+DISCOVER
+New mods
+Popular mods
+Trending mods
+All images
+Report a bug
+Unban requests
+DMCA
+Manage cookie settings
+Discord
+Contact us
+SUPPORT NEXUS MODS
+Mod faster with premium
+NETWORK STATS
+Members
+Kudos given
+Page served in
+Server info
+Terms of Service
+Privacy Policy

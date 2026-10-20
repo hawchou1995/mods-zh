@@ -1,0 +1,9 @@
+node_modules/
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 构建产物需要随仓库发布（raw.githubusercontent 的 updateURL 指向它），故不忽略 dist/

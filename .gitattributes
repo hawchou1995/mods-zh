@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# 产物必须与构建输出逐字节一致（CI 用 git diff 校验），统一 LF
+dist/*.user.js text eol=lf

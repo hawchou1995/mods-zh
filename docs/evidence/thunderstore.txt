@@ -1,0 +1,94 @@
+# Thunderstore UI 文本快照 —— 2026-10-20 抓取
+# 来源页：
+#   https://thunderstore.io/
+#   https://thunderstore.io/communities/
+#   https://thunderstore.io/c/lethal-company/
+#   https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/
+# 只登录取证到的界面元素文本；mod 名称/作者/描述属 UGC，不入快照。
+
+# --- 首页 ---
+The Mod Database
+What are you playing today?
+Choose from over 110,000 mods across 300+ games
+Top Communities
+New Communities
+See all
+Managing Mods
+Just Got Better
+Download Thunderstore Mod Manager for Windows to easily install, update, and manage your mods.
+Get Manager
+
+# --- 社区总览 ---
+Communities
+Popular
+
+# --- 社区包列表 ---
+Upload package
+Sections
+All
+Mods
+Asset Replacements
+APIs & Libraries
+Modpacks
+Categories
+Other filters
+Deprecated
+NSFW
+Filters
+Pinned
+by
+1-20 of 19588 results
+4 weeks ago
+2 hours ago
+
+# --- 分类枚举（Lethal Company 社区 31 项） ---
+AI Generated
+Audio
+BepInEx
+Boombox Music
+Bug Fixes
+Client-side
+Cosmetics
+Emotes
+Equipment
+Furniture
+Hazards
+Interiors
+Items
+Libraries
+MelonLoader
+Misc
+Modpacks
+Mods
+Monsters
+Moons
+Performance
+Posters
+Server-side
+Suits
+Tools
+Translations
+Tweaks & Quality Of Life
+Vehicles
+TV Videos
+Weather
+
+# --- 包详情页 ---
+Install with App
+Details
+Latest version
+Last Updated
+First Uploaded
+Downloads
+Likes
+Size
+Dependants
+Download
+Required (0)
+Wiki
+Changelog
+Versions
+Analysis
+Modding Wiki
+Modding Discord
+Thunderstore development is made possible with ads. Please consider making an exception to your adblock.

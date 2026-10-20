@@ -1,0 +1,23 @@
+{
+  "name": "mods-zh",
+  "version": "1.0.0",
+  "description": "Thunderstore & Nexus Mods 界面中文化油猴脚本（单文件构建）",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0",
+  "homepage": "https://github.com/hawchou1995/mods-zh",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/smoke.test.mjs && node test/browser.test.mjs",
+    "test:smoke": "node test/smoke.test.mjs",
+    "test:dom": "node test/browser.test.mjs",
+    "coverage": "node tools/coverage.mjs thunderstore docs/evidence/thunderstore.txt && node tools/coverage.mjs nexus docs/evidence/nexus.txt",
+    "verify": "node build.mjs && node test/smoke.test.mjs && node test/browser.test.mjs && npm run coverage --silent"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}
