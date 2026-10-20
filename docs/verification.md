@@ -64,7 +64,7 @@ npm install
 npm run verify
 ```
 
-`dist/` 随仓库提交，CI 会校验「源码 → 构建 → dist」三者一致（`git diff --exit-code dist/`），产物与源码不会漂。
+## 6. 首发 v1.0.0 线上发布验收
 
 ## 6. 线上发布验收
 
@@ -75,6 +75,13 @@ npm run verify
 | 构建可复现 | 提交后重新 `node build.mjs`，`git status` 无差异 |
 | Greasyfork | https://greasyfork.org/zh-CN/scripts/601176 已发布，版本 1.0.0，语言 zh-CN |
 | Greasyfork 上的代码 | 回抓 `/scripts/601176/code/mods-zh.user.js`，与本地产物逐行比对：1010 行全一致，**仅 `@downloadURL` / `@updateURL` 两行被 Greasyfork 重写**（指向 update.greasyfork.org，属站点预期行为），其余字节未改 |
+
+## 7. v1.0.1 本地验收
+
+- `npm run verify`：15 条 smoke、7 条 jsdom 全过；Thunderstore 91/91、Nexus 230/230 覆盖。
+- GTFO 截图复测：导航、账号菜单、`Search Mods...`、`Last updated`、GTFO 分类、跨 `<strong>` 的结果计数均有回归断言。
+- UGC 边界复测：作者行的 `by` 翻成“作者”，作者链接文本保持原文；模组描述继续保持原文。
+- README 与 userscript `@description` 增加青橘反馈链接 `https://qingju.me/`；Greasyfork v1.0.1 线上回抓验收结果待发布后补记。
 
 发布流程：Greasyfork 无公开 API，本次通过浏览器实机会话在 `/zh-CN/script_versions/new` 提交 —— 代码走 `code_upload` 文件通道（39473 字节，站点侧自动解析出元数据），脚本名、描述、语言（`zh-CN`）填写后提交，落库 ID 601176。
 
