@@ -100,4 +100,7 @@ npm run verify
 - 详情页源 HTML 的标签实际是 `Required (<!-- -->0<!-- -->)`：React 注释把标签、计数和括号拆成独立文本节点，导致整句正则和单词字典都可能漏掉。v1.0.2 在完整 `Required (N)` 容器匹配后改标签和括号，保留数字节点；`/required` 空态文案也一并翻译。
 - `lookup()` 改为先查精确白名单、再对未知长文本应用长度门。已验证精确的 NSFW 帮助文案和页脚说明会翻译，未收录长句仍保持原文。
 - `npm run verify`：15 条 smoke + 9 条 jsdom 全过；覆盖率 Thunderstore 203/203、Nexus 230/230。
-- 发布目标：既有 GitHub 仓库和 Greasyfork 脚本 601176，目标版本 1.0.2；本节线上回抓结果待发布后补记。
+- v1.0.2 已发布到既有 Greasyfork 脚本 601176；更新通过已登录浏览器在 `/zh-CN/scripts/601176/versions/new` 提交 `code_upload`，非新建脚本。线上回抓结果：
+  - GitHub 代码提交：`d1bca55437c96275d8d84788e43bd3623d07e076`；raw 产物 HTTP 200 / 50322 B / SHA-256 `0EE17920EA2F5E7CD54068385EDDFE7E715472829EA69BC4ABBC6956655B5AFD`。
+  - Greasyfork 版本历史命中 `1.0.2`，更新说明已显示；脚本页显示 1.0.2 且介绍包含 `https://qingju.me/`。
+  - Greasyfork CDN 50386 B / SHA-256 `FC6813098546044DF3153ECF041D1CB43DDE3B4F38B721BFA6C5FACF13CACCE2`；移除 Greasyfork 自动改写的 `@downloadURL` / `@updateURL` 后，与本地源码逐行一致。
