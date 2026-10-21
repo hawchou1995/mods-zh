@@ -104,3 +104,22 @@ npm run verify
   - GitHub 代码提交：`d1bca55437c96275d8d84788e43bd3623d07e076`；raw 产物 HTTP 200 / 50322 B / SHA-256 `0EE17920EA2F5E7CD54068385EDDFE7E715472829EA69BC4ABBC6956655B5AFD`。
   - Greasyfork 版本历史命中 `1.0.2`，更新说明已显示；脚本页显示 1.0.2 且介绍包含 `https://qingju.me/`。
   - Greasyfork CDN 50386 B / SHA-256 `FC6813098546044DF3153ECF041D1CB43DDE3B4F38B721BFA6C5FACF13CACCE2`；移除 Greasyfork 自动改写的 `@downloadURL` / `@updateURL` 后，与本地源码逐行一致。
+
+## 10. 实时动态筛选与分段结果计数补全（2026-10-20）
+
+- 在真实浏览器检查 `https://thunderstore.io/c/lethal-company/` 与 `https://thunderstore.io/c/gtfo/`：展开 Filters 并打开排序菜单，核对 Lethal Company 分类、GTFO 分类、分页控件及 ARIA 标签。抓取的 UI-only 快照：`docs/evidence/thunderstore-dynamic.txt`。
+- 新发现的词条补入全局/社区词典：`Close`、`Next`、`Pagination`、大小写不同的 `Last Updated`、`Card layout`、`Content width`、`Newest`、`Most downloaded`、`Top rated`。原有 `Asset Replacements`、`APIs & Libraries` 及 GTFO 分类词条已覆盖。
+- 真实列表 DOM 为 `<p class="package-count"><b>1-20 </b>&nbsp;of&nbsp;<b>868</b>&nbsp;result<!-- -->s</p>`。引擎此前虽能匹配完整容器，却漏掉 React 注释拆开的 `result` / `s`，并保留范围数字后的空格；现改为输出 `1-20，共 868 条结果`，关闭中文化后精确恢复原始节点。
+- 新增 jsdom 动态面板与计数回归；`npm run verify`：15 条 smoke、11 条 jsdom 全通过；Thunderstore 原快照 203/203、新增动态快照 54/54、Nexus 230/230。
+- 2026-10-20 的未登录公开浏览器访问曾跳转登录页；2026-10-21 续测时用 bsk 登录 profile 打开上传页，完整结果见第11节。v1.0.2 的早期未登录限制已由后续实测补齐。
+- 第10节编写时的二次补丁仍在本地，仓库发布版为 v1.0.2；后续发版状态见第11节。
+
+## 11. bsk 登录态上传页动态控件与 ZIP 校验补全（2026-10-21）
+
+- bsk `status --json` 确认 Chrome 扩展在线。曾列出一个 Thunderstore 用户标签，但借用时返回 `No tab with id`，随后列表中该标签消失；未伪称成功借用。改在同一已登录 Chrome profile 的 bsk Agent 标签打开 `https://thunderstore.io/package/create/`；页面 GET HTTP 200、标题 `Upload package | Thunderstore`，`/api/experimental/current-user/` 返回 HTTP 200。
+- 从同源原始 HTML 读取确认静态英文；页面另有翻译扩展改写可见文字，因此精确动态原文以 HTTP 200 的 `upload-B0mDWrXl.js` 字符串为准。
+- 实际展开 Team、Communities 与分类控件；GTFO 分类选择器显示 `Select categories`。未选分类。用 scratch 中仅含文本条目的临时 ZIP 在 bsk 表单触发客户端本地校验，实测缺少 `manifest.json`、`icon.png`、`README.md` 和 BepInEx / Assembly-CSharp / DLL 数量提示；`Submit` 始终禁用。
+- bsk 网络增量只有静态 JS、页面与社区数据 GET，没有文件上传或包提交请求。未选择最终 Submit，未产生线上提交。
+- ZIP 校验提示、上传进度/错误状态与成功摘要文案已补全；结果计数兼容 singular/plural，React 尾缀清理不误增计数，成功摘要全角冒号在分段 DOM 中正确处理。动态错误详情统一本地化，所有长文本模式由 smoke 门禁确认完整锚定。
+- `docs/evidence/thunderstore-dynamic.txt` 保存 UI-only 快照和 bundle 字面文案；未触发的网络失败、提交后校验提示标注为源码已核对、未手动触发。
+- 最终发布前验证：`npm run verify`，16 条 smoke、12 条 jsdom 全过；Thunderstore 原快照 203/203、新增动态与上传校验快照 100/100、Nexus 230/230。构建产物 58,947 B / 1,338 行，版本 `1.0.3`；GitHub 与 GreasyFork 推送待进行。

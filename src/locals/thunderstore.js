@@ -75,6 +75,10 @@ SITES.push({
             'Privacy Policy': '隐私政策',
             'News': '新闻',
             'GitHub': 'GitHub',
+            'Close': '关闭',
+            'Next': '下一页',
+            'Pagination': '分页',
+            'Last Updated': '最后更新',
             'Get Thunderstore Mod Manager App': '获取 Thunderstore Mod Manager 应用',
             'Header': '页眉',
             'Main': '主要内容',
@@ -156,6 +160,11 @@ SITES.push({
             'by': '作者',
             'Modding Wiki': '模组 Wiki',
             'Modding Discord': '模组 Discord',
+            'Card layout': '卡片布局',
+            'Content width': '内容宽度',
+            'Newest': '最新发布',
+            'Most downloaded': '下载量最多',
+            'Top rated': '评分最高',
             'Thunderstore development is made possible with ads. Please consider making an exception to your adblock.':
                 'Thunderstore 依靠广告维持开发，请考虑对本站关闭广告拦截。',
 
@@ -250,17 +259,75 @@ SITES.push({
             'Select a community to view available categories': '选择一个社区以查看可用分类',
             'Double-check your selections and hit "Submit" when you\'re ready!': '请仔细核对所选内容，确认无误后点击“提交”！',
             'Reset': '重置',
+            'Select categories': '选择分类',
+            'Drop ZIP file here': '将 ZIP 文件拖放到此处',
+            'Please upload a ZIP archive (application/zip).': '请上传 ZIP 压缩包（application/zip）。',
+            'Please choose a ZIP file before submitting.': '提交前请选择 ZIP 文件。',
+            'Please fix the problems with your .zip file before submitting.': '请先修复 ZIP 文件中的问题，再提交。',
+            'Please review the form errors above and submit again.': '请修正上方表单错误后重新提交。',
+            "If you need to test your mod, you can import it locally through the 'Import local mod' option in your mod manager's settings.": '如果需要测试模组，可在模组管理器设置中选择“导入本地模组”。',
+            'You have BepInEx.dll in your .zip file. BepInEx should probably be a dependency in your manifest.json file instead.': 'ZIP 压缩包中包含 BepInEx.dll。建议在 manifest.json 中将 BepInEx 声明为依赖项。',
+            'You have Assembly-CSharp.dll in your .zip file. Your package may be removed if you do not have permission to distribute this file.': 'ZIP 压缩包中包含 Assembly-CSharp.dll。若无权分发该文件，你的软件包可能会被移除。',
+            "If you're making a modpack, do not include the files for each mod in your .zip file. Instead, put the dependency string for each mod inside your manifest.json file.": '如果正在制作模组整合包，请勿将各模组文件打包进 ZIP；请在 manifest.json 中填写每个模组的依赖项字符串。',
+            'The file names of manifest.json, icon.png, and README.md are case-sensitive.': 'manifest.json、icon.png 和 README.md 文件名区分大小写。',
+            'Your manifest.json, icon.png, and README.md files must have the correct file extensions.': 'manifest.json、icon.png 和 README.md 文件必须使用正确的扩展名。',
+            'Your manifest, icon, and README files should be at the root of the .zip file. You can prevent this by compressing the contents of a folder, rather than the folder itself.': 'manifest、icon 和 README 文件应位于 ZIP 压缩包根目录。压缩文件夹内的内容，而不是文件夹本身，即可避免此问题。',
+            'Your manifest.json, icon.png, or README.md file is missing its file extension.': 'manifest.json、icon.png 或 README.md 文件缺少扩展名。',
+            'Your package is missing a manifest.json file!': '软件包缺少 manifest.json 文件！',
+            'Your package is missing an icon.png file!': '软件包缺少 icon.png 文件！',
+            'Your package is missing a README.md file!': '软件包缺少 README.md 文件！',
+            'Upload progress': '上传进度',
+            'Uploading…': '正在上传…',
+            'Submitting…': '正在提交…',
+            'Processing…': '正在处理中…',
+            'Retry Status Check': '重试状态检查',
+            'Success!': '成功！',
+            'The package is listed in': '软件包已发布到',
+            'communities': '个社区',
+            'community': '个社区',
+            'View listing': '查看软件包页面',
+            'Link': '链接',
+            'Upload already running': '上传已在进行中。',
+            'Executor not initialized, cannot pause upload': '上传任务尚未初始化，无法暂停。',
+            'MultipartUpload.handle accessed before set': '上传句柄尚未设置便被访问。',
+            'Uploads are not related to the same upload handle': '这些上传分片不属于同一上传任务。',
+            'No uploads found': '未找到上传任务。',
+            'Failed to initialize MD5 WorkerManager: Worker not supported': '当前浏览器不支持 MD5 WorkerManager，无法初始化。',
+            'Failed to create MD5 worker': '无法创建 MD5 Worker。',
+            'File selection changed during validation.': '验证过程中所选文件已更改。',
+            'API host is not configured': '未配置 API 主机。',
+            'Network error': '网络错误',
+            'HTTP error': 'HTTP 错误',
+            'Upload failed': '上传失败',
+            'Upload failed before submission.': '提交前上传失败。',
+            'Unknown error': '未知错误',
         },
     },
 
     /* ---------------- 正则组 ---------------- */
     patterns: [
         // "1-20 of 19588 results"
-        [/^(\d[\d,]*)-(\d[\d,]*) of ([\d,]+) results$/, '$1-$2，共 $3 条结果'],
+        [/^(\d[\d,]*)-(\d[\d,]*) of ([\d,]+) results?$/, '$1-$2，共 $3 条结果'],
         // "19588 results"
-        [/^([\d,]+) results$/, '共 $1 条结果'],
+        [/^([\d,]+) results?$/, '共 $1 条结果'],
         // "Required (0)"
         [/^Required\s*\(\s*(\d+)\s*\)$/i, '必需依赖（$1）'],
+        // Thunderstore 上传页动态 ZIP 校验与传输状态；均为完整字符串锚定。
+        [/^You have (\d+) \.dll files in your \.zip file\. Some of these files may be unnecessary\.$/i, 'ZIP 压缩包中包含 $1 个 .dll 文件，其中某些可能并非必需。'],
+        [/^HTTP error: (\d+)$/i, 'HTTP 错误：$1'],
+        [/^ETAG missing on part upload: (\d+)$/i, '分片 $1 缺少 ETag。'],
+        [/^Uploading…\s*(\d+%)$/i, '正在上传… $1'],
+        [/^Error polling submission status: (.+)$/i, (_match, detail) => '查询提交状态失败：' + detail
+            .replace(/unknown error/gi, '未知错误')
+            .replace(/UPLOAD_FAILED:\s*Network error/gi, '网络错误')
+            .replace(/UPLOAD_FAILED:\s*HTTP error:\s*(\d+)/gi, 'HTTP 错误：$1')
+            .replace(/HTTP error:\s*(\d+)/gi, 'HTTP 错误：$1')
+            .replace(/Network error/gi, '网络错误')
+            .replace(/(?:ETAG_MISSING:\s*)?ETAG missing on part upload:\s*(\d+)/gi, '分片 $1 缺少 ETag。')],
+        [/^Upload failed with errors: (.+)$/i, (_match, detail) => '上传失败：' + detail
+            .replace(/UPLOAD_FAILED:\s*Network error/gi, '网络错误')
+            .replace(/UPLOAD_FAILED:\s*HTTP error:\s*(\d+)/gi, 'HTTP 错误：$1')
+            .replace(/ETAG_MISSING:\s*ETAG missing on part upload:\s*(\d+)/gi, '分片 $1 缺少 ETag。')],
         // 相对时间
         [/^just now$/i, '刚刚'],
         [/^(\d+)\s*second(s)? ago$/i, '$1 秒前'],

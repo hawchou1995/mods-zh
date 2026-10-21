@@ -40,7 +40,7 @@ function auditLocals() {
     for (const rel of ['src/locals/_registry.js', 'src/locals/thunderstore.js', 'src/locals/nexus.js']) {
         vm.runInContext(readFileSync(join(ROOT, rel), 'utf8'), ctx, { filename: rel });
     }
-    return vm.runInContext('SITES.map(s => ({ id: s.id, dict: s.dict, patterns: (s.patterns||[]).length }))', ctx);
+    return vm.runInContext('SITES.map(s => ({ id: s.id, dict: s.dict, patterns: s.patterns || [] }))', ctx);
 }
 
 const sites = auditLocals();
@@ -84,7 +84,13 @@ console.log('\n[词条库]');
 test('两站点均已注册且带正则组', () => {
     const ids = sites.map(s => s.id);
     assert.strictEqual(sites.map(s => s.id).join(','), 'thunderstore,nexus');
-    assert.ok(sites.every(s => s.patterns > 0));
+    assert.ok(sites.every(s => s.patterns.length > 0));
+});
+test('Thunderstore 动态长文本正则均完整锚定', () => {
+    const ts = sites.find(s => s.id === 'thunderstore');
+    assert.ok(ts);
+    const unanchored = ts.patterns.filter(([re]) => !re.source.startsWith('^') || !re.source.endsWith('$'));
+    assert.strictEqual(unanchored.length, 0, '长正则必须完整锚定，避免改写正文片段');
 });
 test('词条总数 >= 200（去重后）', () => {
     let total = 0;

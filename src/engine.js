@@ -12,7 +12,8 @@
  * ========================================================================== */
 
 const CONFIG = {
-    MAX_LEN: 80,                                  // 超长文本不处理（多为正文）
+    MAX_LEN: 80,                                  // 默认正则长度门槛
+    PATTERN_MAX_LEN: 240,                         // 动态界面模板专用上限
     ATTRS: ['placeholder', 'aria-label', 'title'], // 属性翻译白名单
     SKIP_TAGS: ['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'KBD',
         'TEXTAREA', 'SVG', 'CANVAS', 'TEMPLATE', 'IFRAME'],
@@ -87,9 +88,10 @@ function lookup(key) {
 
     let result = null;
     if (State.dict.has(key)) {
-        // 精确白名单允许翻译长的静态帮助文案；未知长文本仍按 MAX_LEN 跳过。
+        // 精确白名单允许长帮助句；动态正则须完整锚定并受长度上限约束。
         result = State.dict.get(key);
-    } else if (key.length <= CONFIG.MAX_LEN) {
+    } else if (key.length <= CONFIG.MAX_LEN ||
+        (State.site && State.site.id === 'thunderstore' && key.length <= CONFIG.PATTERN_MAX_LEN)) {
         for (const [re, to] of State.patterns) {
             if (!re.test(key)) continue;
             const out = typeof to === 'function' ? key.replace(re, to) : key.replace(re, to);
@@ -169,37 +171,88 @@ function translateAttributes(el) {
     return changed;
 }
 
-/* 统计文案常由 <strong> 数字 + 普通文本节点组成，整句正则无法命中。
- * 只在拼起来完整匹配结果计数的最小容器内翻译分隔词，保留数字及其加粗结构。 */
+/* 统计文案常由数字节点和 React 注释拆开的文本组成。
+ * 只在完整计数容器匹配时翻译分隔词，保留数字及其 DOM 结构。 */
 function translateSplitResultCounter(root) {
     if (!root || !root.querySelectorAll) return;
-    const resultRe = /^[\d,]+\s*-\s*[\d,]+ of [\d,]+ results$/i;
+    const resultRe = /^[\d,]+\s*-\s*[\d,]+ of [\d,]+ results?$/i;
     const doc = root.ownerDocument || root;
 
     for (const el of root.querySelectorAll('*')) {
         if (isIgnored(el) || !resultRe.test(normalize(el.textContent || ''))) continue;
-
-        // 只处理最小匹配容器，避免同一组文本被父容器重复改写。
         let nestedMatch = false;
         for (const child of el.children) {
-            if (resultRe.test(normalize(child.textContent || ''))) {
-                nestedMatch = true;
-                break;
-            }
+            if (resultRe.test(normalize(child.textContent || ''))) { nestedMatch = true; break; }
         }
         if (nestedMatch) continue;
 
         const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
-        const textNodes = [];
+        const nodes = [];
         let node = walker.nextNode();
-        while (node) { textNodes.push(node); node = walker.nextNode(); }
+        while (node) { nodes.push(node); node = walker.nextNode(); }
+        const write = (target, value, count = true) => {
+            if (!target || target.nodeValue === value) return;
+            if (!State.originals.has(target)) State.originals.set(target, target.nodeValue);
+            State.writing = true;
+            target.nodeValue = value;
+            State.writing = false;
+            if (count) State.stats.nodes++;
+        };
 
-        for (const textNode of textNodes) {
+        for (let i = 0; i < nodes.length; i++) {
+            const textNode = nodes[i];
             const token = normalize(textNode.nodeValue || '').toLowerCase();
-            if (token !== 'of' && token !== 'results') continue;
-            if (!State.originals.has(textNode)) State.originals.set(textNode, textNode.nodeValue);
-            textNode.nodeValue = token === 'of' ? '，共 ' : ' 条结果';
-            State.stats.nodes++;
+            if (token === 'of') {
+                const previous = nodes[i - 1];
+                if (previous && /^\s*[\d,]+\s*-\s*[\d,]+\s*$/.test(previous.nodeValue || '')) {
+                    write(previous, (previous.nodeValue || '').replace(/\s+$/, ''), false);
+                }
+                write(textNode, '，共 ');
+            } else if (token === 'results') {
+                write(textNode, ' 条结果');
+            } else if (token === 'result') {
+                write(textNode, ' 条结果');
+                const suffix = nodes[i + 1];
+                if (suffix && normalize(suffix.nodeValue || '').toLowerCase() === 's') {
+                    write(suffix, '', false);
+                    i++;
+                }
+            }
+        }
+    }
+}
+
+/* 上传成功摘要含动态数量和 React 拆开的 community / 冒号；
+ * 仅在完整摘要容器匹配时修正，避免改写 UGC 标点。 */
+function translateSplitPackageListingSummary(root) {
+    if (!root || !root.querySelectorAll) return;
+    const summaryRe = /^(?:The package is listed in|软件包已发布到)\s+[\d,]+\s+(?:communities|community|个社区)\s*[:：]\s*$/i;
+    const doc = root.ownerDocument || root;
+
+    for (const el of root.querySelectorAll('*')) {
+        if (isIgnored(el) || !summaryRe.test(normalize(el.textContent || ''))) continue;
+        let nestedMatch = false;
+        for (const child of el.children) {
+            if (summaryRe.test(normalize(child.textContent || ''))) { nestedMatch = true; break; }
+        }
+        if (nestedMatch) continue;
+
+        const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+        let node = walker.nextNode();
+        while (node) {
+            const raw = node.nodeValue || '';
+            const value = raw
+                .replace(/The package is listed in/i, '软件包已发布到')
+                .replace(/\bcommunities?\b/i, '个社区')
+                .replace(/:\s*$/, suffix => suffix.replace(':', '：'));
+            if (value !== raw) {
+                if (!State.originals.has(node)) State.originals.set(node, raw);
+                State.writing = true;
+                node.nodeValue = value;
+                State.writing = false;
+                State.stats.nodes++;
+            }
+            node = walker.nextNode();
         }
     }
 }
@@ -272,6 +325,7 @@ function scanRoot(root) {
     for (const node of batch) translateTextNode(node);
     translateSplitResultCounter(root);
     translateSplitRequiredCounter(root);
+    translateSplitPackageListingSummary(root);
 
     if (root.querySelectorAll) {
         const sel = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');

@@ -1,0 +1,112 @@
+# Live browser UI snapshot captured 2026-10-20.
+# Public community pages: https://thunderstore.io/c/lethal-company/ and https://thunderstore.io/c/gtfo/.
+# Authenticated bsk session on 2026-10-21: GET /package/create/ returned HTTP 200, title "Upload package | Thunderstore".
+# Lethal Company filter drawer: labels, settings, categories, and other filters.
+Filters
+Close
+Last updated
+Card layout
+Content width
+Sections
+All
+Mods
+Asset Replacements
+APIs & Libraries
+Modpacks
+Categories
+AI Generated
+Audio
+BepInEx
+Boombox Music
+Bug Fixes
+Client-side
+Cosmetics
+Emotes
+Equipment
+Furniture
+Hazards
+Interiors
+Items
+Libraries
+MelonLoader
+Misc
+Monsters
+Moons
+Performance
+Posters
+Server-side
+Suits
+Tools
+Translations
+Tweaks & Quality Of Life
+Vehicles
+TV Videos
+Weather
+Other filters
+Deprecated
+NSFW
+Newest
+Most downloaded
+Top rated
+# GTFO filter drawer categories.
+Client Mods
+Dev Tools
+Rundown Mods
+Rundowns
+# Community listing controls / accessible labels.
+Next
+Pagination
+Last Updated
+# Live React DOM: <p class="package-count"><b>1-20 </b>&nbsp;of&nbsp;<b>868</b>&nbsp;result<!-- -->s</p>
+1-20 of 868 results
+
+# --- Authenticated /package/create/ form: live DOM and upload-bundle validation strings ---
+# The upload module was HTTP 200; visible strings below are exact source literals because the browser profile has a separate page translator.
+Select categories
+Drop ZIP file here
+Upload progress
+Uploading…
+Submitting…
+Processing…
+Retry Status Check
+Success!
+The package is listed in
+community
+communities
+View listing
+Link
+# Selected a synthetic ZIP in the bsk Agent tab; local validation displayed these warnings/errors, and Submit remained disabled.
+If you need to test your mod, you can import it locally through the 'Import local mod' option in your mod manager's settings.
+You have BepInEx.dll in your .zip file. BepInEx should probably be a dependency in your manifest.json file instead.
+You have Assembly-CSharp.dll in your .zip file. Your package may be removed if you do not have permission to distribute this file.
+You have 11 .dll files in your .zip file. Some of these files may be unnecessary.
+If you're making a modpack, do not include the files for each mod in your .zip file. Instead, put the dependency string for each mod inside your manifest.json file.
+Your package is missing a manifest.json file!
+Your package is missing an icon.png file!
+Your package is missing a README.md file!
+# Additional exact validation/error literals in the HTTP 200 bundle; not all were activated to avoid submission.
+Please upload a ZIP archive (application/zip).
+Please choose a ZIP file before submitting.
+Please fix the problems with your .zip file before submitting.
+Please review the form errors above and submit again.
+The file names of manifest.json, icon.png, and README.md are case-sensitive.
+Your manifest.json, icon.png, and README.md files must have the correct file extensions.
+Your manifest, icon, and README files should be at the root of the .zip file. You can prevent this by compressing the contents of a folder, rather than the folder itself.
+Your manifest.json, icon.png, or README.md file is missing its file extension.
+File selection changed during validation.
+API host is not configured
+Upload already running
+Executor not initialized, cannot pause upload
+MultipartUpload.handle accessed before set
+Uploads are not related to the same upload handle
+No uploads found
+Failed to initialize MD5 WorkerManager: Worker not supported
+Failed to create MD5 worker
+Network error
+HTTP error: 503
+ETAG missing on part upload: 12
+Upload failed
+Upload failed before submission.
+Unknown error
+Error polling submission status: Unknown error
+Upload failed with errors: UPLOAD_FAILED: Network error

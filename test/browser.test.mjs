@@ -175,6 +175,151 @@ await test('Required React 分段计数与 /required 空态被翻译', async () 
     dom.window.close();
 });
 
+await test('React 注释拆分的单复数结果计数正确且关闭后还原', async () => {
+    const html = `<!DOCTYPE html><html><body>
+      <p class="package-count"><b>1-20 </b>&nbsp;of&nbsp;<b>868</b>&nbsp;result<!-- -->s</p>
+      <p class="package-count"><b>1-1 </b>&nbsp;of&nbsp;<b>1</b>&nbsp;result</p>
+    </body></html>`;
+    const dom = boot(html, 'https://thunderstore.io/c/gtfo/');
+    const [plural, singular] = dom.window.document.querySelectorAll('.package-count');
+    const nbsp = String.fromCharCode(160);
+    const originals = ['1-20 ' + nbsp + 'of' + nbsp + '868' + nbsp + 'results', '1-1 ' + nbsp + 'of' + nbsp + '1' + nbsp + 'result'];
+
+    assert.strictEqual(plural.textContent, '1-20，共 868 条结果');
+    assert.strictEqual(singular.textContent, '1-1，共 1 条结果');
+    const api = dom.window.__MODS_ZH__;
+    assert.strictEqual(api.stats.nodes, 4, '拆分复数计数只应统计两个标签各自的 of 和结果词');
+    api.rescan();
+    assert.strictEqual(api.stats.nodes, 4, '重复扫描不得重复计数');
+    dom.window.__MODS_ZH__.setEnabled(false);
+    assert.deepStrictEqual([plural.textContent, singular.textContent], originals, '关闭后须还原原始 React 文本节点');
+    dom.window.close();
+});
+
+await test('动态筛选器、排序菜单、分页与 aria-label 被翻译', async () => {
+    const html = '<!DOCTYPE html><html><body><div id="late"></div></body></html>';
+    const dom = boot(html, 'https://thunderstore.io/c/lethal-company/');
+    const d = dom.window.document;
+    d.getElementById('late').innerHTML = `
+      <section>
+        <h2>Filters</h2><button aria-label="Close"></button>
+        <div role="combobox">Last updated</div>
+        <button aria-label="Card layout"></button><button aria-label="Content width"></button>
+        <div role="listbox"><div role="option">Newest</div><div role="option">Most downloaded</div><div role="option">Top rated</div></div>
+        <div>Sections</div><button>All</button><button>Mods</button><button>Asset Replacements</button><button>APIs &amp; Libraries</button><button>Modpacks</button>
+        <div>Other filters</div><button>Deprecated</button><button>NSFW</button>
+        <span aria-label="Last Updated">4 hours ago</span>
+        <nav aria-label="Pagination"><button>Next</button></nav>
+      </section>`;
+    await wait(300);
+    const text = d.body.textContent.replace(/\s+/g, ' ');
+
+    assert.strictEqual(d.querySelector('#late h2').textContent, '筛选器', '动态插入的 Filters 标题必须翻译');
+    for (const [expected, source] of [
+        ['最后更新', 'Last updated'], ['最新发布', 'Newest'], ['下载量最多', 'Most downloaded'],
+        ['评分最高', 'Top rated'], ['分区', 'Sections'], ['全部', 'All'], ['模组', 'Mods'],
+        ['资源替换', 'Asset Replacements'], ['API 与库', 'APIs & Libraries'], ['整合包', 'Modpacks'],
+        ['其他筛选', 'Other filters'], ['已弃用', 'Deprecated'], ['成人内容', 'NSFW'],
+        ['4 小时前', '4 hours ago'], ['下一页', 'Next'],
+    ]) assert.ok(text.includes(expected), `${source} 未翻译：${text}`);
+
+    assert.strictEqual(d.querySelector('button[aria-label="关闭"]')?.getAttribute('aria-label'), '关闭');
+    assert.strictEqual(d.querySelector('button[aria-label="卡片布局"]')?.getAttribute('aria-label'), '卡片布局');
+    assert.strictEqual(d.querySelector('button[aria-label="内容宽度"]')?.getAttribute('aria-label'), '内容宽度');
+    assert.strictEqual(d.querySelector('span[aria-label="最后更新"]')?.getAttribute('aria-label'), '最后更新');
+    assert.strictEqual(d.querySelector('nav').getAttribute('aria-label'), '分页');
+    dom.window.close();
+});
+
+await test('上传页 ZIP 校验、传输状态与结果文案均翻译且保留 UGC', async () => {
+    const dom = boot('<!DOCTYPE html><html><body><main><div id="dynamic-validation"></div></main></body></html>', 'https://thunderstore.io/package/create/');
+    const d = dom.window.document;
+    d.getElementById('dynamic-validation').innerHTML = `
+      <label>Drop ZIP file here</label><input id="category" placeholder="Select categories">
+      <p id="zip-type">Please upload a ZIP archive (application/zip).</p>
+      <p id="zip-required">Please choose a ZIP file before submitting.</p>
+      <p id="zip-errors">Please fix the problems with your .zip file before submitting.</p>
+      <p id="form-errors">Please review the form errors above and submit again.</p>
+      <p id="test-tip">If you need to test your mod, you can import it locally through the 'Import local mod' option in your mod manager's settings.</p>
+      <p id="bepinex">You have BepInEx.dll in your .zip file. BepInEx should probably be a dependency in your manifest.json file instead.</p>
+      <p id="assembly">You have Assembly-CSharp.dll in your .zip file. Your package may be removed if you do not have permission to distribute this file.</p>
+      <p id="modpack">If you're making a modpack, do not include the files for each mod in your .zip file. Instead, put the dependency string for each mod inside your manifest.json file.</p>
+      <p id="case">The file names of manifest.json, icon.png, and README.md are case-sensitive.</p>
+      <p id="extensions">Your manifest.json, icon.png, and README.md files must have the correct file extensions.</p>
+      <p id="root">Your manifest, icon, and README files should be at the root of the .zip file. You can prevent this by compressing the contents of a folder, rather than the folder itself.</p>
+      <p id="missing-extension">Your manifest.json, icon.png, or README.md file is missing its file extension.</p>
+      <p id="missing-manifest">Your package is missing a manifest.json file!</p>
+      <p id="missing-icon">Your package is missing an icon.png file!</p>
+      <p id="missing-readme">Your package is missing a README.md file!</p>
+      <p id="dll-count">You have 11 .dll files in your .zip file. Some of these files may be unnecessary.</p>
+      <p id="http-error">HTTP error: 503</p>
+      <p id="etag-error">ETAG missing on part upload: 12</p>
+      <p id="poll-error">Error polling submission status: Unknown error</p>
+      <p id="multi-upload-error">Upload failed with errors: UPLOAD_FAILED: Network error</p>
+      <p id="poll-http">Error polling submission status: HTTP error: 503</p>
+      <p id="poll-network">Error polling submission status: Network error</p>
+      <p id="multi-http">Upload failed with errors: UPLOAD_FAILED: HTTP error: 502</p>
+      <p id="multi-etag">Upload failed with errors: ETAG_MISSING: ETAG missing on part upload: 9</p>
+      <p id="upload-state">Upload already running</p><p id="unknown">Unknown error</p>
+      <div role="progressbar" aria-label="Upload progress"></div><p id="uploading">Uploading… 42%</p>
+      <p id="submitting">Submitting…</p><p id="processing">Processing…</p>
+      <button id="retry">Retry Status Check</button><span id="success">Success!</span>
+      <p id="listed">The package is listed in<!-- --> <b>2</b><!-- --> communities<!-- -->:</p>
+      <p id="listed-singular">The package is listed in<!-- --> <b>1</b><!-- --> community<!-- -->:</p>
+      <a id="view">View listing</a><span id="link">Link</span>
+      <p class="package-description" id="ugc">Your package is missing a manifest.json file!</p>`;
+    await wait(300);
+
+    const expected = [
+        ['zip-type', '请上传 ZIP 压缩包（application/zip）。'],
+        ['zip-required', '提交前请选择 ZIP 文件。'],
+        ['zip-errors', '请先修复 ZIP 文件中的问题，再提交。'],
+        ['form-errors', '请修正上方表单错误后重新提交。'],
+        ['test-tip', '如果需要测试模组，可在模组管理器设置中选择“导入本地模组”。'],
+        ['bepinex', 'ZIP 压缩包中包含 BepInEx.dll。建议在 manifest.json 中将 BepInEx 声明为依赖项。'],
+        ['assembly', 'ZIP 压缩包中包含 Assembly-CSharp.dll。若无权分发该文件，你的软件包可能会被移除。'],
+        ['modpack', '如果正在制作模组整合包，请勿将各模组文件打包进 ZIP；请在 manifest.json 中填写每个模组的依赖项字符串。'],
+        ['case', 'manifest.json、icon.png 和 README.md 文件名区分大小写。'],
+        ['extensions', 'manifest.json、icon.png 和 README.md 文件必须使用正确的扩展名。'],
+        ['root', 'manifest、icon 和 README 文件应位于 ZIP 压缩包根目录。压缩文件夹内的内容，而不是文件夹本身，即可避免此问题。'],
+        ['missing-extension', 'manifest.json、icon.png 或 README.md 文件缺少扩展名。'],
+        ['missing-manifest', '软件包缺少 manifest.json 文件！'],
+        ['missing-icon', '软件包缺少 icon.png 文件！'],
+        ['missing-readme', '软件包缺少 README.md 文件！'],
+        ['dll-count', 'ZIP 压缩包中包含 11 个 .dll 文件，其中某些可能并非必需。'],
+        ['http-error', 'HTTP 错误：503'],
+        ['etag-error', '分片 12 缺少 ETag。'],
+        ['poll-error', '查询提交状态失败：未知错误'],
+        ['multi-upload-error', '上传失败：网络错误'],
+        ['poll-http', '查询提交状态失败：HTTP 错误：503'],
+        ['poll-network', '查询提交状态失败：网络错误'],
+        ['multi-http', '上传失败：HTTP 错误：502'],
+        ['multi-etag', '上传失败：分片 9 缺少 ETag。'],
+        ['upload-state', '上传已在进行中。'],
+        ['unknown', '未知错误'],
+        ['uploading', '正在上传… 42%'],
+        ['submitting', '正在提交…'],
+        ['processing', '正在处理中…'],
+        ['retry', '重试状态检查'],
+        ['success', '成功！'],
+        ['listed', '软件包已发布到 2 个社区：'],
+        ['listed-singular', '软件包已发布到 1 个社区：'],
+        ['view', '查看软件包页面'],
+        ['link', '链接'],
+    ];
+    for (const [id, text] of expected) {
+        assert.strictEqual(d.getElementById(id).textContent.trim(), text, id + ' 翻译不匹配');
+    }
+    assert.strictEqual(d.querySelector('#dynamic-validation label').textContent.trim(), '将 ZIP 文件拖放到此处');
+    assert.strictEqual(d.querySelector('#category').getAttribute('placeholder'), '选择分类');
+    assert.strictEqual(d.querySelector('[role="progressbar"]').getAttribute('aria-label'), '上传进度');
+    assert.strictEqual(d.getElementById('ugc').textContent, 'Your package is missing a manifest.json file!', '用户描述不应翻译');
+    dom.window.__MODS_ZH__.setEnabled(false);
+    assert.strictEqual(d.getElementById('listed').textContent, 'The package is listed in 2 communities:');
+    assert.strictEqual(d.getElementById('listed-singular').textContent, 'The package is listed in 1 community:');
+    dom.window.close();
+});
+
 await test('动态插入节点被 MutationObserver 接管', async () => {
     const dom = boot(TS_HTML, 'https://thunderstore.io/c/gtfo/');
     const d = dom.window.document;
