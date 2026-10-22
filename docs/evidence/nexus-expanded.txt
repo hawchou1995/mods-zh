@@ -1,0 +1,236 @@
+# Nexus Mods expanded fixed-UI snapshot — 2026-10-22
+# Route families: games, game, browse, collection, media, news, mod, forums, support, account.
+# Captured fixed controls and fixed enums only; no game/mod/user names, article titles, posts, descriptions, or entered values.
+# wiki.nexusmods.com returned HTTP 403; no wiki-specific strings are included.
+
+# --- global navigation and footer ---
+Media
+Community
+Support
+Search/
+Upload
+Show notifications
+View messages
+Unread notifications
+Open profile menu
+Open navigation menu
+Close navigation menu
+Discover
+Network stats
+Support Nexus Mods
+Try premium for free
+Statistics
+Careers
+About us
+Premium features
+Terms of Service
+Privacy Policy
+Served in 0.571s
+
+# --- games directory ---
+All games
+Game genre
+Game genre search
+Search game
+Vortex Support
+No. of mods
+No. of collections
+Downloads
+Action
+Adventure
+ARPG
+Dungeon crawl
+Fighting
+FPS
+Hack and Slash
+Horror
+Indie
+Metroidvania
+MMORPG
+Music
+Platformer
+Puzzle
+Racing
+Roguelike
+RPG
+Sandbox
+Simulation
+Space sim
+Sports
+Stealth
+Strategy
+Survival
+Third-Person Shooter
+Visual Novel
+VR
+
+# --- game home ---
+No. of endorsements
+Trending Mods
+Latest news
+View all
+View more
+Updated
+Surprise
+All time
+
+# --- mod browse ---
+Hide filters
+Show filters
+Category
+Tags
+Search parameters
+Language support
+Content options
+File size
+Filter
+Sort
+Desc
+to
+Previous page
+Next page
+Go
+Page
+Game version
+Badge
+
+# --- collections ---
+All collections
+Game
+Show games
+Search game
+Essentials (472)
+Miscellaneous (598)
+Themed (496)
+Official (5)
+Top Pick (10)
+Included Mods
+Collection (4,843)
+Wabbajack list (26)
+Adult Content
+
+# --- media ---
+Aesthetics (114,405)
+Combat (4,243)
+Funny (4,543)
+Misc (45,290)
+Narrative (6,156)
+Poses (25,776)
+Screenshot Community Event #18 (3,243)
+General
+Personal Showcase
+Interview
+Review
+Story Driven
+Tutorial
+
+# --- news ---
+News & Updates
+Jump
+All time
+24 hrs
+7 days
+14 days
+30 days
+1 year
+Range...
+From
+To
+Recent
+Last Comment
+Asc
+Desc
+20 items
+40 items
+60 items
+80 items
+Learn more
+
+# --- mod detail ---
+Exclusive media content and more
+File information
+Credits and distribution permission
+Author notes
+File credits
+Donation Points system
+See who endorsed this mod
+Link a new video
+Tracking
+Endorse
+Vote
+
+# --- forums fixed controls and board names ---
+Existing user? Sign In
+Browse
+Game Communities
+Forums
+Online Users
+Guidelines
+Staff
+Search
+Events
+Activity
+Explore
+Search...
+Everywhere
+Topics
+Members
+Community Activity
+Popular Game Communities
+Active Topics
+Tell a friend
+Email
+Share
+Contact Us
+Cookies
+Site Updates
+Projects
+Site Support
+Vortex Support
+Mod Troubleshooting
+Mod Ideas
+Modding Academy
+Articles and Guides
+Newbies
+General Chat
+Gaming
+Hardware and software discussion
+Off-Topic
+Formal Warnings, Bans and Takedowns
+
+# --- help center and API docs fixed controls ---
+Search the knowledge base
+Policies and Guidelines
+Frequently Asked Questions
+Account Settings
+Website Features
+Overview
+collections
+mod-bugs
+mod-files
+mods
+vortex
+Download
+Legacy APIs
+API Stability
+Upcoming Changes
+Request samples
+Response samples
+Responses
+PATH PARAMETERS
+QUERY PARAMETERS
+REQUEST BODY SCHEMA:
+Content type
+Copy
+Expand all
+Collapse all
+AUTHORIZATIONS:
+I want to
+upload a mod
+
+# --- account form ---
+Email or Username
+Forgot your Password?
+Need an account?
+Register here
+Sign out

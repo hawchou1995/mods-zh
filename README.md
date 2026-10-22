@@ -4,8 +4,8 @@
 
 只翻界面，不碰内容：模组名称、作者、描述正文、评论、文件名一律保持英文原样 —— 这些是你要复制去搜索、对比、报错的东西，翻了只会碍事。
 
-- 词条：**459 条分组映射**（Thunderstore 206 / Nexus Mods 253），**40 组**正则；覆盖社区动态筛选、上传校验、详情与 Required 依赖页
-- 覆盖：`thunderstore.io`、`www.nexusmods.com`、`nexusmods.com`、`users.nexusmods.com`
+- 词条：**677 个去重原文键**（Thunderstore 201 / Nexus Mods 476），**45 组**动态规则（17 / 28）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
+- 覆盖：`thunderstore.io`；Nexus Mods 根域及 `www`、`next`、`forums`、`help`、`api-docs`、`users` 一方子域路由
 - 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
 - 当前发布版本：`v1.0.3`
 
@@ -63,7 +63,7 @@ mods-zh/
 
 ## 引擎怎么工作
 
-1. `detectSite()` 按 `location.hostname` 选站点，`currentPage()` 按 `pathname` 选页型（如 Thunderstore 的 `community` / `package`、Nexus 的 `browse` / `mod`）
+1. `detectSite()` 按 `location.hostname` 选站点，`currentPage()` 按 `pathname` 选页型（Nexus：`home` / `games` / `game` / `browse` / `mod` / `collection` / `media` / `news` / `forums` / `support` / `account`）
 2. 合并 `global` + 页型词条成一张 Map，正则组单列
 3. `TreeWalker` 遍历文本节点，归一化空白后查表；精确命中优先，其次正则；命中即写回，保留原有前后空白
 4. `MutationObserver` + 80ms 防抖接管动态渲染的节点；写入用 `State.writing` 标记，且译文本身不会再命中字典，因此扫描天然幂等、不会被自身写入喂成死循环
@@ -77,7 +77,7 @@ mods-zh/
 ```bash
 npm install
 npm run build      # src/ → dist/mods-zh.user.js
-npm test           # 15 条最小 DOM 测试 + 9 条 jsdom 测试
+npm test           # 18 条最小 DOM 测试 + 24 条 jsdom 测试
 npm run coverage   # 对照 docs/evidence/ 快照算词条覆盖率
 npm run verify     # 以上全套
 ```
@@ -97,10 +97,10 @@ npm run verify     # 以上全套
 
 ## 已知限制
 
-- **`next.nexusmods.com`（新版 Beta 前端）未纳入**：DOM 还在变，等稳定后再加，避免词条一半命中一半不命中
+- **Wiki 页面未验证**：`wiki.nexusmods.com` 于 2026-10-22 返回 HTTP 403，因此没有加入 Wiki 专属词条；`www.nexusmods.com/community` 与 `/support` 实测为 404，社区与支持页按 `forums` / `help` 一方子域路由处理
 - **Thunderstore 旧站 / Legacy 页面未纳入**：现行 `thunderstore.io` 已覆盖全部主要路径
 - 词条按取证到的原文**精确匹配**：站点改文案（哪怕加一个句号）就会漏翻，需要按上面的流程补词条 —— 这是文本驱动方案的代价，也是它抗改版的原因
-- 词条快照抓取于 2026-10-20；Nexus 用的是 2026 版新前端页面
+- Nexus 基线快照抓取于 2026-10-20，扩展固定 UI 快照抓取于 2026-10-22；Nexus 快照覆盖 440/440 行（100%），Thunderstore 快照覆盖 303/303 行（100%）
 
 ## 许可
 

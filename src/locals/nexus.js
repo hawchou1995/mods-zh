@@ -20,6 +20,35 @@ function nxMonth(token) {
     return 0;
 }
 
+const NX_COUNTED_LABELS = Object.freeze({
+    'Essentials': '必备',
+    'Miscellaneous': '杂项',
+    'Themed': '主题',
+    'Official': '官方',
+    'Top Pick': '精选',
+    'Collection': '合集',
+    'Wabbajack list': 'Wabbajack 列表',
+    'Aesthetics': '美学',
+    'Combat': '战斗',
+    'Funny': '搞笑',
+    'Misc': '杂项',
+    'Narrative': '叙事',
+    'Poses': '姿势',
+    'General': '综合',
+    'Personal Showcase': '个人展示',
+    'Interview': '访谈',
+    'Review': '评测',
+    'Story Driven': '剧情向',
+});
+
+function nxCountedLabel(all, label, count) {
+    if (Object.prototype.hasOwnProperty.call(NX_COUNTED_LABELS, label)) {
+        return NX_COUNTED_LABELS[label] + ' (' + count + ')';
+    }
+    const event = label.match(/^Screenshot Community Event #(\d+)$/);
+    return event ? '截图社区活动 #' + event[1] + ' (' + count + ')' : all;
+}
+
 SITES.push({
     id: 'nexus',
     name: 'Nexus Mods',
@@ -36,18 +65,30 @@ SITES.push({
         '[class*="comment"]', '[class*="Comment"]',
         '[class*="markdown"]', '[class*="prose"]',
         '[class*="mod-title"]', '[class*="file-name"]',
+        '[href*="/games/"]', '[href*="/collections/"]', '[href*="/images/"]', '[href*="/videos/"]',
+        '[href*="/topic/"]', '[class*="featured-article"]',
+        '.ipsType_richText',
+        '.ipsDataItem_lastPoster',
+        '.ipsDataItem_lastPoster__title',
+        'a.ipsDataItem_title[href*="/topic/"]',
         'script', 'style', 'noscript',
     ].join(','),
 
     detect(path, host) {
         if (host.indexOf('users.nexusmods.com') === 0) return 'account';
+        if (host.indexOf('forums.nexusmods.com') === 0) return 'forums';
+        if (host.indexOf('help.nexusmods.com') === 0 || host.indexOf('wiki.nexusmods.com') === 0 || host.indexOf('api-docs.nexusmods.com') === 0) return 'support';
         if (path === '/' || path === '') return 'home';
         if (/^\/games\/[^/]+\/mods\/\d+/.test(path)) return 'mod';
         if (/^\/[^/]+\/mods\/\d+/.test(path)) return 'mod';          // 旧版详情页
         if (/^\/games\/[^/]+\/mods\/?$/.test(path)) return 'browse';
+        if (/^\/games\/[^/]+\/collections(?:\/|$)/.test(path)) return 'collection';
+        if (/^\/games\/[^/]+\/(?:images|videos)(?:\/|$)/.test(path)) return 'media';
         if (/^\/games\/?$/.test(path)) return 'games';
         if (/^\/games\/[^/]+\/?$/.test(path)) return 'game';
-        if (path.indexOf('/collections') === 0) return 'collection';
+        if (/^\/collections(?:\/|$)/.test(path)) return 'collection';
+        if (/^\/(?:images|videos)(?:\/|$)/.test(path)) return 'media';
+        if (/^\/news(?:\/|$)/.test(path)) return 'news';
         if (path.indexOf('/users/') === 0) return 'account';
         return 'global';
     },
@@ -68,6 +109,72 @@ SITES.push({
             'SUPPORT': '支持',
             'WIKI': 'WIKI',
             'VORTEX': 'VORTEX',
+            'Media': '媒体',
+            'Community': '社区',
+            'Support': '支持',
+            'Search/': '搜索 /',
+            'Search /': '搜索 /',
+            'Upload': '上传',
+            'Show notifications': '显示通知',
+            'View messages': '查看消息',
+            'Unread notifications': '未读通知',
+            'Discover': '发现',
+            'Network stats': '站点数据',
+            'Support Nexus Mods': '支持 NEXUS MODS',
+            'Try premium for free': '免费试用高级版',
+            'Try Premium for free': '免费试用高级版',
+            'Join us on Discord': '加入 Discord',
+            'Follow us on X': '关注 X',
+            'Follow us on Twitter': '关注 Twitter',
+            'Follow us on TikTok': '关注 TikTok',
+            'Follow us on Twitch': '关注 Twitch',
+            'Follow us on Youtube': '关注 YouTube',
+            'Follow us on YouTube': '关注 YouTube',
+            'Home': '首页',
+            'Browse': '浏览',
+            'Search': '搜索',
+            'Search...': '搜索…',
+            'Sign In': '登录',
+            'Sign Up': '注册',
+            'Existing user?': '已有账号？',
+            'Game Communities': '游戏社区',
+            'Online Users': '在线用户',
+            'Guidelines': '指南',
+            'Staff': '工作人员',
+            'Events': '活动',
+            'Activity': '动态',
+            'Explore': '探索',
+            'Popular Game Communities': '热门游戏社区',
+            'Active Topics': '活跃主题',
+            'Tell a friend': '推荐给朋友',
+            'Email': '邮箱',
+            'Share': '分享',
+            'Contact Us': '联系我们',
+            'Cookies': 'Cookie 设置',
+            'Sign out': '退出登录',
+            'Trending Mods': '趋势模组',
+            'Latest news': '最新消息',
+            'View all': '查看全部',
+            'View more': '查看更多',
+            'Updated': '已更新',
+            'Popular': '热门',
+            'Surprise': '随机',
+            'All time': '所有时间',
+            'Downloads': '下载量',
+            'Sort by': '排序依据',
+            'Sort direction': '排序方向',
+            'Time': '时间',
+            'Filter': '筛选',
+            'Sort': '排序',
+            'Page': '页码',
+            'Previous page': '上一页',
+            'Next page': '下一页',
+            'Games per page': '每页游戏数',
+            'Mods per page': '每页模组数',
+            'Collections per page': '每页合集数',
+            'Media per page': '每页媒体数',
+            'Asc': '升序',
+            'Desc': '降序',
 
             /* 导航下拉项 */
             'All games': '所有游戏',
@@ -162,19 +269,222 @@ SITES.push({
             'Server info': '服务器信息',
             'Terms of Service': '服务条款',
             'Privacy Policy': '隐私政策',
+            'Kudos': '赞许',
         },
 
         /* ---------------- 首页 ---------------- */
         home: {
             'Browse the internet\'s best mods': '浏览全网最优秀的模组',
+            'Welcome back,': '欢迎回来，',
+            'My Games': '我的游戏',
+            'My games': '我的游戏',
+            'Tracking Centre': '追踪中心',
+            'Tracking centre': '追踪中心',
+            'Download history': '下载历史记录',
+            'My content': '我的内容',
+            'Add game': '添加游戏',
+            'Hot Collections': '热门合集',
+            'Get fast downloads with premium': '开通会员，下载更快',
+            'Try Premium free': '免费试用 Premium',
+            'Free Premium': '免费会员',
+            'Cash payouts': '现金报酬',
+            'Make mods. Earn rewards. Cash payouts': '创作模组，赢取奖励并获得现金报酬',
         },
 
+        /* ---------------- 游戏目录 ---------------- */
+        games: {
+            'GAME': '游戏',
+            'Game': '游戏',
+            'GAME GENRE': '游戏类型',
+            'Game genre': '游戏类型',
+            'Game genre search': '搜索游戏类型',
+            'Search game': '搜索游戏',
+            'Show games': '显示游戏',
+            'Choose from': '可供选择',
+            'games': '款游戏',
+            'to mod': '以便修改',
+            'Affiliate link': '联盟链接',
+            'Get games to mod, cheaper.': '更便宜地购买可添加模组的游戏。',
+            'Discover offers': '探索优惠',
+            'Vortex Support': 'Vortex 支持',
+            'VORTEX SUPPORT': 'Vortex 支持',
+            'No. of mods': '模组数',
+            'No. of collections': '合集数',
+            'Action': '动作',
+            'Adventure': '冒险',
+            'ARPG': '动作角色扮演',
+            'Dungeon crawl': '地牢探索',
+            'Fighting': '格斗',
+            'FPS': '第一人称射击',
+            'Hack and Slash': '砍杀',
+            'Horror': '恐怖',
+            'Indie': '独立游戏',
+            'Metroidvania': '银河恶魔城',
+            'MMORPG': '大型多人在线角色扮演',
+            'Music': '音乐',
+            'Platformer': '平台跳跃',
+            'Puzzle': '解谜',
+            'Racing': '赛车',
+            'Roguelike': '肉鸽',
+            'RPG': '角色扮演',
+            'Sandbox': '沙盒',
+            'Simulation': '模拟',
+            'Space sim': '太空模拟',
+            'Sports': '体育',
+            'Stealth': '潜行',
+            'Strategy': '策略',
+            'Survival': '生存',
+            'Third-Person Shooter': '第三人称射击',
+            'Visual Novel': '视觉小说',
+            'VR': 'VR',
+        },
+
+        /* ---------------- 游戏主页 /games/<game> ---------------- */
+        game: {
+            'No. of endorsements': '认可数',
+            'Mods filter': '模组筛选',
+            'Media filter': '媒体筛选',
+        },
+
+        /* ---------------- 合集列表与详情 ---------------- */
+        collection: {
+            'All collections': '所有合集',
+            'Hide filters': '收起筛选',
+            'Show filters': '展开筛选',
+            'Game': '游戏',
+            'Search game': '搜索游戏',
+            'Show games': '显示游戏',
+            'Game version': '游戏版本',
+            'Category': '分类',
+            'Essentials': '必备',
+            'Miscellaneous': '杂项',
+            'Themed': '主题',
+            'Badge': '徽章',
+            'Official': '官方',
+            'Top Pick': '精选',
+            'Included Mods': '包含的模组',
+            'Collection': '合集',
+            'Wabbajack list': 'Wabbajack 列表',
+            'Tags': '标签',
+            'Adult Content': '成人内容',
+            'Hide adult content': '隐藏成人内容',
+            'Highest rated': '评分最高',
+            'Collections per page': '每页合集数',
+        },
+
+        /* ---------------- 图片与视频列表 ---------------- */
+        media: {
+            'Hide filters': '收起筛选',
+            'Show filters': '展开筛选',
+            'Category': '分类',
+            'Aesthetics': '美学',
+            'Combat': '战斗',
+            'Funny': '搞笑',
+            'Misc': '杂项',
+            'Narrative': '叙事',
+            'Poses': '姿势',
+            'Content options': '内容选项',
+            'Sort direction': '排序方向',
+            'Media per page': '每页媒体数',
+            'Recently added': '最近添加',
+            'General': '综合',
+            'Personal Showcase': '个人展示',
+            'Interview': '访谈',
+            'Review': '评测',
+            'Story Driven': '剧情向',
+        },
+
+        /* ---------------- 新闻 ---------------- */
+        news: {
+            'News & Updates': '新闻与动态',
+            'Jump': '跳转',
+            '24 hrs': '24 小时',
+            '7 days': '7 天',
+            '14 days': '14 天',
+            '30 days': '30 天',
+            '1 year': '1 年',
+            'Range...': '自选范围…',
+            'From': '起始日期',
+            'To': '截止日期',
+            'Recent': '最近',
+            'Title': '标题',
+            'Author': '作者',
+            'Last Comment': '最新评论',
+            'Learn more': '了解更多',
+            'Competition': '竞赛',
+            'Feature': '专题',
+            'Site News': '站点新闻',
+            'Mod News': '模组新闻',
+        },
+
+        /* ---------------- Help Center / API Docs ---------------- */
+        support: {
+            'Search the knowledge base': '搜索知识库',
+            'Policies and Guidelines': '政策与指南',
+            'Frequently Asked Questions': '常见问题',
+            'Account Settings': '账号设置',
+            'Website Features': '网站功能',
+            'Overview': '概览',
+            'collections': '合集',
+            'mod-bugs': '模组缺陷',
+            'mod-files': '模组文件',
+            'mods': '模组',
+            'vortex': 'Vortex',
+            'Download': '下载',
+            'Legacy APIs': '旧版 API',
+            'API Stability': 'API 稳定性',
+            'Upcoming Changes': '即将变更',
+            'Request samples': '请求示例',
+            'Response samples': '响应示例',
+            'Responses': '响应',
+            'PATH PARAMETERS': '路径参数',
+            'QUERY PARAMETERS': '查询参数',
+            'REQUEST BODY SCHEMA:': '请求正文架构：',
+            'Content type': '内容类型',
+            'Copy': '复制',
+            'Expand all': '全部展开',
+            'Collapse all': '全部折叠',
+            'AUTHORIZATIONS:': '授权：',
+            'I want to': '我想要',
+            'upload a mod': '上传模组',
+        },
+
+        /* ---------------- Nexus Mods Forums ---------------- */
+        forums: {
+            'Nexus Mods Hub': 'Nexus Mods 中心',
+            'Existing user? Sign In': '已有账号？登录',
+            'Topics': '主题',
+            'Everywhere': '全站',
+            'Community Activity': '社区动态',
+            'Site Updates': '网站更新',
+            'Projects': '项目',
+            'Site Support': '站点支持',
+            'Vortex Support': 'Vortex 支持',
+            'Mod Troubleshooting': '模组故障排查',
+            'Mod Ideas': '模组创意',
+            'Modding Academy': '模组制作学院',
+            'Articles and Guides': '文章与指南',
+            'Newbies': '新人专区',
+            'General Chat': '综合聊天',
+            'Gaming': '游戏讨论',
+            'Hardware and software discussion': '硬件与软件讨论',
+            'Off-Topic': '闲聊',
+            'Formal Warnings, Bans and Takedowns': '正式警告、封禁与下架',
+            'Nexus Mods app': 'Nexus Mods 应用',
+        },
         /* ---------------- 模组浏览页 /games/<game>/mods ---------------- */
         browse: {
             'Home': '首页',
             'Browse the internet\'s best mods': '浏览全网最优秀的模组',
             'Hide filters': '收起筛选',
             'Show filters': '展开筛选',
+            'Category': '分类',
+            'Tags': '标签',
+            'Search parameters': '搜索参数',
+            'Language support': '语言支持',
+            'Content options': '内容选项',
+            'File size': '文件大小',
+            'to': '至',
             'CATEGORY': '分类',
             'TAGS': '标签',
             'Includes': '包含',
@@ -286,6 +596,17 @@ SITES.push({
         /* ---------------- 模组详情页 ---------------- */
         mod: {
             'Details': '详情',
+            'Exclusive media content and more': '独家媒体内容及更多',
+            'File information': '文件信息',
+            'Credits and distribution permission': '致谢与分发许可',
+            'Author notes': '作者说明',
+            'File credits': '文件鸣谢',
+            'Donation Points system': '捐赠点数系统',
+            'See who endorsed this mod': '查看认可此模组的用户',
+            'Link a new video': '关联新视频',
+            'Tracking': '追踪',
+            'Endorse': '认可',
+            'Vote': '投票',
             'Endorsements': '认可数',
             'Unique DLs': '独立下载',
             'Total DLs': '总下载',
@@ -325,6 +646,10 @@ SITES.push({
         /* ---------------- 账号页 users.nexusmods.com ---------------- */
         account: {
             'Email': '邮箱',
+            'Email or Username': '邮箱或用户名',
+            'Forgot your Password?': '忘记密码？',
+            'Need an account?': '还没有账号？',
+            'Register here': '在此注册',
             'Password': '密码',
             'Forgot password?': '忘记密码？',
             'Remember me': '记住我',
@@ -375,6 +700,9 @@ SITES.push({
         [/^(\d+)\s*month(s)? ago$/i, '$1 个月前'],
         [/^(\d+)\s*year(s)? ago$/i, '$1 年前'],
 
+        [/^(.+) \(([\d,]+)\)$/, nxCountedLabel],
+        [/^([\d,]+) items$/, '每页 $1 项'],
+        [/^Screenshot Community Event #(\d+)$/, '截图社区活动 #$1'],
         // "20 Oct 2026"
         [/^(\d{1,2}) ([A-Z][a-z]{2}) (\d{4})$/, (all, d, mon, y) => {
             const m = nxMonth(mon);
@@ -388,5 +716,8 @@ SITES.push({
             if (ap.toUpperCase() === 'PM') h += 12;
             return y + '年' + m + '月' + parseInt(d, 10) + '日 ' + (h < 10 ? '0' + h : h) + ':' + mm;
         }],
+        // Dynamic UI labels preserve the numeric value and game name.
+        [/^Served in ([\d.]+|--)s$/, '服务器响应耗时 $1 秒'],
+        [/^Bookmark (.+)$/, '收藏 $1'],
     ],
 });

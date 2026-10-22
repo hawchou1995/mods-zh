@@ -162,7 +162,8 @@ function translateAttributes(el) {
         if (!key) continue;
         const hit = lookup(key);
         if (!hit || hit === key) continue;
-        if (isIgnored(el.parentElement)) continue;
+        // Also honor ignore selectors on the attribute host itself, without suppressing textarea placeholders.
+        if ((isIgnored(el) && el.tagName !== 'TEXTAREA') || isIgnored(el.parentElement)) continue;
         if (!State.originals.has(el)) State.originals.set(el, raw);
         el.setAttribute(attr, hit);
         changed = true;

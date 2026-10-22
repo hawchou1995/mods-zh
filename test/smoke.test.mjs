@@ -40,7 +40,7 @@ function auditLocals() {
     for (const rel of ['src/locals/_registry.js', 'src/locals/thunderstore.js', 'src/locals/nexus.js']) {
         vm.runInContext(readFileSync(join(ROOT, rel), 'utf8'), ctx, { filename: rel });
     }
-    return vm.runInContext('SITES.map(s => ({ id: s.id, dict: s.dict, patterns: s.patterns || [] }))', ctx);
+    return vm.runInContext('SITES.map(s => ({ id: s.id, dict: s.dict, patterns: s.patterns || [], ignore: s.ignore || "" }))', ctx);
 }
 
 const sites = auditLocals();
@@ -92,6 +92,12 @@ test('Thunderstore 动态长文本正则均完整锚定', () => {
     const unanchored = ts.patterns.filter(([re]) => !re.source.startsWith('^') || !re.source.endsWith('$'));
     assert.strictEqual(unanchored.length, 0, '长正则必须完整锚定，避免改写正文片段');
 });
+test('Nexus 动态界面规则均完整锚定', () => {
+    const nx = sites.find(s => s.id === 'nexus');
+    assert.ok(nx);
+    const unanchored = nx.patterns.filter(([re]) => !re.source.startsWith('^') || !re.source.endsWith('$'));
+    assert.strictEqual(unanchored.length, 0, 'Nexus 动态规则必须完整锚定');
+});
 test('词条总数 >= 200（去重后）', () => {
     let total = 0;
     for (const s of sites) {
@@ -100,6 +106,20 @@ test('词条总数 >= 200（去重后）', () => {
         total += keys.size;
     }
     assert.ok(total >= 200, '实际 ' + total);
+});
+test('Nexus audited route dictionaries and forum UGC guards are registered', () => {
+    const nx = sites.find(s => s.id === 'nexus');
+    assert.ok(nx, 'Nexus site registration');
+    for (const page of ['home', 'games', 'game', 'browse', 'mod', 'collection', 'media', 'news', 'forums', 'support', 'account']) {
+        assert.ok(nx.dict[page], `missing Nexus dictionary group: ${page}`);
+    }
+    assert.strictEqual(nx.dict.collection.Miscellaneous, '杂项');
+    assert.strictEqual(nx.dict.media.Funny, '搞笑');
+    assert.strictEqual(nx.dict.mod['File information'], '文件信息');
+    assert.strictEqual(nx.dict.account['Email or Username'], '邮箱或用户名');
+    for (const selector of ['.ipsType_richText', '.ipsDataItem_lastPoster', '.ipsDataItem_lastPoster__title', 'a.ipsDataItem_title[href*="/topic/"]']) {
+        assert.ok(nx.ignore.includes(selector), `missing forum UGC guard: ${selector}`);
+    }
 });
 test('同站跨页型同键不得给出不同译法', () => {
     for (const s of sites) {
