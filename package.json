@@ -1,6 +1,6 @@
 {
   "name": "mods-zh",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Thunderstore & Nexus Mods 界面中文化油猴脚本（单文件构建）",
   "private": true,
   "type": "module",

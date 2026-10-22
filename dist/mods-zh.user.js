@@ -2,7 +2,7 @@
 // @name         Thunderstore & Nexus Mods 中文化
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
-// @version      1.0.3
+// @version      1.0.4
 // @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
 // @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
@@ -27,7 +27,7 @@
 (function () {
     'use strict';
 
-    const VERSION = "1.0.3";
+    const VERSION = "1.0.4";
 
 /* =============================================================================
  * _registry.js —— 站点注册表
