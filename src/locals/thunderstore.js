@@ -19,17 +19,44 @@ SITES.push({
     ignore: [
         'pre', 'code', 'kbd', 'textarea', '[contenteditable="true"]',
         '[class*="markdown"]', '[class*="Markdown"]',
-        '[class*="package-name"]', '[class*="PackageName"]',
+        /* 模组名/包名属 UGC：即使与界面词条同串（例如模组就叫 Libraries）也不翻 */
+        '[class*="package-name"]', '[class*="PackageName"]', '[class*="card-package__title"]',
         '[class*="author"]', '[class*="Author"]',
         '[class*="description"]', '[class*="Description"]',
         '[class*="changelog"]', '[class*="Changelog"]',
         'script', 'style', 'noscript',
     ].join(','),
 
+    /* 面包屑末段是非链接 <span class="breadcrumbs__segment">，同一个 class 有两种含义：
+     *   作者页 → 作者名、包详情 → 包名、社区页 → 社区/游戏名：UGC，整棵跳过；
+     *   社区总览 /communities/ → "Communities"、上传页 /package/create/ → "Upload"、
+     *   工具页 /tools/markdown-preview|manifest-v1-validator/ → 同名固定 UI：必须翻译。
+     * 因此只在名称型页型上加这条保护，不做全局 ignore（全局会让上面几页退回英文）。
+     * 中间层级的固定项（Communities / 社区名）是 <a>，不在保护范围内。 */
+    ignorePages: {
+        author: 'span.breadcrumbs__segment',
+        package: 'span.breadcrumbs__segment',
+        community: 'span.breadcrumbs__segment',
+    },
+
+    /* 作者列表页 /c/<社区>/p/<作者>/ 的筛选器、展示控件、排序与卡片外壳
+     * 与社区列表页是同一套组件（PackageSearch），词条直接复用 community 组。 */
+    /* 页头“Mods uploaded by <作者名>”：React 注释拆成两个文本节点，
+     * 作者名可能是 Misc / Tools / All 这类与界面词条同串的值（实测 /c/riskofrain2/p/Misc/），
+     * 只翻前缀，名称节点整节点保护。单文本节点形态同样只替换前缀片段。 */
+    namePrefixes: [
+        { selector: '.page-header__heading', re: /^(?:Mods uploaded by|上传者)\s+(.+)$/, from: 'Mods uploaded by', to: '上传者' },
+    ],
+
+    alias: { author: 'community' },
+
     detect(path) {
         if (path === '/' || path === '') return 'home';
         if (path.indexOf('/communities') === 0) return 'communities';
         if (path.indexOf('/package/create') === 0) return 'upload';
+        // 作者列表页：/c/<社区>/p/<作者>/（无包名段）。此前落到 global，
+        // 导致筛选器与卡片徽标只剩 global 词条可用。
+        if (/^\/c\/[^/]+\/p\/[^/]+\/?$/.test(path)) return 'author';
         // 包相关页：/c/<社区>/p/<作者>/<包名>[/required|/wiki|/changelog|/versions|/source|/dependants]
         if (/^\/c\/[^/]+\/p\/[^/]+\/[^/]+\//.test(path) ||
             /^\/c\/[^/]+\/p\/[^/]+\/[^/]+$/.test(path)) return 'package';
@@ -44,6 +71,7 @@ SITES.push({
             'Communities': '社区',
             'Upload package': '上传包',
             'Search Mods...': '搜索模组…',
+            'Search mods': '搜索模组',
             'Search': '搜索',
             'Developers': '开发者',
             'Switch to legacy': '切换到旧版',
@@ -162,6 +190,27 @@ SITES.push({
             'Modding Discord': '模组 Discord',
             'Card layout': '卡片布局',
             'Content width': '内容宽度',
+            /* 展示控件下拉菜单：thunderstore PackageSearch 常量
+             * header 为 Cards / View，选项 label 为 Grid / List 与 Compact / Wide；
+             * 菜单由 Radix portal 在点开时才挂到 body，靠 MutationObserver 接管。 */
+            'Cards': '卡片',
+            'Grid': '网格',
+            'List': '列表',
+            'View': '视图',
+            'Compact': '紧凑',
+            'Wide': '宽屏',
+            /* 列表空态（PackageSearch bundle 字面 + 真实 SSR）：
+             * <p class="package-count">No results</p>
+             * <span class="empty-state__title">It's empty in here</span>
+             * <span class="empty-state__message">Team <名称> hasn't uploaded any mods …</span>
+             * 团队名走 patterns 的完整锚定规则，只换模板文字。 */
+            'No results': '没有结果',
+            'No results found': '没有找到结果',
+            "It's empty in here": '空空如也',
+            'Be the first to upload a mod!': '成为第一个上传模组的人！',
+            'Make sure all keywords are spelled correctly or try different search parameters.':
+                '请确认所有关键词拼写正确，或尝试不同的搜索条件。',
+            'Clear all filters': '清除所有筛选',
             'Newest': '最新发布',
             'Most downloaded': '下载量最多',
             'Top rated': '评分最高',
@@ -203,6 +252,14 @@ SITES.push({
             'Vehicles': '载具',
             'TV Videos': '电视视频',
             'Weather': '天气',
+        },
+
+        /* ---------------- 作者列表页 /c/<社区>/p/<作者>/ ---------------- */
+        author: {
+            /* 页头 React 注释把前缀和作者名拆成两个文本节点
+             * （<h1>Mods uploaded by <!-- -->Kaldea</h1>），这里只翻前缀；
+             * 单节点形式由 patterns 里的完整锚定规则处理，作者名都保持原文。 */
+            'Mods uploaded by': '上传者',
         },
 
         /* ---------------- 包详情页 ---------------- */
@@ -306,8 +363,16 @@ SITES.push({
 
     /* ---------------- 正则组 ---------------- */
     patterns: [
+        // "Mods uploaded by Kaldea"（页头若被渲染成单个文本节点）：与拆节点形态统一为「上传者 <名称>」，
+        // 名称原字节返回（函数式替换，避免名称里的 $ 被当成替换语法解析）
+        [/^Mods uploaded by (.+)$/, (_match, name) => '上传者 ' + name],
+        // "Team Misc hasn't uploaded any mods for this community yet."：只换模板文字，团队名原样保留
+        [/^Team (.+) hasn['\u2019]t uploaded any mods for this community yet\.$/,
+            (_match, team) => '团队 ' + team + ' 还没有为该社区上传任何模组。'],
         // "1-20 of 19588 results"
         [/^(\d[\d,]*)-(\d[\d,]*) of ([\d,]+) results?$/, '$1-$2，共 $3 条结果'],
+        // "1 of 1 result" / "21 of 21 results"（末页或仅一条，数字不带区间）：单文本节点形态
+        [/^(\d[\d,]*) of (\d[\d,]*) results?$/, '$1，共 $2 条结果'],
         // "19588 results"
         [/^([\d,]+) results?$/, '共 $1 条结果'],
         // "Required (0)"

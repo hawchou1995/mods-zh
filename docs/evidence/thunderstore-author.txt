@@ -1,0 +1,63 @@
+# Thunderstore 作者列表页界面文本快照 —— 2026-10-26 抓取
+# 来源页：
+#   https://thunderstore.io/c/gtfo/p/Kaldea/
+#   https://thunderstore.io/c/gtfo/p/Kaldea/?deprecated=true   （用户截图中的“弃用筛选已启用”状态）
+#   https://thunderstore.io/c/riskofrain2/p/Misc/             （作者名恰好等于界面词条 Misc + 空列表态）
+#   https://thunderstore.io/c/riskofrain2/p/Tools/ 与 /p/All/  （同上，交叉核对同串作者名）
+# 抓取方式：curl 直取服务端 SSR HTML（HTTP 200），界面文案取自文本节点；
+# 展示控件菜单项的原文取自同源 bundle /assets/PackageSearch-*.js 的常量
+# （header:"Cards"/"View"，options label: Grid/List 与 Compact/Wide）。
+# 只收界面元素；作者名、模组名、描述正文与输入值属 UGC，不入快照。
+# --- 页头：React 注释把 “Mods uploaded by ” 与作者名拆成两个文本节点 ---
+Mods uploaded by
+# --- 左侧筛选器：Sections / Categories / Other filters（GTFO 分类枚举 + 弃用状态）---
+Sections
+All
+Categories
+Client Mods
+Dev Tools
+Libraries
+Modpacks
+Rundown Mods
+Rundowns
+Other filters
+Deprecated
+NSFW
+# --- 展示控件下拉菜单（Radix portal，点开才挂载）---
+Cards
+Grid
+List
+View
+Compact
+Wide
+# --- 列表/卡片控件与可访问标签 ---
+Pinned
+Search Mods...
+Search mods
+Card layout
+Content width
+Last Updated
+# --- 动态文本（正则组覆盖）---
+# /c/gtfo/p/Kaldea/ 只有 1 个结果时（顶部与底部分页各一处）：
+#   <p class="package-count"><b>1 </b>\u00a0of\u00a0<b>1</b>\u00a0result</p>
+# 末页只剩 1 项时同样的无区间形态、但单复数不同（bundle: a===1 ? "" : "s"）
+1-3 of 3 results
+1 of 1 result
+21 of 21 results
+2 days ago
+3 weeks ago
+# --- 真实 /c/riskofrain2/p/Misc/：面包屑末段是非链接 <span class="breadcrumbs__segment">，
+# 内容是作者名（<span class="breadcrumbs__item-label">Misc</span>），页头 h1 为
+# “Mods uploaded by <!-- -->Misc”；作者名属 UGC，不入快照条目，只在此说明结构 ---
+# 列表空态（SSR 可见）：
+#   <p class="package-count">No results</p>
+#   <span class="empty-state__title">It's empty in here</span>
+#   <span class="empty-state__message">Team <团队名> hasn't uploaded any mods for this community yet.</span>
+No results
+It's empty in here
+Team Misc hasn't uploaded any mods for this community yet.
+# 同一空态组件的其它真实分支（bundle /assets/PackageSearch-*.js 字面；筛选后无结果时挂载）
+No results found
+Make sure all keywords are spelled correctly or try different search parameters.
+Clear all filters
+Be the first to upload a mod!

@@ -2,7 +2,7 @@
 // @name         Thunderstore & Nexus Mods 中文化
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
-// @version      1.0.4
+// @version      1.0.5
 // @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
 // @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
@@ -27,7 +27,7 @@
 (function () {
     'use strict';
 
-    const VERSION = "1.0.4";
+    const VERSION = "1.0.5";
 
 /* =============================================================================
  * _registry.js —— 站点注册表
@@ -38,8 +38,14 @@
  *     id:     唯一标识
  *     name:   人类可读名称（菜单里显示）
  *     match:  hostname 正则
- *     ignore: 忽略选择器字符串（UGC / 代码 / 用户输入区域）
+ *     ignore: 忽略选择器字符串（UGC / 代码 / 用户输入区域），全站生效
+ *     ignorePages: 可选 { 页型: 选择器 }，只在对应页型追加的忽略选择器
+ *             （同一 DOM 结构在不同页型分属 UGC 与固定 UI 时用，如 Thunderstore 面包屑末段）
  *     detect(pathname, search): 返回页型字符串
+ *     namePrefixes: 可选 [ { selector, re, from, to } ]，页头「固定前缀 + 动态名称」规则：
+ *             只替换前缀片段，其余文本节点整节点保护（作者名不会被当界面词条翻译）
+ *     alias:  可选 { 页型: 共享页型 }，该页型先并入共享页型的词条，再叠加自身词条
+ *             （例：Thunderstore 作者列表页 author 复用社区列表页 community）
  *     dict:   { 页型: { 英文: 中文 } }，键 'global' 表示全站生效
  *     patterns: [[RegExp, string | Function], ...] 全站生效的正则组
  *   }
@@ -73,17 +79,44 @@ SITES.push({
     ignore: [
         'pre', 'code', 'kbd', 'textarea', '[contenteditable="true"]',
         '[class*="markdown"]', '[class*="Markdown"]',
-        '[class*="package-name"]', '[class*="PackageName"]',
+        /* 模组名/包名属 UGC：即使与界面词条同串（例如模组就叫 Libraries）也不翻 */
+        '[class*="package-name"]', '[class*="PackageName"]', '[class*="card-package__title"]',
         '[class*="author"]', '[class*="Author"]',
         '[class*="description"]', '[class*="Description"]',
         '[class*="changelog"]', '[class*="Changelog"]',
         'script', 'style', 'noscript',
     ].join(','),
 
+    /* 面包屑末段是非链接 <span class="breadcrumbs__segment">，同一个 class 有两种含义：
+     *   作者页 → 作者名、包详情 → 包名、社区页 → 社区/游戏名：UGC，整棵跳过；
+     *   社区总览 /communities/ → "Communities"、上传页 /package/create/ → "Upload"、
+     *   工具页 /tools/markdown-preview|manifest-v1-validator/ → 同名固定 UI：必须翻译。
+     * 因此只在名称型页型上加这条保护，不做全局 ignore（全局会让上面几页退回英文）。
+     * 中间层级的固定项（Communities / 社区名）是 <a>，不在保护范围内。 */
+    ignorePages: {
+        author: 'span.breadcrumbs__segment',
+        package: 'span.breadcrumbs__segment',
+        community: 'span.breadcrumbs__segment',
+    },
+
+    /* 作者列表页 /c/<社区>/p/<作者>/ 的筛选器、展示控件、排序与卡片外壳
+     * 与社区列表页是同一套组件（PackageSearch），词条直接复用 community 组。 */
+    /* 页头“Mods uploaded by <作者名>”：React 注释拆成两个文本节点，
+     * 作者名可能是 Misc / Tools / All 这类与界面词条同串的值（实测 /c/riskofrain2/p/Misc/），
+     * 只翻前缀，名称节点整节点保护。单文本节点形态同样只替换前缀片段。 */
+    namePrefixes: [
+        { selector: '.page-header__heading', re: /^(?:Mods uploaded by|上传者)\s+(.+)$/, from: 'Mods uploaded by', to: '上传者' },
+    ],
+
+    alias: { author: 'community' },
+
     detect(path) {
         if (path === '/' || path === '') return 'home';
         if (path.indexOf('/communities') === 0) return 'communities';
         if (path.indexOf('/package/create') === 0) return 'upload';
+        // 作者列表页：/c/<社区>/p/<作者>/（无包名段）。此前落到 global，
+        // 导致筛选器与卡片徽标只剩 global 词条可用。
+        if (/^\/c\/[^/]+\/p\/[^/]+\/?$/.test(path)) return 'author';
         // 包相关页：/c/<社区>/p/<作者>/<包名>[/required|/wiki|/changelog|/versions|/source|/dependants]
         if (/^\/c\/[^/]+\/p\/[^/]+\/[^/]+\//.test(path) ||
             /^\/c\/[^/]+\/p\/[^/]+\/[^/]+$/.test(path)) return 'package';
@@ -98,6 +131,7 @@ SITES.push({
             'Communities': '社区',
             'Upload package': '上传包',
             'Search Mods...': '搜索模组…',
+            'Search mods': '搜索模组',
             'Search': '搜索',
             'Developers': '开发者',
             'Switch to legacy': '切换到旧版',
@@ -216,6 +250,27 @@ SITES.push({
             'Modding Discord': '模组 Discord',
             'Card layout': '卡片布局',
             'Content width': '内容宽度',
+            /* 展示控件下拉菜单：thunderstore PackageSearch 常量
+             * header 为 Cards / View，选项 label 为 Grid / List 与 Compact / Wide；
+             * 菜单由 Radix portal 在点开时才挂到 body，靠 MutationObserver 接管。 */
+            'Cards': '卡片',
+            'Grid': '网格',
+            'List': '列表',
+            'View': '视图',
+            'Compact': '紧凑',
+            'Wide': '宽屏',
+            /* 列表空态（PackageSearch bundle 字面 + 真实 SSR）：
+             * <p class="package-count">No results</p>
+             * <span class="empty-state__title">It's empty in here</span>
+             * <span class="empty-state__message">Team <名称> hasn't uploaded any mods …</span>
+             * 团队名走 patterns 的完整锚定规则，只换模板文字。 */
+            'No results': '没有结果',
+            'No results found': '没有找到结果',
+            "It's empty in here": '空空如也',
+            'Be the first to upload a mod!': '成为第一个上传模组的人！',
+            'Make sure all keywords are spelled correctly or try different search parameters.':
+                '请确认所有关键词拼写正确，或尝试不同的搜索条件。',
+            'Clear all filters': '清除所有筛选',
             'Newest': '最新发布',
             'Most downloaded': '下载量最多',
             'Top rated': '评分最高',
@@ -257,6 +312,14 @@ SITES.push({
             'Vehicles': '载具',
             'TV Videos': '电视视频',
             'Weather': '天气',
+        },
+
+        /* ---------------- 作者列表页 /c/<社区>/p/<作者>/ ---------------- */
+        author: {
+            /* 页头 React 注释把前缀和作者名拆成两个文本节点
+             * （<h1>Mods uploaded by <!-- -->Kaldea</h1>），这里只翻前缀；
+             * 单节点形式由 patterns 里的完整锚定规则处理，作者名都保持原文。 */
+            'Mods uploaded by': '上传者',
         },
 
         /* ---------------- 包详情页 ---------------- */
@@ -360,8 +423,16 @@ SITES.push({
 
     /* ---------------- 正则组 ---------------- */
     patterns: [
+        // "Mods uploaded by Kaldea"（页头若被渲染成单个文本节点）：与拆节点形态统一为「上传者 <名称>」，
+        // 名称原字节返回（函数式替换，避免名称里的 $ 被当成替换语法解析）
+        [/^Mods uploaded by (.+)$/, (_match, name) => '上传者 ' + name],
+        // "Team Misc hasn't uploaded any mods for this community yet."：只换模板文字，团队名原样保留
+        [/^Team (.+) hasn['\u2019]t uploaded any mods for this community yet\.$/,
+            (_match, team) => '团队 ' + team + ' 还没有为该社区上传任何模组。'],
         // "1-20 of 19588 results"
         [/^(\d[\d,]*)-(\d[\d,]*) of ([\d,]+) results?$/, '$1-$2，共 $3 条结果'],
+        // "1 of 1 result" / "21 of 21 results"（末页或仅一条，数字不带区间）：单文本节点形态
+        [/^(\d[\d,]*) of (\d[\d,]*) results?$/, '$1，共 $2 条结果'],
         // "19588 results"
         [/^([\d,]+) results?$/, '共 $1 条结果'],
         // "Required (0)"
@@ -1148,7 +1219,9 @@ const State = {
     patterns: [],
     cache: new Map(),      // 原文 -> 译文（含 null，表示不翻）
     ignoreSelector: '',
-    originals: new WeakMap(), // 文本节点/属性宿主 -> 原文
+    originals: new WeakMap(),     // 文本节点 -> 原文
+    attrOriginals: new WeakMap(), // 元素 -> { 属性名: 原文 }，每个属性各自记录
+    protectedNodes: new WeakSet(), // 动态名称文本节点（作者名等）：整节点不参与查表
     observer: null,
     timer: 0,
     enabled: true,
@@ -1160,7 +1233,12 @@ const State = {
 
 function buildDict(site, page) {
     const dict = new Map();
-    const groups = [site.dict.global, site.dict[page]];
+    // 站点可声明 alias：{ 页型: 共享页型 }，例如 Thunderstore 的作者列表页
+    // 复用社区页的列表 UI 词条。共享页型先铺，本页型后铺，本页型优先。
+    const alias = site.alias && site.alias[page];
+    const groups = alias && site.dict[alias]
+        ? [site.dict.global, site.dict[alias], site.dict[page]]
+        : [site.dict.global, site.dict[page]];
     for (const group of groups) {
         if (!group) continue;
         for (const key of Object.keys(group)) {
@@ -1171,7 +1249,11 @@ function buildDict(site, page) {
     State.dict = dict;
     State.patterns = site.patterns || [];
     State.cache.clear();
-    State.ignoreSelector = site.ignore || '';
+    // 页型级 ignore：只在某些页型成立的忽略选择器（Thunderstore 面包屑末段在
+    // author/package/community 是动态名称，在社区总览/上传/工具页却是固定 UI）。
+    // 与 alias 一样按页型装配，换页型时重建，保证不漏配也不残留。
+    const pageIgnore = (site.ignorePages && site.ignorePages[page]) || '';
+    State.ignoreSelector = [site.ignore, pageIgnore].filter(Boolean).join(',');
 }
 
 function detectSite() {
@@ -1235,6 +1317,8 @@ function isIgnored(el) {
 }
 
 function translateTextNode(node) {
+    // 动态名称（作者/团队名）节点整节点跳过：名称可能正好等于某条界面词条
+    if (State.protectedNodes.has(node)) return false;
     const raw = node.nodeValue;
     if (!raw) return false;
     const key = normalize(raw);
@@ -1284,7 +1368,10 @@ function translateAttributes(el) {
         if (!hit || hit === key) continue;
         // Also honor ignore selectors on the attribute host itself, without suppressing textarea placeholders.
         if ((isIgnored(el) && el.tagName !== 'TEXTAREA') || isIgnored(el.parentElement)) continue;
-        if (!State.originals.has(el)) State.originals.set(el, raw);
+        // 同一元素的 placeholder / aria-label / title 各自记原文，还原时才不会互相覆盖
+        let record = State.attrOriginals.get(el);
+        if (!record) { record = {}; State.attrOriginals.set(el, record); }
+        if (!(attr in record)) record[attr] = raw;
         el.setAttribute(attr, hit);
         changed = true;
         State.stats.attrs++;
@@ -1292,11 +1379,60 @@ function translateAttributes(el) {
     return changed;
 }
 
+/* 页头「固定前缀 + 动态名称」：Thunderstore 的真实形态是
+ *   <h1 class="… page-header__heading">Mods uploaded by <!-- -->Misc</h1>
+ * React 注释把前缀和作者/团队名拆成两个文本节点，而名称可能正好等于某条界面词条
+ * （Misc / Tools / All / Libraries / Cards / View / Deprecated …），整节点查表会被误翻成“杂项”。
+ * 这里只改前缀文本节点，同一页头里其余文本节点标记为受保护，名称一个字节都不动；
+ * 单文本节点形态同理（只替换其中的前缀片段）。站点用 namePrefixes 声明规则。
+ */
+function translateHeaderNamePrefix(root) {
+    const rules = (State.site && State.site.namePrefixes) || [];
+    if (!rules.length || !root || !root.querySelectorAll) return;
+    const doc = root.ownerDocument || root;
+
+    for (const rule of rules) {
+        const targets = [];
+        if (root.matches && root.matches(rule.selector)) targets.push(root);
+        for (const el of root.querySelectorAll(rule.selector)) targets.push(el);
+
+        for (const el of targets) {
+            if (!rule.re.test(normalize(el.textContent || ''))) continue;
+
+            const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+            const nodes = [];
+            let node = walker.nextNode();
+            while (node) { nodes.push(node); node = walker.nextNode(); }
+
+            let prefixNode = null;
+            for (const textNode of nodes) {
+                const raw = textNode.nodeValue || '';
+                const at = raw.indexOf(rule.from);
+                if (at === -1) continue;
+                const value = raw.slice(0, at) + rule.to + raw.slice(at + rule.from.length);
+                if (!State.originals.has(textNode)) State.originals.set(textNode, raw);
+                State.writing = true;
+                textNode.nodeValue = value;
+                State.writing = false;
+                State.stats.nodes++;
+                prefixNode = textNode;
+                break;
+            }
+
+            // 前缀之外的一切都是动态名称，整节点受保护（含重复扫描时的幂等路径）
+            for (const textNode of nodes) {
+                if (textNode !== prefixNode) State.protectedNodes.add(textNode);
+            }
+        }
+    }
+}
+
 /* 统计文案常由数字节点和 React 注释拆开的文本组成。
  * 只在完整计数容器匹配时翻译分隔词，保留数字及其 DOM 结构。 */
 function translateSplitResultCounter(root) {
     if (!root || !root.querySelectorAll) return;
-    const resultRe = /^[\d,]+\s*-\s*[\d,]+ of [\d,]+ results?$/i;
+    // 区间形态 1-20 of 868 results；末页 / 仅一条时不带区间：1 of 1 result、21 of 21 results
+    const resultRe = /^[\d,]+(?:\s*-\s*[\d,]+)? of [\d,]+ results?$/i;
     const doc = root.ownerDocument || root;
 
     for (const el of root.querySelectorAll('*')) {
@@ -1325,7 +1461,7 @@ function translateSplitResultCounter(root) {
             const token = normalize(textNode.nodeValue || '').toLowerCase();
             if (token === 'of') {
                 const previous = nodes[i - 1];
-                if (previous && /^\s*[\d,]+\s*-\s*[\d,]+\s*$/.test(previous.nodeValue || '')) {
+                if (previous && /^\s*[\d,]+(?:\s*-\s*[\d,]+)?\s*$/.test(previous.nodeValue || '')) {
                     write(previous, (previous.nodeValue || '').replace(/\s+$/, ''), false);
                 }
                 write(textNode, '，共 ');
@@ -1443,6 +1579,7 @@ function scanRoot(root) {
         batch.push(n);
         n = walker.nextNode();
     }
+    translateHeaderNamePrefix(root);
     for (const node of batch) translateTextNode(node);
     translateSplitResultCounter(root);
     translateSplitRequiredCounter(root);
@@ -1501,11 +1638,12 @@ function restoreAll() {
         if (State.originals.has(n)) n.nodeValue = State.originals.get(n);
         n = walker.nextNode();
     }
-    // 属性
-    for (const attr of CONFIG.ATTRS) {
-        for (const el of document.querySelectorAll('[' + attr + ']')) {
-            if (State.originals.has(el)) el.setAttribute(attr, State.originals.get(el));
-        }
+    // 属性：逐元素逐属性还原，placeholder / aria-label / title 各自独立
+    const attrSelector = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');
+    for (const el of document.querySelectorAll(attrSelector)) {
+        const record = State.attrOriginals.get(el);
+        if (!record) continue;
+        for (const attr of Object.keys(record)) el.setAttribute(attr, record[attr]);
     }
 }
 
@@ -1530,6 +1668,8 @@ function onLocationChange() {
     State.page = page;
     buildDict(State.site, page);
     State.originals = new WeakMap();
+    State.attrOriginals = new WeakMap();
+    State.protectedNodes = new WeakSet();
     if (State.enabled) scanRoot(document.body);
 }
 
@@ -1617,6 +1757,8 @@ function registerMenu() {
         if (!State.enabled) return;
         State.cache.clear();
         State.originals = new WeakMap();
+        State.attrOriginals = new WeakMap();
+        State.protectedNodes = new WeakSet();
         scanRoot(document.body);
     });
 

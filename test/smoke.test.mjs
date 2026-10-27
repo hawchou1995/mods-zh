@@ -171,6 +171,24 @@ test('社区页导航与分类命中', () => {
     assert.ok(t.includes('整合包'), 'Modpacks');
     assert.ok(t.includes('调整与体验优化'), 'Tweaks & Quality Of Life');
 });
+test('作者列表页复用社区列表词条并命中页头前缀', () => {
+    const { doc, api } = loadBundle('thunderstore.io', '/c/gtfo/p/Kaldea/');
+    assert.strictEqual(api.page, 'author');
+    const root = buildTree(doc, [
+        { tag: 'div', text: 'Sections' },
+        { tag: 'div', text: 'All' },
+        { tag: 'div', text: 'Mods uploaded by' },
+        { tag: 'div', text: 'Cards' },
+        { tag: 'div', text: 'View' },
+    ]);
+    api.rescan();
+    const t = root.textContent;
+    assert.ok(t.includes('分区'), t);
+    assert.ok(t.includes('全部'), t);
+    assert.ok(t.includes('上传者'), t);
+    assert.ok(t.includes('卡片'), t);
+    assert.ok(t.includes('视图'), t);
+});
 test('结果计数与相对时间走正则', () => {
     const { doc, api } = loadBundle('thunderstore.io', '/c/lethal-company/');
     const root = buildTree(doc, [
@@ -178,10 +196,14 @@ test('结果计数与相对时间走正则', () => {
         { tag: 'div', text: '4 weeks ago' },
         { tag: 'div', text: '2 hours ago' },
         { tag: 'div', text: '30 days ago' },
+        { tag: 'div', text: '1 of 1 result' },
+        { tag: 'div', text: '21 of 21 results' },
     ]);
     api.rescan();
     const t = root.textContent;
     assert.ok(t.includes('1-20，共 19588 条结果'), t);
+    assert.ok(t.includes('1，共 1 条结果'), '单结果计数（无区间）未翻译：' + t);
+    assert.ok(t.includes('21，共 21 条结果'), '末页单结果计数未翻译：' + t);
     assert.ok(t.includes('4 周前'), t);
     assert.ok(t.includes('2 小时前'), t);
     assert.ok(t.includes('30 天前'), t);

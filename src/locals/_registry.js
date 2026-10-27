@@ -7,8 +7,14 @@
  *     id:     唯一标识
  *     name:   人类可读名称（菜单里显示）
  *     match:  hostname 正则
- *     ignore: 忽略选择器字符串（UGC / 代码 / 用户输入区域）
+ *     ignore: 忽略选择器字符串（UGC / 代码 / 用户输入区域），全站生效
+ *     ignorePages: 可选 { 页型: 选择器 }，只在对应页型追加的忽略选择器
+ *             （同一 DOM 结构在不同页型分属 UGC 与固定 UI 时用，如 Thunderstore 面包屑末段）
  *     detect(pathname, search): 返回页型字符串
+ *     namePrefixes: 可选 [ { selector, re, from, to } ]，页头「固定前缀 + 动态名称」规则：
+ *             只替换前缀片段，其余文本节点整节点保护（作者名不会被当界面词条翻译）
+ *     alias:  可选 { 页型: 共享页型 }，该页型先并入共享页型的词条，再叠加自身词条
+ *             （例：Thunderstore 作者列表页 author 复用社区列表页 community）
  *     dict:   { 页型: { 英文: 中文 } }，键 'global' 表示全站生效
  *     patterns: [[RegExp, string | Function], ...] 全站生效的正则组
  *   }

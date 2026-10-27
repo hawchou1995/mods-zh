@@ -4,7 +4,7 @@
 
 **词条（entry）** —— 一条 `英文原文 → 中文译文` 映射。原文必须是站点 DOM 里真实出现过的完整文本，取自 `docs/evidence/` 的快照。
 
-**页型（page）** —— 站点内部的界面类别，由 URL 判定。Thunderstore 有 `home` / `communities` / `community` / `package` / `upload`；Nexus Mods 有 `home` / `games` / `game` / `browse` / `mod` / `collection` / `media` / `news` / `forums` / `support` / `account`。词条按页型分组，另外有一组 `global` 全站生效。
+**页型（page）** —— 站点内部的界面类别，由 URL 判定。Thunderstore 有 `home` / `communities` / `community` / `author` / `package` / `upload`；Nexus Mods 有 `home` / `games` / `game` / `browse` / `mod` / `collection` / `media` / `news` / `forums` / `support` / `account`。词条按页型分组，另外有一组 `global` 全站生效。
 
 **界面元素（UI element）** —— 站点提供的、与内容无关的文案：导航、按钮、筛选器、分类枚举、语言枚举、排序项、统计标签、面包屑、提示语。
 

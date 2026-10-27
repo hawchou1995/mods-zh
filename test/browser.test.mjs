@@ -61,6 +61,157 @@ const TS_REQUIRED_HTML = `<!DOCTYPE html><html><body>
   <div class="empty-state"><span>No dependencies</span><span>This package does not require any other packages to work.</span></div>
 </body></html>`;
 
+/* 作者列表页 /c/<社区>/p/<作者>/ —— 2026-10-26 抓自
+ * https://thunderstore.io/c/gtfo/p/Kaldea/?deprecated=true 的真实 DOM 结构
+ * （SVG、广告位与图片地址折叠；作者名 / 模组名 / 描述按真实内容保留，用于断言不被翻译）。
+ * 展示控件下拉菜单是 Radix portal，点开才挂载到 <body>，不在此静态夹具里。 */
+const TS_AUTHOR_HTML = `<!DOCTYPE html><html><body>
+  <header class="page-header"><div class="page-header__content-simple"><div class="page-header__info">
+    <h1 class="display display--variant--primary display--size--2 page-header__heading">Mods uploaded by <!-- -->Kaldea</h1>
+  </div></div></header>
+  <div class="package-search package-search--with-sidebar-ad">
+    <div class="package-search__sidebar"><div class="package-search__filters">
+      <details class="collapsible" open><summary class="button button--variant--secondary button--size--big button--ghost collapsible__header">Sections<svg></svg></summary>
+        <div class="collapsible__content"><div role="radiogroup" class="radio-group" aria-required="false">
+          <label class="radio-group__label radio-group__label--selected"><button type="button" role="radio" aria-checked="true" data-state="checked" value="all" class="radio-group__radio"><svg></svg></button><input type="radio" aria-hidden="true" checked value="all">All</label>
+        </div></div></details>
+      <details class="collapsible" open><summary class="button button--variant--secondary button--size--big button--ghost collapsible__header">Categories<svg></svg></summary>
+        <div class="collapsible__content"><ol class="checkbox-list">
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-client-mods"><span><button id="cb-client-mods" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Client Mods</span><button class="checkbox-list__icon checkbox-list__exclude-button"><svg></svg></button></label></li>
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-dev-tools"><span><button id="cb-dev-tools" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Dev Tools</span><button class="checkbox-list__icon checkbox-list__exclude-button"><svg></svg></button></label></li>
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-libraries"><span><button id="cb-libraries" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Libraries</span><button class="checkbox-list__icon checkbox-list__exclude-button"><svg></svg></button></label></li>
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-modpacks"><span><button id="cb-modpacks" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Modpacks</span><button class="checkbox-list__icon checkbox-list__exclude-button"><svg></svg></button></label></li>
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-rundown-mods"><span><button id="cb-rundown-mods" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Rundown Mods</span><button class="checkbox-list__icon checkbox-list__exclude-button"><svg></svg></button></label></li>
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-rundowns"><span><button id="cb-rundowns" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Rundowns</span><button class="checkbox-list__icon checkbox-list__exclude-button"><svg></svg></button></label></li>
+        </ol></div></details>
+      <details class="collapsible" open><summary class="button button--variant--secondary button--size--big button--ghost collapsible__header">Other filters<svg></svg></summary>
+        <div class="collapsible__content"><ol class="checkbox-list">
+          <li><label class="checkbox-list__label checkbox-list__label--include" for="cb-deprecated"><span><button id="cb-deprecated" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>Deprecated</span></label></li>
+          <li><label class="checkbox-list__label checkbox-list__label--off" for="cb-nsfw"><span><button id="cb-nsfw" class="checkbox-list__icon checkbox-list__checkbox-button"><svg></svg></button>NSFW</span></label></li>
+        </ol></div></details>
+    </div></div>
+    <div class="package-search__content">
+      <div class="package-search__search-wrapper"><div class="text-input__wrapper text-input__wrapper--variant--primary"><svg></svg><input placeholder="Search Mods..." aria-label="Search mods" id="searchInput" value="Mastaba R66"></div></div>
+      <div class="package-search__top-bar"><div class="display-controls">
+        <button aria-label="Card layout" type="button" id="cards-trigger" aria-haspopup="menu" aria-expanded="false" class="button button--variant--secondary display-controls__trigger display-controls__trigger--cards"><svg></svg></button>
+        <button aria-label="Content width" type="button" id="view-trigger" aria-haspopup="menu" aria-expanded="false" class="button button--variant--secondary display-controls__trigger display-controls__trigger--view"><svg></svg></button>
+      </div></div>
+      <div class="package-search__search-params"><div class="package-search__results"><p class="package-count"><b>1-3 </b>&nbsp;of&nbsp;<b>3</b>&nbsp;results</p></div></div>
+      <div class="package-search__packages"><div class="package-search__grid">
+        <div class="card-package card-package--variant--card card-package--size--medium" id="card-deprecated">
+          <a tabindex="-1" title="Mastaba R66 ENDFIELD STANDARD ISSUE by Kaldea" class="link card-package__media" href="/c/gtfo/p/Kaldea/Mastaba_R66_ENDFIELD_STANDARD_ISSUE/"><div class="card-package__image-tags"><div class="tag tag--variant--yellow tag--size--small tag--dark"><svg></svg>Deprecated</div></div><div class="image card-package__image-wrapper"><div class="image__content image__content--variant--primary"><img alt="" class="image__src"></div></div></a>
+          <div class="card-package__content">
+            <div class="card-package__info"><div class="card-package__heading"><a title="Mastaba R66 ENDFIELD STANDARD ISSUE" class="link card-package__title" href="/c/gtfo/p/Kaldea/Mastaba_R66_ENDFIELD_STANDARD_ISSUE/">Mastaba R66 ENDFIELD STANDARD ISSUE</a></div>
+            <div class="card-package__author"><span class="card-package__prefix">by</span><a title="Kaldea" class="link link--variant--cyber card-package__link" href="/c/gtfo/p/Kaldea/">Kaldea</a></div></div>
+            <p class="card-package__description">Mastaba R66 的终末地风格皮肤。Endfield-style Mastaba R66 skin with floating holographic markings.</p>
+            <div class="card-package__tags"><a href="/c/gtfo/?includedCategories=44" class="tag tag--variant--primary tag--size--xsmall tag--dark tag--hoverable"><span>Client Mods</span></a></div>
+            <div class="card-package__footer"><div class="card-package__meta"><div class="meta-item meta-item--variant--default meta-item--size--12"><svg></svg>24</div></div><span class="card-package__updated" aria-label="Last Updated"><svg></svg><span> <!-- -->2 days ago</span></span></div>
+          </div>
+        </div>
+        <div class="card-package card-package--variant--card card-package--size--medium" id="card-ugc">
+          <a tabindex="-1" title="Libraries by ebkr" class="link card-package__media" href="/c/gtfo/p/ebkr/Libraries/"><div class="image card-package__image-wrapper"><div class="image__content image__content--variant--primary"><img alt="" class="image__src"></div></div></a>
+          <div class="card-package__content">
+            <div class="card-package__info"><div class="card-package__heading"><a title="Libraries" class="link card-package__title" href="/c/gtfo/p/ebkr/Libraries/">Libraries</a></div>
+            <div class="card-package__author"><span class="card-package__prefix">by</span><a title="ebkr" class="link link--variant--cyber card-package__link" href="/c/gtfo/p/ebkr/">ebkr</a></div></div>
+            <p class="card-package__description">Deprecated NSFW 说明：All、View 与 Cards 都是用户原文的一部分。</p>
+            <div class="card-package__tags"><a href="/c/gtfo/?includedCategories=8" class="tag tag--variant--primary tag--size--xsmall tag--dark tag--hoverable"><span>Libraries</span></a></div>
+            <div class="card-package__footer"><div class="card-package__meta"><div class="meta-item meta-item--variant--default meta-item--size--12"><svg></svg>7</div></div><span class="card-package__updated" aria-label="Last Updated"><svg></svg><span> <!-- -->3 weeks ago</span></span></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</body></html>`;
+
+/* 真实 /c/riskofrain2/p/Misc/ 片段（2026-10-26 HTTP 200 SSR）：作者名恰好叫 Misc（= 界面词条），
+ * 面包屑末段是非链接 <span class="breadcrumbs__segment">，空态为 package-count "No results" +
+ * empty-state__title/message（bundle 中 message 为 `Team ${namespace} hasn't uploaded any mods ...`）。 */
+/* 真实「无中间层级」面包屑：Home 链接 + 非链接 <span class="breadcrumbs__segment">。
+ * 2026-10-26 抓取的 4 个页面（HTTP 200）都是这个结构，末段是**固定 UI**，不是名称：
+ *   /communities/                → 面包屑 "Communities"（h1 同名）
+ *   /package/create/             → 面包屑 "Upload"（h1 "Upload package"）
+ *   /tools/markdown-preview/     → 面包屑 "Markdown Preview"（h1 同名）
+ *   /tools/manifest-v1-validator/→ 面包屑 "Manifest Validator"（h1 同名）
+ * 与作者/包详情的「末段=动态名称」共用同一个 class，因此保护必须按页型收窄。 */
+function breadcrumbPageHTML(label, heading) {
+    return `<!DOCTYPE html><html><body>
+  <div class="breadcrumbs breadcrumbs--variant--default breadcrumbs--size--medium">
+    <a aria-label="Home" data-state="closed" class="link  breadcrumbs__segment breadcrumbs__homelink" href="/" data-discover="true"><span class="breadcrumbs__item-content"><svg></svg></span></a>
+    <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">${label}</span></span></span>
+  </div>
+  <header class="page-header page-header--simple"><div class="page-header__content-simple"><div class="page-header__info">
+    <h1 class="display display--variant--primary display--size--2 page-header__heading">${heading}</h1>
+  </div></div></header>
+</body></html>`;
+}
+
+const BREADCRUMB_PAGES = [
+    ['https://thunderstore.io/communities/', 'communities', 'Communities', 'Communities', '社区', '社区'],
+    ['https://thunderstore.io/package/create/', 'upload', 'Upload', 'Upload package', '上传', '上传包'],
+    ['https://thunderstore.io/tools/markdown-preview/', 'global', 'Markdown Preview', 'Markdown Preview', 'Markdown 预览', 'Markdown 预览'],
+    ['https://thunderstore.io/tools/manifest-v1-validator/', 'global', 'Manifest Validator', 'Manifest Validator', '清单校验器', '清单校验器'],
+];
+
+const TS_AUTHOR_MISC_HTML = `<!DOCTYPE html><html><body>
+  <nav class="breadcrumbs breadcrumbs--variant--default breadcrumbs--size--medium">
+    <a aria-label="Home" class="link breadcrumbs__segment breadcrumbs__homelink" href="/"><span class="breadcrumbs__item-content"><svg></svg></span></a>
+    <a class="link link--variant--cyber breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+    <a class="link link--variant--cyber breadcrumbs__segment" href="/c/riskofrain2/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Risk of Rain 2</span></span></a>
+    <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Misc</span></span></span>
+  </nav>
+  <section class="page team">
+    <header class="page-header page-header--simple"><div class="page-header__content-simple"><div class="page-header__info">
+      <h1 class="display display--variant--primary display--size--2 page-header__heading">Mods uploaded by <!-- -->Misc</h1>
+    </div></div></header>
+    <div class="package-search package-search--with-sidebar-ad">
+      <div class="package-search__sidebar"><div class="package-search__filters">
+        <details class="collapsible" open><summary class="button button--variant--secondary button--size--big button--ghost collapsible__header">Sections<svg></svg></summary>
+          <div class="collapsible__content"><div role="radiogroup" class="radio-group" aria-required="false">
+            <label class="radio-group__label radio-group__label--unselected"><button type="button" role="radio" aria-checked="false" value="all" class="radio-group__radio"><svg></svg></button><input type="radio" value="all">All</label>
+            <div class="radio-group__divider" role="presentation"></div>
+            <label class="radio-group__label radio-group__label--selected"><button type="button" role="radio" aria-checked="true" value="mods" class="radio-group__radio"><svg></svg></button><input type="radio" checked value="mods">Mods</label>
+            <label class="radio-group__label radio-group__label--unselected"><button type="button" role="radio" aria-checked="false" value="modpacks" class="radio-group__radio"><svg></svg></button><input type="radio" value="modpacks">Modpacks</label>
+          </div></div></details>
+      </div></div>
+      <div class="package-search__content">
+        <div class="package-search__search-params"><div class="package-search__results"><p class="package-count">No results</p></div></div>
+        <div class="package-search__packages"><div class="empty-state no-result">
+          <div class="empty-state__icon no-result__ghostbounce"><svg></svg></div>
+          <div class="no-result__info">
+            <span class="empty-state__title ">It's empty in here</span>
+            <span class="empty-state__message ">Team Misc hasn't uploaded any mods for this community yet.</span>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+</body></html>`;
+
+/* 极简作者页：只保留面包屑非链接末段 + 页头 + Sections 侧栏，用于把作者名换成任意与 UI 同串的值。
+ * splitHeading=true 复现 React 注释拆节点的真实形态，false 复现单文本节点形态。 */
+function authorPageHTML(name, splitHeading) {
+    const heading = splitHeading ? 'Mods uploaded by <!-- -->' + name : 'Mods uploaded by ' + name;
+    return `<!DOCTYPE html><html><body>
+  <nav class="breadcrumbs breadcrumbs--variant--default breadcrumbs--size--medium">
+    <a aria-label="Home" class="link breadcrumbs__segment breadcrumbs__homelink" href="/"><span class="breadcrumbs__item-content"><svg></svg></span></a>
+    <a class="link link--variant--cyber breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+    <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">${name}</span></span></span>
+  </nav>
+  <section class="page team">
+    <header class="page-header page-header--simple"><div class="page-header__content-simple"><div class="page-header__info">
+      <h1 class="display display--variant--primary display--size--2 page-header__heading">${heading}</h1>
+    </div></div></header>
+    <div class="package-search package-search--with-sidebar-ad"><div class="package-search__sidebar"><div class="package-search__filters">
+      <details class="collapsible" open><summary class="button button--variant--secondary button--size--big button--ghost collapsible__header">Sections<svg></svg></summary>
+        <div class="collapsible__content"><div role="radiogroup" class="radio-group">
+          <label class="radio-group__label radio-group__label--unselected"><button type="button" role="radio" aria-checked="false" value="all" class="radio-group__radio"><svg></svg></button><input type="radio" value="all">All</label>
+          <label class="radio-group__label radio-group__label--selected"><button type="button" role="radio" aria-checked="true" value="mods" class="radio-group__radio"><svg></svg></button><input type="radio" checked value="mods">Mods</label>
+        </div></div></details>
+    </div></div></div>
+  </section>
+</body></html>`;
+}
+
 const NX_HTML = `<!DOCTYPE html><html><body>
   <nav><a>MODS</a><a>COLLECTIONS</a></nav>
   <button aria-label="Show search"></button>
@@ -333,6 +484,414 @@ await test('动态筛选器、排序菜单、分页与 aria-label 被翻译', as
     assert.strictEqual(d.querySelector('button[aria-label="内容宽度"]')?.getAttribute('aria-label'), '内容宽度');
     assert.strictEqual(d.querySelector('span[aria-label="最后更新"]')?.getAttribute('aria-label'), '最后更新');
     assert.strictEqual(d.querySelector('nav').getAttribute('aria-label'), '分页');
+    dom.window.close();
+});
+
+console.log('[jsdom · Thunderstore 作者列表页]');
+
+await test('作者列表页固定 UI（筛选器/展示控件/徽标/分类标签）中文化且 UGC 原文保留', async () => {
+    const dom = boot(TS_AUTHOR_HTML, 'https://thunderstore.io/c/gtfo/p/Kaldea/?deprecated=true');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+
+    assert.strictEqual(api.page, 'author', '作者列表页须识别为独立页型并复用社区列表词条');
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 Kaldea', '页头只翻前缀，作者名保持原文');
+
+    const sidebar = d.querySelector('.package-search__filters').textContent;
+    for (const [expected, source] of [
+        ['分区', 'Sections'], ['全部', 'All'], ['分类', 'Categories'],
+        ['客户端模组', 'Client Mods'], ['开发工具', 'Dev Tools'], ['库', 'Libraries'],
+        ['整合包', 'Modpacks'], ['远征序列模组', 'Rundown Mods'], ['远征序列', 'Rundowns'],
+        ['其他筛选', 'Other filters'], ['已弃用', 'Deprecated'], ['成人内容', 'NSFW'],
+    ]) assert.ok(sidebar.includes(expected), `${source} 未翻译：${sidebar}`);
+
+    assert.strictEqual(d.querySelector('.display-controls__trigger--cards').getAttribute('aria-label'), '卡片布局');
+    assert.strictEqual(d.querySelector('.display-controls__trigger--view').getAttribute('aria-label'), '内容宽度');
+    assert.strictEqual(d.querySelector('.package-count').textContent, '1-3，共 3 条结果');
+
+    const deprecatedCard = d.getElementById('card-deprecated');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__title').textContent, 'Mastaba R66 ENDFIELD STANDARD ISSUE', '模组名不得翻译');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__link').textContent, 'Kaldea', '作者名不得翻译');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__prefix').textContent, '作者');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__description').textContent,
+        'Mastaba R66 的终末地风格皮肤。Endfield-style Mastaba R66 skin with floating holographic markings.', '描述不得翻译');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__image-tags .tag').textContent, '已弃用', '卡片弃用徽标未翻译');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__tags .tag').textContent, '客户端模组', '卡片分类标签未翻译');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__updated').getAttribute('aria-label'), '最后更新');
+    assert.ok(deprecatedCard.querySelector('.card-package__updated').textContent.includes('2 天前'));
+
+    // UGC 与界面词条同串：模组名/描述/作者名保持原文，分类标签（界面枚举）照常翻译
+    const ugcCard = d.getElementById('card-ugc');
+    assert.strictEqual(ugcCard.querySelector('.card-package__title').textContent, 'Libraries', '与 UI 词条同串的模组名不得翻译');
+    assert.strictEqual(ugcCard.querySelector('.card-package__link').textContent, 'ebkr');
+    assert.strictEqual(ugcCard.querySelector('.card-package__description').textContent,
+        'Deprecated NSFW 说明：All、View 与 Cards 都是用户原文的一部分。', '描述内与 UI 同串的文字不得翻译');
+    assert.strictEqual(ugcCard.querySelector('.card-package__tags .tag').textContent, '库', '同一串出现在分类标签里仍应翻译');
+
+    // 链接与属性不得被改写（title 在翻译白名单里，但内容是 UGC）
+    const media = deprecatedCard.querySelector('.card-package__media');
+    assert.strictEqual(media.getAttribute('title'), 'Mastaba R66 ENDFIELD STANDARD ISSUE by Kaldea');
+    assert.strictEqual(media.getAttribute('href'), '/c/gtfo/p/Kaldea/Mastaba_R66_ENDFIELD_STANDARD_ISSUE/');
+    assert.strictEqual(deprecatedCard.querySelector('.card-package__title').getAttribute('href'),
+        '/c/gtfo/p/Kaldea/Mastaba_R66_ENDFIELD_STANDARD_ISSUE/');
+
+    const search = d.getElementById('searchInput');
+    assert.strictEqual(search.getAttribute('placeholder'), '搜索模组…');
+    assert.strictEqual(search.getAttribute('aria-label'), '搜索模组');
+    assert.strictEqual(search.value, 'Mastaba R66', '输入值必须保持原文');
+    dom.window.close();
+});
+
+await test('展示控件下拉菜单动态挂载与关闭重开都被翻译', async () => {
+    const dom = boot(TS_AUTHOR_HTML, 'https://thunderstore.io/c/gtfo/p/Kaldea/');
+    const d = dom.window.document;
+    const openMenu = (name, header, options) => {
+        const menu = d.createElement('div');
+        menu.className = 'display-controls__menu display-controls__menu--' + name;
+        menu.setAttribute('role', 'menu');
+        menu.innerHTML = '<div class="display-controls__header">' + header + '</div>' + options.map(([value, label]) =>
+            '<div class="display-controls__option display-controls__option--' + value + '" role="menuitemradio">' +
+            '<button type="button"><svg></svg>' + label + '</button></div>').join('');
+        d.body.appendChild(menu);
+        return menu;
+    };
+
+    const cardsMenu = openMenu('cards', 'Cards', [['grid', 'Grid'], ['list', 'List']]);
+    const viewMenu = openMenu('view', 'View', [['compact', 'Compact'], ['wide', 'Wide']]);
+    await wait(300);
+
+    const text = d.body.textContent.replace(/\s+/g, ' ');
+    for (const [expected, source] of [['卡片', 'Cards'], ['网格', 'Grid'], ['列表', 'List'],
+        ['视图', 'View'], ['紧凑', 'Compact'], ['宽屏', 'Wide']]) {
+        assert.ok(text.includes(expected), `${source} 未翻译：${text}`);
+    }
+
+    // 动态挂载的按钮属性同样要被翻译
+    const lateTrigger = d.createElement('button');
+    lateTrigger.setAttribute('aria-label', 'Card layout');
+    d.body.appendChild(lateTrigger);
+    await wait(300);
+    assert.strictEqual(lateTrigger.getAttribute('aria-label'), '卡片布局', '动态节点属性未被翻译');
+
+    // Radix 关闭即卸载菜单节点；重开是全新节点，必须被 MutationObserver 再次接管
+    cardsMenu.remove();
+    viewMenu.remove();
+    await wait(200);
+    const reopened = openMenu('cards', 'Cards', [['grid', 'Grid'], ['list', 'List']]);
+    await wait(300);
+    assert.strictEqual(reopened.querySelector('.display-controls__header').textContent, '卡片');
+    assert.deepStrictEqual(
+        [...reopened.querySelectorAll('.display-controls__option button')].map(b => b.textContent),
+        ['网格', '列表'],
+        '重开的菜单节点必须被再次翻译'
+    );
+    dom.window.close();
+});
+
+await test('作者列表页关闭中文化后逐字还原', async () => {
+    const dom = boot(TS_AUTHOR_HTML, 'https://thunderstore.io/c/gtfo/p/Kaldea/?deprecated=true');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    api.setEnabled(false);
+
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, 'Mods uploaded by Kaldea');
+    const sidebar = d.querySelector('.package-search__filters').textContent;
+    for (const source of ['Sections', 'All', 'Client Mods', 'Dev Tools', 'Libraries', 'Modpacks',
+        'Rundown Mods', 'Rundowns', 'Other filters', 'Deprecated', 'NSFW']) {
+        assert.ok(sidebar.includes(source), `${source} 未还原：${sidebar}`);
+    }
+    assert.strictEqual(d.querySelector('.display-controls__trigger--cards').getAttribute('aria-label'), 'Card layout');
+    assert.strictEqual(d.getElementById('searchInput').getAttribute('placeholder'), 'Search Mods...');
+    assert.strictEqual(d.getElementById('searchInput').value, 'Mastaba R66');
+    assert.strictEqual(d.querySelector('#card-deprecated .card-package__image-tags .tag').textContent, 'Deprecated');
+    assert.strictEqual(d.querySelector('#card-deprecated .card-package__prefix').textContent, 'by');
+
+    api.setEnabled(true);
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 Kaldea');
+    dom.window.close();
+});
+
+await test('作者名与界面词条同串：标题前缀与固定 UI 照翻，作者名与面包屑保持原字节', async () => {
+    const dom = boot(TS_AUTHOR_MISC_HTML, 'https://thunderstore.io/c/riskofrain2/p/Misc/');
+    const d = dom.window.document;
+    assert.strictEqual(dom.window.__MODS_ZH__.page, 'author');
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 Misc', '作者名 Misc 不得被翻成“杂项”');
+    assert.deepStrictEqual([...d.querySelectorAll('.breadcrumbs__item-label')].map(e => e.textContent),
+        ['社区', 'Risk of Rain 2', 'Misc'], '面包屑只翻固定项与链接项，作者名保持原文');
+    const sidebar = d.querySelector('.package-search__filters').textContent;
+    assert.ok(sidebar.includes('分区'), '侧栏 Sections 未翻译：' + sidebar);
+    assert.ok(sidebar.includes('全部'), '侧栏 All 未翻译：' + sidebar);
+    assert.ok(sidebar.includes('模组'), '侧栏 Mods 未翻译：' + sidebar);
+    assert.ok(sidebar.includes('整合包'), '侧栏 Modpacks 未翻译：' + sidebar);
+
+    dom.window.__MODS_ZH__.setEnabled(false);
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, 'Mods uploaded by Misc');
+    dom.window.__MODS_ZH__.setEnabled(true);
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 Misc');
+    dom.window.close();
+});
+
+await test('作者名等于 All/Cards/View/Deprecated 等词条时两种页头形态都保持原字节', async () => {
+    for (const name of ['Misc', 'Tools', 'All', 'Libraries', 'Cards', 'View', 'Deprecated']) {
+        for (const split of [true, false]) {
+            const dom = boot(authorPageHTML(name, split), 'https://thunderstore.io/c/gtfo/p/' + name + '/');
+            const d = dom.window.document;
+            const tag = `${name} / ${split ? 'split' : 'single'}`;
+            assert.strictEqual(dom.window.__MODS_ZH__.page, 'author', tag);
+            assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 ' + name, tag + ' 作者名被改写');
+            assert.strictEqual(d.querySelectorAll('.breadcrumbs__item-label')[1].textContent, name, tag + ' 面包屑作者名被改写');
+            assert.strictEqual(d.querySelectorAll('.breadcrumbs__item-label')[0].textContent, '社区', tag + ' 面包屑固定项未翻译');
+            const sidebar = d.querySelector('.package-search__filters').textContent;
+            assert.ok(sidebar.includes('分区'), tag + ' 侧栏 Sections 未翻译');
+            assert.ok(sidebar.includes('全部'), tag + ' 侧栏 All 未翻译（作者名同串不得连累侧栏）');
+            dom.window.close();
+        }
+    }
+
+    // 反向：同一个词在社区页作为分类枚举时必须照常翻译（保护只作用于作者名/面包屑名称）
+    const communityDom = boot(`<!DOCTYPE html><html><body>
+        <h1 class="display display--variant--primary display--size--3">Lethal Company</h1>
+        <ol class="checkbox-list"><li><label class="checkbox-list__label"><span><button class="checkbox-list__icon"></button>Misc</span></label></li>
+          <li><label class="checkbox-list__label"><span><button class="checkbox-list__icon"></button>Tools</span></label></li></ol>
+      </body></html>`, 'https://thunderstore.io/c/lethal-company/');
+    assert.strictEqual(communityDom.window.__MODS_ZH__.page, 'community');
+    assert.deepStrictEqual([...communityDom.window.document.querySelectorAll('.checkbox-list__label')].map(e => e.textContent),
+        ['杂项', '工具'], '社区页分类 Misc/Tools 仍须翻译');
+    communityDom.window.close();
+});
+
+await test('真实 Misc 空态与团队提示被翻译且保留团队名', async () => {
+    const dom = boot(TS_AUTHOR_MISC_HTML, 'https://thunderstore.io/c/riskofrain2/p/Misc/');
+    const d = dom.window.document;
+    assert.strictEqual(d.querySelector('.package-count').textContent, '没有结果');
+    assert.strictEqual(d.querySelector('.empty-state__title').textContent, '空空如也');
+    assert.strictEqual(d.querySelector('.empty-state__message').textContent, '团队 Misc 还没有为该社区上传任何模组。');
+
+    // 同一空态组件的其它真实分支（bundle 字面）：动态挂载后同样被接管
+    const late = d.createElement('div');
+    late.className = 'no-result';
+    late.innerHTML = '<div class="no-result__info"><span class="empty-state__title">No results found</span>' +
+        '<span class="empty-state__message">Make sure all keywords are spelled correctly or try different search parameters.</span></div>' +
+        '<button class="no-result__button">Clear all filters</button>' +
+        '<div class="empty-state"><span class="empty-state__message">Be the first to upload a mod!</span></div>';
+    d.body.appendChild(late);
+    await wait(300);
+    assert.strictEqual(late.querySelectorAll('.empty-state__title')[0].textContent, '没有找到结果');
+    assert.ok(late.querySelectorAll('.empty-state__message')[0].textContent.includes('请确认所有关键词拼写正确'),
+        late.querySelectorAll('.empty-state__message')[0].textContent);
+    assert.strictEqual(late.querySelector('.no-result__button').textContent, '清除所有筛选');
+    assert.strictEqual(late.querySelectorAll('.empty-state__message')[1].textContent, '成为第一个上传模组的人！');
+    dom.window.close();
+});
+
+await test('同一元素的 placeholder / aria-label / title 各自记录原文并在关闭、再开启后正确还原', async () => {
+    const html = `<!DOCTYPE html><html><body>
+      <input id="multi" placeholder="Search Mods..." aria-label="Search mods" title="Card layout" value="Kaldea">
+      <button id="same" aria-label="Close" title="Close">Close</button>
+    </body></html>`;
+    const dom = boot(html, 'https://thunderstore.io/c/gtfo/');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    const multi = d.getElementById('multi');
+    const same = d.getElementById('same');
+
+    assert.strictEqual(multi.getAttribute('placeholder'), '搜索模组…');
+    assert.strictEqual(multi.getAttribute('aria-label'), '搜索模组');
+    assert.strictEqual(multi.getAttribute('title'), '卡片布局');
+    assert.strictEqual(multi.value, 'Kaldea', '输入值不得被改写');
+    assert.strictEqual(same.getAttribute('aria-label'), '关闭');
+    assert.strictEqual(same.getAttribute('title'), '关闭');
+
+    api.rescan();
+    api.rescan();
+    assert.strictEqual(multi.getAttribute('placeholder'), '搜索模组…', '重复扫描应保持幂等');
+    assert.strictEqual(multi.getAttribute('title'), '卡片布局', '重复扫描应保持幂等');
+
+    api.setEnabled(false);
+    assert.strictEqual(multi.getAttribute('placeholder'), 'Search Mods...', 'placeholder 必须还原成自己的原文');
+    assert.strictEqual(multi.getAttribute('aria-label'), 'Search mods', 'aria-label 必须还原成自己的原文');
+    assert.strictEqual(multi.getAttribute('title'), 'Card layout', 'title 必须还原成自己的原文');
+    assert.strictEqual(multi.value, 'Kaldea');
+    assert.strictEqual(same.getAttribute('aria-label'), 'Close');
+    assert.strictEqual(same.getAttribute('title'), 'Close');
+
+    api.setEnabled(true);
+    assert.strictEqual(multi.getAttribute('placeholder'), '搜索模组…', '再次开启后应重新翻译');
+    assert.strictEqual(multi.getAttribute('aria-label'), '搜索模组');
+    assert.strictEqual(multi.getAttribute('title'), '卡片布局');
+    assert.strictEqual(multi.value, 'Kaldea');
+    dom.window.close();
+});
+
+await test('SPA 从社区页切到作者页后按新页型重装配词条并保护作者名', async () => {
+    const dom = boot('<!DOCTYPE html><html><body><div id="root"></div></body></html>', 'https://thunderstore.io/c/riskofrain2/');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    assert.strictEqual(api.page, 'community');
+
+    d.getElementById('root').innerHTML = `<nav class="breadcrumbs">
+        <a class="link breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+        <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Tools</span></span></span>
+      </nav>
+      <h1 class="display page-header__heading">Mods uploaded by <!-- -->Tools</h1>
+      <div class="package-search__filters"><summary class="collapsible__header">Sections<svg></svg></summary><div role="radiogroup"><label class="radio-group__label">All</label></div></div>`;
+    dom.window.history.pushState({}, '', '/c/riskofrain2/p/Tools/');
+    await wait(500);
+
+    assert.strictEqual(api.page, 'author', 'SPA 路由变化后页型必须重新判定');
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 Tools');
+    assert.deepStrictEqual([...d.querySelectorAll('.breadcrumbs__item-label')].map(e => e.textContent), ['社区', 'Tools']);
+    assert.ok(d.querySelector('.package-search__filters').textContent.includes('分区'));
+    assert.ok(d.querySelector('.package-search__filters').textContent.includes('全部'));
+    dom.window.close();
+});
+
+await test('单结果计数（无区间）的单文本与 React 拆分形态都翻译，数字与结构保留', async () => {
+    const html = `<!DOCTYPE html><html><body>
+      <p class="package-count" id="split-single"><b>1 </b>&nbsp;of&nbsp;<b>1</b>&nbsp;result</p>
+      <p class="package-count" id="split-last-page"><b>21 </b>&nbsp;of&nbsp;<b>21</b>&nbsp;results</p>
+      <p class="package-count" id="split-range"><b>1-3 </b>&nbsp;of&nbsp;<b>3</b>&nbsp;results</p>
+      <p class="package-count" id="text-single">1 of 1 result</p>
+      <p class="package-count" id="text-nbsp">1&nbsp;of&nbsp;1&nbsp;result</p>
+      <p class="package-count" id="text-range">1-3 of 3 results</p>
+      <p class="package-description" id="ugc">1 of 1 result</p>
+      <div id="late"></div>
+    </body></html>`;
+    const dom = boot(html, 'https://thunderstore.io/c/gtfo/p/Kaldea/');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    const nbsp = String.fromCharCode(160);
+    const text = id => d.getElementById(id).textContent;
+
+    assert.strictEqual(text('split-single'), '1，共 1 条结果', '真实 SSR 形态：<b>1 </b>' + nbsp + 'of' + nbsp + '<b>1</b>' + nbsp + 'result');
+    assert.strictEqual(text('split-last-page'), '21，共 21 条结果', '末页仅 1 项时数字不带区间、result 为复数');
+    assert.strictEqual(text('split-range'), '1-3，共 3 条结果', '原有区间形态不得回归');
+    assert.strictEqual(text('text-single'), '1，共 1 条结果', '单文本节点形态');
+    assert.strictEqual(text('text-nbsp'), '1，共 1 条结果', '单文本节点 + 不换行空格的空白差异');
+    assert.strictEqual(text('text-range'), '1-3，共 3 条结果');
+    assert.strictEqual(text('ugc'), '1 of 1 result', '用户描述里恰好是计数格式时不得翻译');
+
+    // 数字节点与加粗结构保留
+    const splitBolds = [...d.getElementById('split-single').querySelectorAll('b')].map(b => b.textContent);
+    assert.deepStrictEqual(splitBolds, ['1', '1'], '数字节点必须保留且不带多余空格');
+    assert.deepStrictEqual([...d.getElementById('split-last-page').querySelectorAll('b')].map(b => b.textContent),
+        ['21', '21'], '大数字不得被改写或截断');
+
+    // 关闭后逐字还原（含不换行空格与 <b> 尾随空格）
+    api.setEnabled(false);
+    assert.strictEqual(text('split-single'), '1 ' + nbsp + 'of' + nbsp + '1' + nbsp + 'result');
+    assert.strictEqual(text('split-last-page'), '21 ' + nbsp + 'of' + nbsp + '21' + nbsp + 'results');
+    assert.strictEqual(text('split-range'), '1-3 ' + nbsp + 'of' + nbsp + '3' + nbsp + 'results');
+    assert.strictEqual(text('text-nbsp'), '1' + nbsp + 'of' + nbsp + '1' + nbsp + 'result');
+    assert.strictEqual(text('ugc'), '1 of 1 result');
+    api.setEnabled(true);
+    assert.strictEqual(text('split-single'), '1，共 1 条结果', '再次开启后应重新翻译');
+
+    // 动态插入（MutationObserver）与重开一致
+    d.getElementById('late').innerHTML =
+        '<p class="package-count" id="late-single"><b>1 </b>&nbsp;of&nbsp;<b>1</b>&nbsp;result</p>' +
+        '<p class="package-count" id="late-plural"><b>7 </b>&nbsp;of&nbsp;<b>7</b>&nbsp;results</p>';
+    await wait(300);
+    assert.strictEqual(text('late-single'), '1，共 1 条结果', '动态插入的单结果计数未被接管');
+    assert.strictEqual(text('late-plural'), '7，共 7 条结果');
+    dom.window.close();
+});
+
+await test('固定 UI 面包屑（非链接末段）在社区总览/上传/工具页照常翻译且关闭后逐字还原', async () => {
+    for (const [url, page, label, heading, expectLabel, expectHeading] of BREADCRUMB_PAGES) {
+        const dom = boot(breadcrumbPageHTML(label, heading), url);
+        const d = dom.window.document;
+        const api = dom.window.__MODS_ZH__;
+        const crumbs = () => d.querySelector('.breadcrumbs__item-label').textContent;
+        const title = () => d.querySelector('.page-header__heading').textContent;
+
+        assert.strictEqual(api.page, page, url + ' 页型判定');
+        assert.strictEqual(crumbs(), expectLabel, url + ' 面包屑末段必须翻译（固定 UI，不是名称）');
+        assert.strictEqual(title(), expectHeading, url + ' 页头必须翻译');
+
+        api.setEnabled(false);
+        assert.strictEqual(crumbs(), label, url + ' 关闭后面包屑必须逐字还原');
+        assert.strictEqual(title(), heading, url + ' 关闭后页头必须逐字还原');
+        api.setEnabled(true);
+        assert.strictEqual(crumbs(), expectLabel, url + ' 再次开启后应重新翻译');
+        dom.window.close();
+    }
+});
+
+await test('名称保护不下降：包详情与社区页的末级面包屑名称仍保持原文', async () => {
+    // 包详情：包名与界面词条同串（Tools），末级面包屑必须原样；页面固定 UI（Changelog）照常翻译
+    const pkgDom = boot(`<!DOCTYPE html><html><body>
+        <div class="breadcrumbs breadcrumbs--variant--default">
+          <a class="link breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+          <a class="link link--variant--cyber breadcrumbs__segment" href="/c/gtfo/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">GTFO</span></span></a>
+          <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Tools</span></span></span>
+        </div>
+        <a class="tabs-item"><span>Changelog</span></a><div>Latest version</div>
+      </body></html>`, 'https://thunderstore.io/c/gtfo/p/ebkr/Tools/');
+    const pd = pkgDom.window.document;
+    assert.strictEqual(pkgDom.window.__MODS_ZH__.page, 'package');
+    assert.deepStrictEqual([...pd.querySelectorAll('.breadcrumbs__item-label')].map(e => e.textContent),
+        ['社区', 'GTFO', 'Tools'], '包名与界面词条同串时不得改写');
+    assert.strictEqual(pd.querySelector('.tabs-item').textContent, '更新日志', '详情页固定 UI 仍须翻译');
+
+    // 社区页：社区名与界面词条同串时同样保持原文
+    const comDom = boot(`<!DOCTYPE html><html><body>
+        <div class="breadcrumbs breadcrumbs--variant--default">
+          <a class="link breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+          <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Tools</span></span></span>
+        </div>
+        <summary class="collapsible__header">Sections<svg></svg></summary>
+      </body></html>`, 'https://thunderstore.io/c/riskofrain2/');
+    const cd = comDom.window.document;
+    assert.strictEqual(comDom.window.__MODS_ZH__.page, 'community');
+    assert.deepStrictEqual([...cd.querySelectorAll('.breadcrumbs__item-label')].map(e => e.textContent),
+        ['社区', 'Tools'], '社区名不得被当界面词条翻译');
+    assert.strictEqual(cd.querySelector('.collapsible__header').textContent, '分区');
+    pkgDom.window.close();
+    comDom.window.close();
+});
+
+await test('SPA 转换页型时按新页型重装配面包屑保护（不遗留、不丢失）', async () => {
+    const communityHTML = `<!DOCTYPE html><html><body><div id="root">
+        <div class="breadcrumbs breadcrumbs--variant--default">
+          <a class="link breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+          <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">GTFO</span></span></span>
+        </div>
+        <h1 class="display page-header__heading">GTFO</h1>
+      </div></body></html>`;
+    const communitiesHTML = `<div class="breadcrumbs breadcrumbs--variant--default">
+          <a class="link breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+          <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></span>
+        </div><h1 class="page-header__heading">Communities</h1>`;
+    const authorHTML = `<div class="breadcrumbs breadcrumbs--variant--default">
+          <a class="link breadcrumbs__segment" href="/communities/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Communities</span></span></a>
+          <a class="link link--variant--cyber breadcrumbs__segment" href="/c/riskofrain2/"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Risk of Rain 2</span></span></a>
+          <span class="breadcrumbs__segment"><span class="breadcrumbs__item-content"><span class="breadcrumbs__item-label">Misc</span></span></span>
+        </div>
+        <h1 class="page-header__heading">Mods uploaded by <!-- -->Misc</h1>`;
+
+    const dom = boot(communityHTML, 'https://thunderstore.io/c/gtfo/');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    const labels = () => [...d.querySelectorAll('.breadcrumbs__item-label')].map(e => e.textContent);
+
+    assert.strictEqual(api.page, 'community');
+    assert.deepStrictEqual(labels(), ['社区', 'GTFO'], '社区页面包屑名称保持原文');
+
+    // 社区页 → 社区总览：保护必须随页型撤掉，末段 "Communities" 要翻
+    d.getElementById('root').innerHTML = communitiesHTML;
+    dom.window.history.pushState({}, '', '/communities/');
+    await wait(500);
+    assert.strictEqual(api.page, 'communities');
+    assert.deepStrictEqual(labels(), ['社区', '社区'], 'SPA 切到社区总览后不得沿用作者/社区保护');
+
+    // 社区总览 → 作者页：保护必须随页型装配回来
+    d.getElementById('root').innerHTML = authorHTML;
+    dom.window.history.pushState({}, '', '/c/riskofrain2/p/Misc/');
+    await wait(500);
+    assert.strictEqual(api.page, 'author');
+    assert.strictEqual(d.querySelector('.page-header__heading').textContent, '上传者 Misc');
+    assert.deepStrictEqual(labels(), ['社区', 'Risk of Rain 2', 'Misc'], 'SPA 切到作者页后作者名必须受保护');
     dom.window.close();
 });
 

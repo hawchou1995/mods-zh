@@ -17,7 +17,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const [siteId, file] = process.argv.slice(2);
 
 if (!siteId || !file) {
-    console.error('用法: node tools/coverage.mjs <site-id> <snapshot.txt>');
+    console.error('用法: node tools/coverage.mjs <site-id> <snapshot.txt> [--page <页型>]');
     process.exit(2);
 }
 
@@ -35,8 +35,23 @@ if (!site) {
     process.exit(2);
 }
 
+/* 默认口径：该站点所有分组的并集（用于找缺口）。
+ * 加 --page <页型> 后只装配运行期真实会加载的分组：global + alias 共享页型 + 该页型，
+ * 这样快照命中数才等价于“该页型下真的翻出来了”，而不是合并词库的静态覆盖。 */
+const pageArgIdx = process.argv.indexOf('--page');
+const page = pageArgIdx > 0 ? process.argv[pageArgIdx + 1] : '';
+let scope;
+if (page) {
+    const alias = site.alias && site.alias[page];
+    scope = [['global', site.dict.global]];
+    if (alias && site.dict[alias]) scope.push([alias, site.dict[alias]]);
+    if (site.dict[page]) scope.push([page, site.dict[page]]);
+} else {
+    scope = Object.entries(site.dict);
+}
+
 const dict = new Map();
-for (const group of Object.values(site.dict)) {
+for (const [, group] of scope) {
     for (const [k, v] of Object.entries(group)) dict.set(k, v);
 }
 
@@ -67,6 +82,7 @@ for (const key of lines) {
 const total = lines.length;
 const pct = total ? (hit / total * 100).toFixed(1) : '0.0';
 console.log('站点     : ' + siteId);
+console.log('词条口径 : ' + (page ? '页型 ' + page + '（' + scope.map(s => s[0]).join(' + ') + '）' : '全部分组并集'));
 console.log('快照行数 : ' + total);
 console.log('命中     : ' + hit + ' (' + pct + '%)');
 console.log('未命中   : ' + missed.length);

@@ -51,6 +51,8 @@ function registerMenu() {
         if (!State.enabled) return;
         State.cache.clear();
         State.originals = new WeakMap();
+        State.attrOriginals = new WeakMap();
+        State.protectedNodes = new WeakSet();
         scanRoot(document.body);
     });
 

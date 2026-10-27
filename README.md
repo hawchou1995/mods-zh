@@ -7,7 +7,7 @@
 - 词条：**677 个去重原文键**（Thunderstore 201 / Nexus Mods 476），**45 组**动态规则（17 / 28）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
 - 覆盖：`thunderstore.io`；Nexus Mods 根域及 `www`、`next`、`forums`、`help`、`api-docs`、`users` 一方子域路由
 - 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
-- 当前发布版本：`v1.0.4`
+- 当前发布版本：`v1.0.5`
 
 ## 安装
 
@@ -34,7 +34,7 @@
 
 - **界面中文化：已开启 / 已关闭** —— 一键切回英文原文（原文逐字存于 WeakMap，关闭即还原），状态会记住
 - **重新扫描当前页面** —— 站点改版后手动补扫
-- **版本 v1.0.4（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
+- **版本 v1.0.5（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
 
 ## 项目结构
 
@@ -77,7 +77,7 @@ mods-zh/
 ```bash
 npm install
 npm run build      # src/ → dist/mods-zh.user.js
-npm test           # 18 条最小 DOM 测试 + 24 条 jsdom 测试
+npm test           # 19 条最小 DOM 测试 + 36 条 jsdom 测试
 npm run coverage   # 对照 docs/evidence/ 快照算词条覆盖率
 npm run verify     # 以上全套
 ```
@@ -90,6 +90,9 @@ npm run verify     # 以上全套
 2. 把新文本按页型加进 `src/locals/<站点>.js` 对应分组，`"English": "中文"`
 3. `npm run build && npm test`，再跑 `npm run coverage` 看缺口
 4. 同一站点跨页型出现同键，会自动校验「译法必须一致」—— 测试会拦下冲突
+5. 新页型若与已有页型共用同一套组件（如作者列表页与社区列表页的筛选器），在站点对象里声明 `alias: { 新页型: 已有页型 }` 复用整组词条，不要复制一遍
+6. 同一段 DOM 在不同页型分属 UGC 与固定 UI 时（如 Thunderstore 面包屑末段：作者/包/社区页是名称，社区总览/上传/工具页是固定 UI），用 `ignorePages: { 页型: 选择器 }` 只在对应页型追加忽略规则，不要写进全局 `ignore`
+7. 快照默认按「全部分组并集」口径体检（找缺口）；要证明某页型下真的翻得出来，用 `node tools/coverage.mjs <站点> <快照> --page <页型>`，只装配该页型运行期实际加载的 global + alias + 本页型分组
 
 ### 本地手测
 
@@ -100,7 +103,7 @@ npm run verify     # 以上全套
 - **Wiki 页面未验证**：`wiki.nexusmods.com` 于 2026-10-22 返回 HTTP 403，因此没有加入 Wiki 专属词条；`www.nexusmods.com/community` 与 `/support` 实测为 404，社区与支持页按 `forums` / `help` 一方子域路由处理
 - **Thunderstore 旧站 / Legacy 页面未纳入**：现行 `thunderstore.io` 已覆盖全部主要路径
 - 词条按取证到的原文**精确匹配**：站点改文案（哪怕加一个句号）就会漏翻，需要按上面的流程补词条 —— 这是文本驱动方案的代价，也是它抗改版的原因
-- Nexus 基线快照抓取于 2026-10-20，扩展固定 UI 快照抓取于 2026-10-22；Nexus 快照覆盖 440/440 行（100%），Thunderstore 快照覆盖 303/303 行（100%）
+- Nexus 基线快照抓取于 2026-10-20，扩展固定 UI 快照抓取于 2026-10-22；Nexus 快照覆盖 440/440 行（100%），Thunderstore 快照覆盖 340/340 行（100%）；其中作者列表页快照（37 行）按 `--page author` 页型门禁体检，不是合并词库口径
 
 ## 许可
 

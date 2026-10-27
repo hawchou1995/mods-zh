@@ -28,7 +28,9 @@ const State = {
     patterns: [],
     cache: new Map(),      // 原文 -> 译文（含 null，表示不翻）
     ignoreSelector: '',
-    originals: new WeakMap(), // 文本节点/属性宿主 -> 原文
+    originals: new WeakMap(),     // 文本节点 -> 原文
+    attrOriginals: new WeakMap(), // 元素 -> { 属性名: 原文 }，每个属性各自记录
+    protectedNodes: new WeakSet(), // 动态名称文本节点（作者名等）：整节点不参与查表
     observer: null,
     timer: 0,
     enabled: true,
@@ -40,7 +42,12 @@ const State = {
 
 function buildDict(site, page) {
     const dict = new Map();
-    const groups = [site.dict.global, site.dict[page]];
+    // 站点可声明 alias：{ 页型: 共享页型 }，例如 Thunderstore 的作者列表页
+    // 复用社区页的列表 UI 词条。共享页型先铺，本页型后铺，本页型优先。
+    const alias = site.alias && site.alias[page];
+    const groups = alias && site.dict[alias]
+        ? [site.dict.global, site.dict[alias], site.dict[page]]
+        : [site.dict.global, site.dict[page]];
     for (const group of groups) {
         if (!group) continue;
         for (const key of Object.keys(group)) {
@@ -51,7 +58,11 @@ function buildDict(site, page) {
     State.dict = dict;
     State.patterns = site.patterns || [];
     State.cache.clear();
-    State.ignoreSelector = site.ignore || '';
+    // 页型级 ignore：只在某些页型成立的忽略选择器（Thunderstore 面包屑末段在
+    // author/package/community 是动态名称，在社区总览/上传/工具页却是固定 UI）。
+    // 与 alias 一样按页型装配，换页型时重建，保证不漏配也不残留。
+    const pageIgnore = (site.ignorePages && site.ignorePages[page]) || '';
+    State.ignoreSelector = [site.ignore, pageIgnore].filter(Boolean).join(',');
 }
 
 function detectSite() {
@@ -115,6 +126,8 @@ function isIgnored(el) {
 }
 
 function translateTextNode(node) {
+    // 动态名称（作者/团队名）节点整节点跳过：名称可能正好等于某条界面词条
+    if (State.protectedNodes.has(node)) return false;
     const raw = node.nodeValue;
     if (!raw) return false;
     const key = normalize(raw);
@@ -164,7 +177,10 @@ function translateAttributes(el) {
         if (!hit || hit === key) continue;
         // Also honor ignore selectors on the attribute host itself, without suppressing textarea placeholders.
         if ((isIgnored(el) && el.tagName !== 'TEXTAREA') || isIgnored(el.parentElement)) continue;
-        if (!State.originals.has(el)) State.originals.set(el, raw);
+        // 同一元素的 placeholder / aria-label / title 各自记原文，还原时才不会互相覆盖
+        let record = State.attrOriginals.get(el);
+        if (!record) { record = {}; State.attrOriginals.set(el, record); }
+        if (!(attr in record)) record[attr] = raw;
         el.setAttribute(attr, hit);
         changed = true;
         State.stats.attrs++;
@@ -172,11 +188,60 @@ function translateAttributes(el) {
     return changed;
 }
 
+/* 页头「固定前缀 + 动态名称」：Thunderstore 的真实形态是
+ *   <h1 class="… page-header__heading">Mods uploaded by <!-- -->Misc</h1>
+ * React 注释把前缀和作者/团队名拆成两个文本节点，而名称可能正好等于某条界面词条
+ * （Misc / Tools / All / Libraries / Cards / View / Deprecated …），整节点查表会被误翻成“杂项”。
+ * 这里只改前缀文本节点，同一页头里其余文本节点标记为受保护，名称一个字节都不动；
+ * 单文本节点形态同理（只替换其中的前缀片段）。站点用 namePrefixes 声明规则。
+ */
+function translateHeaderNamePrefix(root) {
+    const rules = (State.site && State.site.namePrefixes) || [];
+    if (!rules.length || !root || !root.querySelectorAll) return;
+    const doc = root.ownerDocument || root;
+
+    for (const rule of rules) {
+        const targets = [];
+        if (root.matches && root.matches(rule.selector)) targets.push(root);
+        for (const el of root.querySelectorAll(rule.selector)) targets.push(el);
+
+        for (const el of targets) {
+            if (!rule.re.test(normalize(el.textContent || ''))) continue;
+
+            const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */, null);
+            const nodes = [];
+            let node = walker.nextNode();
+            while (node) { nodes.push(node); node = walker.nextNode(); }
+
+            let prefixNode = null;
+            for (const textNode of nodes) {
+                const raw = textNode.nodeValue || '';
+                const at = raw.indexOf(rule.from);
+                if (at === -1) continue;
+                const value = raw.slice(0, at) + rule.to + raw.slice(at + rule.from.length);
+                if (!State.originals.has(textNode)) State.originals.set(textNode, raw);
+                State.writing = true;
+                textNode.nodeValue = value;
+                State.writing = false;
+                State.stats.nodes++;
+                prefixNode = textNode;
+                break;
+            }
+
+            // 前缀之外的一切都是动态名称，整节点受保护（含重复扫描时的幂等路径）
+            for (const textNode of nodes) {
+                if (textNode !== prefixNode) State.protectedNodes.add(textNode);
+            }
+        }
+    }
+}
+
 /* 统计文案常由数字节点和 React 注释拆开的文本组成。
  * 只在完整计数容器匹配时翻译分隔词，保留数字及其 DOM 结构。 */
 function translateSplitResultCounter(root) {
     if (!root || !root.querySelectorAll) return;
-    const resultRe = /^[\d,]+\s*-\s*[\d,]+ of [\d,]+ results?$/i;
+    // 区间形态 1-20 of 868 results；末页 / 仅一条时不带区间：1 of 1 result、21 of 21 results
+    const resultRe = /^[\d,]+(?:\s*-\s*[\d,]+)? of [\d,]+ results?$/i;
     const doc = root.ownerDocument || root;
 
     for (const el of root.querySelectorAll('*')) {
@@ -205,7 +270,7 @@ function translateSplitResultCounter(root) {
             const token = normalize(textNode.nodeValue || '').toLowerCase();
             if (token === 'of') {
                 const previous = nodes[i - 1];
-                if (previous && /^\s*[\d,]+\s*-\s*[\d,]+\s*$/.test(previous.nodeValue || '')) {
+                if (previous && /^\s*[\d,]+(?:\s*-\s*[\d,]+)?\s*$/.test(previous.nodeValue || '')) {
                     write(previous, (previous.nodeValue || '').replace(/\s+$/, ''), false);
                 }
                 write(textNode, '，共 ');
@@ -323,6 +388,7 @@ function scanRoot(root) {
         batch.push(n);
         n = walker.nextNode();
     }
+    translateHeaderNamePrefix(root);
     for (const node of batch) translateTextNode(node);
     translateSplitResultCounter(root);
     translateSplitRequiredCounter(root);
@@ -381,11 +447,12 @@ function restoreAll() {
         if (State.originals.has(n)) n.nodeValue = State.originals.get(n);
         n = walker.nextNode();
     }
-    // 属性
-    for (const attr of CONFIG.ATTRS) {
-        for (const el of document.querySelectorAll('[' + attr + ']')) {
-            if (State.originals.has(el)) el.setAttribute(attr, State.originals.get(el));
-        }
+    // 属性：逐元素逐属性还原，placeholder / aria-label / title 各自独立
+    const attrSelector = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');
+    for (const el of document.querySelectorAll(attrSelector)) {
+        const record = State.attrOriginals.get(el);
+        if (!record) continue;
+        for (const attr of Object.keys(record)) el.setAttribute(attr, record[attr]);
     }
 }
 
@@ -410,6 +477,8 @@ function onLocationChange() {
     State.page = page;
     buildDict(State.site, page);
     State.originals = new WeakMap();
+    State.attrOriginals = new WeakMap();
+    State.protectedNodes = new WeakSet();
     if (State.enabled) scanRoot(document.body);
 }
 
