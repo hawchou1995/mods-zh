@@ -40,7 +40,7 @@ function auditLocals() {
     for (const rel of ['src/locals/_registry.js', 'src/locals/thunderstore.js', 'src/locals/nexus.js']) {
         vm.runInContext(readFileSync(join(ROOT, rel), 'utf8'), ctx, { filename: rel });
     }
-    return vm.runInContext('SITES.map(s => ({ id: s.id, dict: s.dict, patterns: s.patterns || [], ignore: s.ignore || "" }))', ctx);
+    return vm.runInContext('SITES.map(s => ({ id: s.id, dict: s.dict, patterns: s.patterns || [], ignore: s.ignore || "", scoped: s.scoped || [] }))', ctx);
 }
 
 const sites = auditLocals();
@@ -121,6 +121,35 @@ test('Nexus audited route dictionaries and forum UGC guards are registered', () 
         assert.ok(nx.ignore.includes(selector), `missing forum UGC guard: ${selector}`);
     }
 });
+test('Nexus 上下文规则（scoped）：页型受限、选择器非空、正则完整锚定、译文不等于原文', () => {
+    const nx = sites.find(s => s.id === 'nexus');
+    assert.ok(Array.isArray(nx.scoped) && nx.scoped.length > 0, '缺少 scoped 上下文规则');
+    const pages = new Set(['global', 'home', 'games', 'game', 'browse', 'mod', 'collection', 'media', 'news', 'forums', 'support', 'account']);
+    for (const rule of nx.scoped) {
+        assert.ok(rule.selector && rule.selector.trim(), '上下文规则缺 selector');
+        assert.ok(rule.pages === 'all' || (Array.isArray(rule.pages) && rule.pages.length > 0),
+            "上下文规则必须声明 pages（页型数组或显式 'all'），避免溢出到别的页型");
+        if (Array.isArray(rule.pages)) for (const p of rule.pages) assert.ok(pages.has(p), '未知页型：' + p);
+        for (const [k, v] of Object.entries(rule.dict || {})) {
+            assert.notStrictEqual(k, v, '上下文词条译文等于原文：' + k);
+        }
+        const unanchored = (rule.patterns || []).filter(([re]) => !re.source.startsWith('^') || !re.source.endsWith('$'));
+        assert.strictEqual(unanchored.length, 0,
+            '上下文正则必须完整锚定：' + unanchored.map(x => x[0].source).join(', '));
+        const rawUnanchored = (rule.rawPatterns || []).filter(([re]) => !re.source.startsWith('^') || !re.source.endsWith('$'));
+        assert.strictEqual(rawUnanchored.length, 0,
+            '上下文 raw 正则必须完整锚定：' + rawUnanchored.map(x => x[0].source).join(', '));
+    }
+
+    // 与 mod 标题/作者/描述可能同形的分类与时间枚举，只允许待在上下文规则里
+    const globalKeys = new Set();
+    for (const group of Object.values(nx.dict)) for (const k of Object.keys(group)) globalKeys.add(k);
+    for (const key of ['Avatars', 'Cheats', 'Creatures', 'Environment', 'Items - Food', 'Items and Loot',
+        'Maps', 'Prefabs', 'Quests', 'Vehicles', 'XML Edits', 'Zombies', '24 Hours', '28 Days', '1 Year', 'Clear all']) {
+        assert.ok(!globalKeys.has(key), key + ' 不得进全局词库（会与 mod 标题/作者/描述同形）');
+    }
+});
+
 test('同站跨页型同键不得给出不同译法', () => {
     for (const s of sites) {
         const seen = new Map();

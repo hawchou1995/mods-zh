@@ -2,7 +2,7 @@
 // @name         Thunderstore & Nexus Mods 中文化
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
-// @version      1.0.5
+// @version      1.0.6
 // @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
 // @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
@@ -27,7 +27,7 @@
 (function () {
     'use strict';
 
-    const VERSION = "1.0.5";
+    const VERSION = "1.0.6";
 
 /* =============================================================================
  * _registry.js —— 站点注册表
@@ -516,6 +516,82 @@ function nxCountedLabel(all, label, count) {
     return event ? '截图社区活动 #' + event[1] + ' (' + count + ')' : all;
 }
 
+/* ---- 模组浏览页（2026 新前端）固定 UI 枚举 ----
+ * 取证：docs/evidence/nexus-browse-2026-10-27.txt
+ *   · 实机 DOM 里分类名与计数是两个相邻 span：
+ *     <label><p><span class="truncate …">Avatars</span><span class="text-neutral-subdued">(269)</span></p></label>
+ *   · 卡片分类元数据是 a[data-e2eid="mod-tile-category"]，href 同时含 /games/ 与 ?categoryName=
+ *   · 时间范围是 HeadlessUI Popover 按钮文本，已选 chip 是 "Time range: 28 Days"
+ *   · 页大小 label 是大写 "20 Items"（生产 JS 字面量），旧正则只认小写 items
+ * 这些串与 mod 标题/作者/描述可能同形（标题就叫 Vehicles / 28 Days / 20 Items），
+ * 所以只放进 site.scoped 的上下文规则，不进全局 dict。 */
+const NX_BROWSE_CATEGORY_ZH = Object.freeze({
+    'Avatars': '头像',
+    'Cheats': '作弊',
+    'Creatures': '生物',
+    'Environment': '环境',
+    'Items - Food': '物品 - 食品',
+    'Items – Food': '物品 – 食品',
+    'Items and Loot': '物品与战利品',
+    'Maps': '地图',
+    'Prefabs': '预制建筑',
+    'Quests': '任务',
+    'Vehicles': '载具',
+    'XML Edits': 'XML 修改',
+    'Zombies': '僵尸',
+});
+
+const NX_TIME_RANGE_ZH = Object.freeze({
+    'all time': '所有时间',
+    '24 hours': '24 小时',
+    '7 days': '7 天',
+    '14 days': '14 天',
+    '28 days': '28 天',
+    '1 year': '1 年',
+    'custom': '自定义',
+});
+
+/* "Avatars (10)" -> "头像 (10)"：同节点形态，计数一位不动 */
+function nxCategoryCounted(all, label, count) {
+    const zh = NX_BROWSE_CATEGORY_ZH[label];
+    return zh ? zh + ' (' + count + ')' : all;
+}
+
+/* "Time range: 28 Days" -> "时间范围：28 天"；custom 与大小写变体都保留含义 */
+function nxTimeRangeChip(all, value) {
+    const raw = value.trim();
+    return '时间范围：' + (NX_TIME_RANGE_ZH[raw.toLowerCase()] || raw);
+}
+
+/* 会员横幅的第二个文本节点（前半句 "Try Premium free" 是粗体 span，见取证文件）：
+ * 整句是站点点级固定营销文案，但只在横幅容器里翻，避免把同名 UGC 段落牵连进来。 */
+function nxPremiumBannerTail(all, dash) {
+    return (dash ? dash + ' ' : '') + '解锁更快的下载速度与一键安装';
+}
+
+/* ---- 已选搜索条件 chip："Title: <用户输入>"（实机 chip 标签是单文本节点）----
+ * 生产 bundle 里标签由 `${humanize(field)}: ${value}` 拼成，field ∈ title/description/author/uploader。
+ * 只翻固定前缀，冒号后的用户输入逐字节保留（含 "24 Hours"、中文、冒号、多个空格、$1 / $& / $`）。
+ * 用函数式替换，避免 String.replace 把值里的 $ 序列当替换模式。 */
+const NX_SEARCH_FIELD_ZH = Object.freeze({
+    Title: '标题',
+    Description: '描述',
+    Author: '作者',
+    Uploader: '上传者',
+});
+
+function nxSearchChipLabel(all, field, value) {
+    const zh = NX_SEARCH_FIELD_ZH[field];
+    return zh ? zh + '：' + value : all;
+}
+
+/* 时间范围枚举："24 Hours" / "7 days" / "1 Year"：数字原样保留，只本地化单位 */
+const NX_TIME_OPTION_PATTERNS = [
+    [/^([\d,]+)\s*hours?$/i, (all, n) => n + ' 小时'],
+    [/^([\d,]+)\s*days?$/i, (all, n) => n + ' 天'],
+    [/^([\d,]+)\s*years?$/i, (all, n) => n + ' 年'],
+];
+
 SITES.push({
     id: 'nexus',
     name: 'Nexus Mods',
@@ -532,7 +608,11 @@ SITES.push({
         '[class*="comment"]', '[class*="Comment"]',
         '[class*="markdown"]', '[class*="prose"]',
         '[class*="mod-title"]', '[class*="file-name"]',
-        '[href*="/games/"]', '[href*="/collections/"]', '[href*="/images/"]', '[href*="/videos/"]',
+        // 2026 新前端的卡片结构（data-e2eid 稳定标识）：标题/作者/摘要都是 UGC
+        '[data-e2eid="mod-tile-title"]', '[data-e2eid="mod-tile-summary"]', '[data-e2eid="user-link"]',
+        // 游戏名链接仍整棵跳过；卡片上的分类元数据是同一 URL 族里的固定 UI，单独放行
+        '[href*="/games/"]:not([data-e2eid="mod-tile-category"])',
+        '[href*="/collections/"]', '[href*="/images/"]', '[href*="/videos/"]',
         '[href*="/topic/"]', '[class*="featured-article"]',
         '.ipsType_richText',
         '.ipsDataItem_lastPoster',
@@ -983,6 +1063,8 @@ SITES.push({
             'Learn More': '了解更多',
             'Endorsements': '认可数',
             'Downloads': '下载量',
+            'Start free trial': '免费试用',
+            'Display': '显示',
 
             /* 语言枚举 */
             'Afrikaans': '南非荷兰语',
@@ -1187,6 +1269,80 @@ SITES.push({
         [/^Served in ([\d.]+|--)s$/, '服务器响应耗时 $1 秒'],
         [/^Bookmark (.+)$/, '收藏 $1'],
     ],
+
+    /* 页型上下文规则：引擎按 rule.selector 判定「当前文本节点是不是在这个固定 UI 子树里」，
+     * 命中才翻，出了上下文一律不动。这样恰好叫 Vehicles / 28 Days / 20 Items 的
+     * mod 标题、作者名、描述不会因为新增词条被牵连。pages 限定页型，避免溢出到 mod 详情页。 */
+    scoped: [
+        {
+            pages: ['browse'],
+            selector: '[data-e2eid="category-filter"], [data-e2eid="mod-tile-category"]',
+            dict: NX_BROWSE_CATEGORY_ZH,
+            patterns: [[/^(.+) \(([\d,]+)\)$/, nxCategoryCounted]],
+        },
+        {
+            pages: ['browse'],
+            selector: '[id^="headlessui-popover-panel"]',
+            dict: {
+                'All time': '所有时间',
+                'From': '起始日期',
+                'To': '截止日期',
+                'From date': '起始日期',
+                'To date': '截止日期',
+                'Go': '跳转',
+            },
+            patterns: NX_TIME_OPTION_PATTERNS,
+        },
+        {
+            pages: ['browse'],
+            selector: '[class~="group/select"]',
+            dict: { 'All time': '所有时间' },
+            patterns: NX_TIME_OPTION_PATTERNS,
+        },
+        {
+            pages: ['browse'],
+            selector: '[data-e2eid^="remove-filter-"], [data-e2eid="remove-all-filters"]',
+            dict: { 'Clear all': '全部清除', 'Remove filter for': '移除筛选' },
+            patterns: [[/^Time range: (.+)$/, nxTimeRangeChip]],
+            // "Title: <用户输入>"：按原始文本匹配，冒号后的值一位不动
+            rawPatterns: [[/^(Title|Description|Author|Uploader): ([\s\S]*)$/, nxSearchChipLabel]],
+        },
+        {
+            /* 页大小下拉里的固定营销说明（实机三节点拆分，见取证文件的 md:hidden 块）：
+             *   <div class="mt-4 md:hidden"><p><span>View more results … with </span><a>premium</a><span>.</span></p></div>
+             * 选择器钉在 md:hidden 营销块上，mod 标题/描述里的同串不受影响。 */
+            pages: ['browse'],
+            selector: '[id^="headlessui-listbox-options"] div[class~="md:hidden"][class~="mt-4"]',
+            rawPatterns: [
+                [/^View more results for mods, collections and media with\s*$/, '查看更多模组、合集与媒体结果，需升级为 '],
+                [/^premium$/, '高级会员'],
+                [/^\.$/, '。'],
+            ],
+        },
+        {
+            /* 页大小控件（实机 browse 页 `[data-e2eid="select-mods-per-page"]` + 它的
+             * `[id^="headlessui-listbox-options"]` 面板）。本轮新增的大小写/单数扩展只在这里生效；
+             * 全局仍保留 HEAD 的小写 `20 items` 词条行为（collections / media / news 旧前端走那条）。 */
+            pages: ['browse'],
+            selector: '[class~="group/select"], [id^="headlessui-listbox-options"]',
+            patterns: [[/^([\d,]+)\s+items?$/i, '每页 $1 项']],
+        },
+        {
+            /* 站点级会员横幅（实机 `p.text-body-md.text-neutral-moderate.min-w-0`）：
+             * 粗体 span 与尾部说明各是一个文本节点，只在横幅容器内翻译。
+             * 普通正文/标题里恰好写 "Try Premium free" 时不翻（见 jsdom 负向用例）。 */
+            pages: 'all',
+            selector: 'p[class~="min-w-0"][class~="text-neutral-moderate"]',
+            dict: { 'Try Premium free': '免费试用 Premium' },
+            patterns: [[/^([-\u2013\u2014])?\s*unlock faster downloads\s*&\s*1-click installs$/i, nxPremiumBannerTail]],
+        },
+        {
+            // 页头 "7 Days To Die mods"：只换固定后缀，游戏名一个字节都不动
+            pages: ['browse'],
+            selector: 'h1',
+            patterns: [[/^(.+?) mods$/, '$1 模组']],
+        },
+    ],
 });
 
 /* =============================================================================
@@ -1217,11 +1373,14 @@ const State = {
     page: null,
     dict: new Map(),
     patterns: [],
+    scoped: [],            // 页型上下文规则：只在该 DOM 上下文内查表（见 site.scoped）
     cache: new Map(),      // 原文 -> 译文（含 null，表示不翻）
     ignoreSelector: '',
     originals: new WeakMap(),     // 文本节点 -> 原文
     attrOriginals: new WeakMap(), // 元素 -> { 属性名: 原文 }，每个属性各自记录
     protectedNodes: new WeakSet(), // 动态名称文本节点（作者名等）：整节点不参与查表
+    lastWritten: new WeakMap(),    // 文本节点 -> 本脚本最后写入的值（用于区分站点外写与自写）
+    attrLastWritten: new WeakMap(), // 元素 -> { 属性名: 本脚本最后写入的值 }
     observer: null,
     timer: 0,
     enabled: true,
@@ -1230,6 +1389,35 @@ const State = {
 };
 
 /* ------------------------------------------------------------------ 词条装配 */
+
+/* 页型上下文规则装配：site.scoped = [{ pages?, selector, exclude?, dict?, patterns? }]
+ * 只装配当前页型声明的规则；dict 过滤掉空值与同值，patterns 沿用「完整锚定」约定。
+ * 用途：同一串在不同 DOM 上下文里含义不同（分类标签 vs mod 标题、下拉枚举 vs UGC），
+ * 上下文里才翻，出了上下文一个字节都不动。 */
+function buildScopedRules(site, page) {
+    const rules = [];
+    for (const rule of site.scoped || []) {
+        if (!rule || !rule.selector) continue;
+        // pages: 'all' 表示站点级组件（横幅等）在所有页型生效；数组则按页型精确装配
+        if (rule.pages && rule.pages !== 'all' && rule.pages.indexOf(page) === -1) continue;
+        const dict = new Map();
+        const source = rule.dict || {};
+        for (const key of Object.keys(source)) {
+            const val = source[key];
+            if (typeof val === 'string' && val && val !== key) dict.set(key, val);
+        }
+        rules.push({
+            selector: rule.selector,
+            exclude: rule.exclude || '',
+            dict,
+            patterns: rule.patterns || [],
+            // rawPatterns：按**原始文本**匹配（不归一化空白），用于"固定前缀 + 用户输入值"这类
+            // 必须逐字节保留值的内容（如已选筛选 chip 的 "Title: <用户输入>"）。
+            rawPatterns: rule.rawPatterns || [],
+        });
+    }
+    return rules;
+}
 
 function buildDict(site, page) {
     const dict = new Map();
@@ -1248,6 +1436,7 @@ function buildDict(site, page) {
     }
     State.dict = dict;
     State.patterns = site.patterns || [];
+    State.scoped = buildScopedRules(site, page);
     State.cache.clear();
     // 页型级 ignore：只在某些页型成立的忽略选择器（Thunderstore 面包屑末段在
     // author/package/community 是动态名称，在社区总览/上传/工具页却是固定 UI）。
@@ -1304,6 +1493,94 @@ function lookup(key) {
     return result;
 }
 
+/**
+ * 上下文 raw 规则：与 lookupScoped 同样是"只在 rule.selector 子树内"，但直接匹配
+ * 文本节点的原始值（nodeValue），不做空白归一化、不做 CJK/纯符号跳过。
+ * 用于固定前缀 + 动态值同节点、且值必须逐字节保留的场景（chip 的 "Title: <用户输入>"）。
+ * 替换一律走函数形式，值里的 $1 / $& / $` 不会被 String.replace 当替换模式解释。
+ * @returns {boolean} 是否已改写该节点
+ */
+/* 站点在原地改写同一节点（筛选条件变化、SPA 局部刷新）时，nodeValue/属性值会变成新的站点原文。
+ * MutationObserver 的回调是异步的（微任务之后才到），State.writing 那时早已复位，
+ * 因此不能靠同步标记区分「自写」和「站点外写」；这里用 lastWritten 记录本脚本最后写入的值：
+ *   · 当前值 == lastWritten  -> 是自写（或未被改写），保持原原文不动；
+ *   · 当前值 != lastWritten  -> 站点外写，把原文更新为站点当前值，避免关闭开关回滚旧值。
+ * WeakMap 不持有节点，节点被销毁后自动释放。 */
+function refreshOriginal(node, raw) {
+    const written = State.lastWritten.get(node);
+    if (written !== undefined) {
+        if (written === raw) return;                 // 自写：原文不动
+        State.originals.set(node, raw);              // 站点在开启状态下改写
+        State.lastWritten.delete(node);
+        return;
+    }
+    // lastWritten 缺失有两种来源：① 从没写过；② 上一次关闭时还原过并清掉了记录。
+    // 无论哪种，只要当前值与已记录原文不同，就是站点在关闭期间改写了该节点，
+    // 原文必须跟进——否则再次关闭会复活过期值。
+    if (State.originals.has(node) && State.originals.get(node) !== raw) {
+        State.originals.set(node, raw);
+    }
+}
+
+function translateScopedRaw(node, el) {
+    if (!State.scoped.length || !el || typeof el.closest !== 'function') return false;
+    const raw = node.nodeValue;
+    if (!raw) return false;
+    refreshOriginal(node, raw);
+    for (const rule of State.scoped) {
+        if (!rule.rawPatterns.length) continue;
+        let host = null;
+        try { host = el.closest(rule.selector); } catch (e) { host = null; }
+        if (!host) continue;
+        if (rule.exclude) {
+            let blocked = false;
+            try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
+            if (blocked) continue;
+        }
+        for (const [re, to] of rule.rawPatterns) {
+            if (!re.test(raw)) continue;
+            const out = raw.replace(re, to);
+            if (!out || out === raw) continue;
+            if (!State.originals.has(node)) State.originals.set(node, raw);
+            State.writing = true;
+            node.nodeValue = out;
+            State.writing = false;
+            State.lastWritten.set(node, out);
+            State.stats.nodes++;
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * 页型上下文查表：只有当 rule.selector 命中 el 的祖先子树时才生效，命中即停。
+ * 结果依赖上下文，因此不写 State.cache（缓存是「原文 -> 译文」的全局单值）。
+ * @param {Element|null} el 文本节点的父元素 / 属性宿主
+ * @param {string} key 归一化后的原文
+ * @returns {string|null} 译文；无命中返回 null
+ */
+function lookupScoped(el, key) {
+    if (!State.scoped.length || !el || typeof el.closest !== 'function') return null;
+    for (const rule of State.scoped) {
+        let host = null;
+        try { host = el.closest(rule.selector); } catch (e) { host = null; }
+        if (!host) continue;
+        if (rule.exclude) {
+            let blocked = false;
+            try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
+            if (blocked) continue;
+        }
+        if (rule.dict.has(key)) return rule.dict.get(key);
+        for (const [re, to] of rule.patterns) {
+            if (!re.test(key)) continue;
+            const out = key.replace(re, to);
+            if (out && out !== key) return out;
+        }
+    }
+    return null;
+}
+
 function isIgnored(el) {
     if (!el) return true;
     if (State.ignoreSelector) {
@@ -1321,12 +1598,16 @@ function translateTextNode(node) {
     if (State.protectedNodes.has(node)) return false;
     const raw = node.nodeValue;
     if (!raw) return false;
+    // 站点外写（同一节点被改成新内容）时先刷新原文，再按新内容查表
+    refreshOriginal(node, raw);
     const key = normalize(raw);
     if (!key) return false;
 
-    let hit = lookup(key);
-    let authorPrefix = false;
     const parent = node.parentElement;
+    // 上下文 raw 规则（固定前缀 + 需逐字节保留的值）优先；忽略区域不参与
+    if (!isIgnored(parent) && translateScopedRaw(node, parent)) return true;
+    let hit = lookup(key) || lookupScoped(parent, key);
+    let authorPrefix = false;
 
     // Thunderstore 的卡片常把静态 "by" 前缀包在 author 容器里；
     // 保留作者链接原文，只翻前缀，避免 ignore 规则连 UI 一起吞掉。
@@ -1350,9 +1631,11 @@ function translateTextNode(node) {
     if (!State.originals.has(node)) State.originals.set(node, raw);
     const lead = raw.match(/^\s*/)[0];
     const trail = raw.match(/\s*$/)[0];
+    const next = authorPrefix ? hit : lead + hit + trail;
     State.writing = true;
-    node.nodeValue = authorPrefix ? hit : lead + hit + trail;
+    node.nodeValue = next;
     State.writing = false;
+    State.lastWritten.set(node, next);
     State.stats.nodes++;
     return true;
 }
@@ -1362,17 +1645,31 @@ function translateAttributes(el) {
     for (const attr of CONFIG.ATTRS) {
         const raw = el.getAttribute(attr);
         if (!raw) continue;
-        const key = normalize(raw);
-        if (!key) continue;
-        const hit = lookup(key);
-        if (!hit || hit === key) continue;
-        // Also honor ignore selectors on the attribute host itself, without suppressing textarea placeholders.
-        if ((isIgnored(el) && el.tagName !== 'TEXTAREA') || isIgnored(el.parentElement)) continue;
         // 同一元素的 placeholder / aria-label / title 各自记原文，还原时才不会互相覆盖
         let record = State.attrOriginals.get(el);
         if (!record) { record = {}; State.attrOriginals.set(el, record); }
+        let written = State.attrLastWritten.get(el);
+        if (!written) { written = {}; State.attrLastWritten.set(el, written); }
+        // 站点原地改写该属性：原文换成站点当前值。这一句必须放在"是否需要翻译"之前——
+        // 站点改成的新值可能压根没有词条，此时若不更新原文，关闭开关会把它冲回旧值。
+        if (attr in written) {
+            if (written[attr] !== raw) {
+                record[attr] = raw;
+                delete written[attr];
+            }
+        } else if ((attr in record) && record[attr] !== raw) {
+            // 关闭期间站点改写：记录里还是上一次的原文，同样要跟进
+            record[attr] = raw;
+        }
+        const key = normalize(raw);
+        if (!key) continue;
+        const hit = lookup(key) || lookupScoped(el, key);
+        if (!hit || hit === key) continue;
+        // Also honor ignore selectors on the attribute host itself, without suppressing textarea placeholders.
+        if ((isIgnored(el) && el.tagName !== 'TEXTAREA') || isIgnored(el.parentElement)) continue;
         if (!(attr in record)) record[attr] = raw;
         el.setAttribute(attr, hit);
+        written[attr] = hit;
         changed = true;
         State.stats.attrs++;
     }
@@ -1414,6 +1711,7 @@ function translateHeaderNamePrefix(root) {
                 State.writing = true;
                 textNode.nodeValue = value;
                 State.writing = false;
+                State.lastWritten.set(textNode, value);
                 State.stats.nodes++;
                 prefixNode = textNode;
                 break;
@@ -1453,6 +1751,7 @@ function translateSplitResultCounter(root) {
             State.writing = true;
             target.nodeValue = value;
             State.writing = false;
+            State.lastWritten.set(target, value);
             if (count) State.stats.nodes++;
         };
 
@@ -1507,6 +1806,7 @@ function translateSplitPackageListingSummary(root) {
                 State.writing = true;
                 node.nodeValue = value;
                 State.writing = false;
+                State.lastWritten.set(node, value);
                 State.stats.nodes++;
             }
             node = walker.nextNode();
@@ -1539,6 +1839,7 @@ function translateSplitRequiredCounter(root) {
             State.writing = true;
             target.nodeValue = value;
             State.writing = false;
+            State.lastWritten.set(target, value);
             State.stats.nodes++;
         };
 
@@ -1631,19 +1932,38 @@ function stopObserver() {
 /* ------------------------------------------------------------------ 开关 */
 
 function restoreAll() {
-    // 文本节点
+    // 文本节点：只回写"本脚本最后写入、且之后没被站点改写"的节点。
+    // 当前值与 lastWritten 不一致 ⇒ 站点（含关闭期间）已经改写，以站点当前值为准，
+    // 把原文更新为它并跳过回写，避免关闭操作复活过期内容。
     const walker = document.createTreeWalker(document.body, 4, null);
     let n = walker.nextNode();
     while (n) {
-        if (State.originals.has(n)) n.nodeValue = State.originals.get(n);
+        const written = State.lastWritten.get(n);
+        if (written !== undefined) {
+            const current = n.nodeValue;
+            if (current !== written) {
+                State.originals.set(n, current);
+            } else if (State.originals.has(n)) {
+                n.nodeValue = State.originals.get(n);
+            }
+            State.lastWritten.delete(n);
+        }
         n = walker.nextNode();
     }
-    // 属性：逐元素逐属性还原，placeholder / aria-label / title 各自独立
+    // 属性：逐元素逐属性还原，placeholder / aria-label / title 各自独立。
+    // 只处理本脚本写过的属性；站点在关闭期间移除的不要复活，改写的以当前值为准。
     const attrSelector = CONFIG.ATTRS.map(a => '[' + a + ']').join(',');
     for (const el of document.querySelectorAll(attrSelector)) {
         const record = State.attrOriginals.get(el);
-        if (!record) continue;
-        for (const attr of Object.keys(record)) el.setAttribute(attr, record[attr]);
+        const written = State.attrLastWritten.get(el);
+        if (!record || !written) continue;
+        for (const attr of Object.keys(written)) {
+            const current = el.getAttribute(attr);
+            if (current === null) { delete record[attr]; continue; }              // 站点已移除：不复活
+            if (current !== written[attr]) { record[attr] = current; continue; }  // 站点已改写：以当前值为准
+            if (attr in record) el.setAttribute(attr, record[attr]);
+        }
+        State.attrLastWritten.delete(el);
     }
 }
 
@@ -1667,8 +1987,9 @@ function onLocationChange() {
     if (page === State.page) return;
     State.page = page;
     buildDict(State.site, page);
-    State.originals = new WeakMap();
-    State.attrOriginals = new WeakMap();
+    // 只重建「按页型装配」的东西（词条/正则/上下文规则/ignore，buildDict 内完成）与页头名称保护；
+    // 原文容器必须保留：SPA 切页不销毁导航、筛选控件等节点，重建会让这些节点的原文丢失，
+    // 关闭开关时无法逐字还原（originals / attrOriginals / lastWritten 均为 WeakMap，随节点回收）。
     State.protectedNodes = new WeakSet();
     if (State.enabled) scanRoot(document.body);
 }
@@ -1756,8 +2077,7 @@ function registerMenu() {
     GM_registerMenuCommand('重新扫描当前页面', () => {
         if (!State.enabled) return;
         State.cache.clear();
-        State.originals = new WeakMap();
-        State.attrOriginals = new WeakMap();
+        // 原文容器不清空：重扫不能丢掉已翻译节点的原文，否则关闭开关无法逐字还原
         State.protectedNodes = new WeakSet();
         scanRoot(document.body);
     });

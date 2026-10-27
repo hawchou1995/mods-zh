@@ -1,0 +1,101 @@
+# Nexus Mods 模组浏览页固定 UI 快照 —— 2026-10-27
+# 站点现状：2026 版新前端（Next.js SSR + HeadlessUI），路由 /games/<game>/mods。
+# 取证方式（三路交叉，互不替代）：
+#   1) 生产 JS chunk 原文：实机页面内抓取的 40 个 /_next/static chunk（0 失败）中的字面量，
+#      用于锁定时区下拉、页大小、chip 文案、会员横幅的真实英文（不受第三方翻译扩展污染）。
+#   2) SSR 原始 HTML：页内同源 fetch('/games/7daystodie/mods') 得到的未渲染响应（124,566 字节），
+#      用于锁定页头 <h1><span class="line-clamp-2 break-words">7 Days To Die mods</span></h1>。
+#   3) 实机 DOM：bsk Agent Window 内真实 Chrome 渲染后的节点结构与 class/data-e2eid，
+#      用于确认文本节点拆分方式（分类名与计数是两个 span；横幅是 span + 文本节点）。
+# 页面：https://www.nexusmods.com/games/7daystodie/mods（另有 skyrimspecialedition/mods 交叉核对）
+# 只收固定 UI / 固定枚举 / 分类标签；mod 标题、作者、描述、文件名、输入值均属 UGC，不入快照。
+#
+# --- 页头（游戏名 + 固定后缀 " mods"） ---
+7 Days To Die mods
+Skyrim Special Edition mods
+#
+# --- 会员横幅 ---
+Try Premium free
+- unlock faster downloads & 1-click installs
+Start free trial
+Close
+#
+# --- 时间范围（HeadlessUI Popover；选项按钮 span.text-body-md 单节点） ---
+All time
+24 Hours
+7 Days
+14 Days
+28 Days
+1 Year
+From
+To
+From date
+To date
+Go
+#
+# --- 已选筛选 chip（按钮 data-e2eid="remove-filter-time-range-28-days"） ---
+Time range: 28 Days
+Remove filter for
+Clear all
+#
+# --- 每页条数（大写 I，来源 JS 字面量 "20 Items" 等） ---
+20 Items
+40 Items
+60 Items
+80 Items
+#
+# --- 分类筛选（#filters-panel div[data-e2eid="category-filter"]） ---
+# 实机 DOM：<label><p><span class="truncate …">Avatars</span><span class="text-neutral-subdued">(269)</span></p></label>
+# 即分类名与计数在不同文本节点；同节点形态 "Avatars (10)" 亦需支持（截图为 28 天时间范围下的计数）。
+Avatars
+Avatars (10)
+Cheats
+Cheats (4)
+Creatures
+Creatures (12)
+Environment
+Environment (5)
+Items - Food
+Items - Food (8)
+Items and Loot
+Items and Loot (29)
+Maps
+Maps (7)
+Prefabs
+Prefabs (18)
+Quests
+Quests (4)
+Vehicles
+Vehicles (370)
+XML Edits
+XML Edits (484)
+Zombies
+Zombies (195)
+Audio
+Crafting
+Gameplay
+Miscellaneous
+Overhauls
+User Interface
+Utilities
+Visuals and Graphics
+Weapons
+#
+# --- 卡片分类元数据（a[data-e2eid="mod-tile-category"]，href 含 /games/ 与 ?categoryName=） ---
+Immersion
+#
+# --- 结果计数 / 相对时间（已有规则，回归用） ---
+9,479 results
+4 minutes ago
+#
+# --- 页大小下拉面板的固定营销说明（实机 div.mt-4.md:hidden > p，三节点拆分，首节点带尾随空格） ---
+View more results for mods, collections and media with
+premium
+#
+# --- 已选搜索条件 chip：button[data-e2eid^="remove-filter-<field>-"] > span.text-body-sm ---
+# 生产 bundle：`${humanize(field)}: ${value}`（field ∈ title/description/author/uploader），
+# 冒号后是用户输入值，必须逐字节保留；下列值含冒号、空格、$1、$&、反引号与中文（实机实测）。
+Title: 24 Hours: Avatars $1 中文 x
+Description: Author: $& $` 值
+Author: Vehicles
+Uploader: 28 Days

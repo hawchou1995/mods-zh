@@ -1254,6 +1254,883 @@ await test('Nexus routes classify audited page groups', async () => {
         dom.window.close();
     }
 });
+/* ------------------------------------------------------------------ Nexus 模组浏览页（7 Days To Die）
+ * 取证：docs/evidence/nexus-browse-2026-10-27.txt
+ *  - 分类筛选：分类名与计数是两个相邻 span（label > p > span.truncate + span.text-neutral-subdued），
+ *    同节点形态 "Avatars (10)" 也存在于其它页型/截图中；
+ *  - 卡片分类元数据是 a[data-e2eid="mod-tile-category"]，href 同时含 /games/ 与 ?categoryName=；
+ *  - 时间范围是 HeadlessUI Popover（选项为按钮内单节点文本），已选 chip 是
+ *    button[data-e2eid^="remove-filter-"] 内的 "Time range: 28 Days"；
+ *  - 页大小下拉的 label 是大写 "20 Items"（生产 JS 字面量，见证据文件）。
+ */
+
+const NX_BROWSE_7DTD_CATS = [
+    ['Avatars', '10'], ['Cheats', '4'], ['Creatures', '12'], ['Environment', '5'],
+    ['Items - Food', '8'], ['Items and Loot', '29'], ['Maps', '7'], ['Prefabs', '18'],
+    ['Quests', '4'], ['Vehicles', '370'], ['XML Edits', '484'], ['Zombies', '195'],
+    ['Audio', '227'], ['Crafting', '826'], ['Gameplay', '2,634'], ['Miscellaneous', '320'],
+    ['Overhauls', '207'], ['User Interface', '699'], ['Utilities', '224'],
+    ['Visuals and Graphics', '197'], ['Weapons', '502'],
+];
+
+const NX_BROWSE_CAT_ZH = {
+    'Avatars': '头像', 'Cheats': '作弊', 'Creatures': '生物', 'Environment': '环境',
+    'Items - Food': '物品 - 食品', 'Items and Loot': '物品与战利品', 'Maps': '地图',
+    'Prefabs': '预制建筑', 'Quests': '任务', 'Vehicles': '载具', 'XML Edits': 'XML 修改',
+    'Zombies': '僵尸', 'Audio': '音频', 'Crafting': '制作', 'Gameplay': '玩法',
+    'Miscellaneous': '杂项', 'Overhauls': '大修', 'User Interface': '用户界面',
+    'Utilities': '实用工具', 'Visuals and Graphics': '视觉与画面', 'Weapons': '武器',
+};
+
+function nxBrowseCategoryRows(cats) {
+    return cats.map(([name, count], i) =>
+        '<div class="group/checkbox flex gap-x-2 cursor-pointer">' +
+        '<span role="checkbox" aria-checked="false" data-e2eid="checkbox-filter-' + i + '"></span>' +
+        '<label for="cat' + i + '"><p class="text-body-md flex gap-x-1">' +
+        '<span class="truncate text-neutral-moderate">' + name + '</span>' +
+        '<span class="text-neutral-subdued">(' + count + ')</span>' +
+        '</p></label></div>').join('');
+}
+
+function nxBrowsePage(opts) {
+    const gameId = (opts && opts.gameId) || '7daystodie';
+    const gameName = (opts && opts.gameName) || '7 Days To Die';
+    const cats = (opts && opts.cats) || NX_BROWSE_7DTD_CATS;
+    return `<!DOCTYPE html><html><body>
+  <nav aria-label="Breadcrumb navigation">
+    <a href="https://www.nexusmods.com">Home</a>
+    <a href="https://www.nexusmods.com/games/${gameId}">${gameName}</a>
+    <span>Mods</span>
+  </nav>
+  <div class="flex flex-col justify-between space-y-6 gap-x-2 md:flex-row md:items-center">
+    <div class="flex min-w-0 grow flex-col gap-x-6 gap-y-4 sm:flex-row sm:items-center">
+      <div class="space-y-1.5">
+        <h1 class="text-heading-md sm:text-heading-lg text-neutral-strong flex items-center gap-x-2 font-semibold"><span class="line-clamp-2 break-words">${gameName} mods</span></h1>
+      </div>
+    </div>
+  </div>
+  <p class="text-body-md text-neutral-moderate min-w-0"><span class="font-semibold text-neutral-strong">Try Premium free</span> - unlock faster downloads &amp; 1-click installs</p>
+  <div class="flex gap-x-2"><a class="nxm-button" href="https://users.nexusmods.com/account/billing/premium">Start free trial</a><button type="button" aria-label="Close">X</button></div>
+  <div aria-label="Filters panel" id="filters-panel" role="region">
+    <button type="button" aria-expanded="true">Hide filters</button>
+    <div data-e2eid="category-filter"><div class="-m-1 space-y-2 p-1 scrollbar max-h-96 overflow-auto">
+      ${nxBrowseCategoryRows(cats)}
+      <div class="group/checkbox flex gap-x-2"><label for="cat-counted"><p class="text-body-md flex gap-x-1" data-nodeform="counted">Zombies (195)</p></label></div>
+    </div></div>
+  </div>
+  <div class="flex items-center gap-x-3">
+    <div class="relative"><button type="button" aria-label="Time" aria-expanded="false" class="group/select flex min-h-9 shrink-0 items-center justify-center gap-x-1 rounded"><span class="text-body-lg sm:text-body-md grow truncate text-left">28 Days</span></button></div>
+    <div class="relative"><button type="button" aria-label="Mods per page" data-e2eid="select-mods-per-page" class="group/select flex min-h-9 shrink-0 items-center justify-center gap-x-1 rounded"><span class="text-body-lg sm:text-body-md grow truncate text-left">20 Items</span></button></div>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" data-e2eid="remove-filter-time-range-28-days"><div class="relative"><span class="flex items-center gap-x-1 px-2"><span class="sr-only">Remove filter for </span><span class="text-body-sm grow text-left">Time range: 28 Days</span></span></div></button>
+    <button type="button" data-e2eid="remove-all-filters">Clear all</button>
+  </div>
+  <div>9,479 results</div>
+  <div class="mods-grid">
+    <div class="group/mod-tile flex min-h-108 flex-col rounded bg-surface-mid" data-e2eid="mod-tile">
+      <a data-e2eid="mod-tile-title" href="https://www.nexusmods.com/${gameId}/mods/13366">Vehicles</a>
+      <a data-e2eid="user-link" href="https://www.nexusmods.com/profile/Avatars?gameId=1059"><span class="truncate">Avatars</span></a>
+      <div class="flex flex-col"><a class="nxm-link text-body-sm inline" data-e2eid="mod-tile-category" href="https://www.nexusmods.com/games/${gameId}/mods?categoryName=Vehicles">Vehicles</a></div>
+      <div data-e2eid="mod-tile-summary">28 Days later: Cheats and 20 Items appear.</div>
+      <p data-e2eid="mod-tile-updated"><span><time datetime="2026-10-27T02:09:01.000Z">4 minutes ago</time></span></p>
+    </div>
+    <div class="group/mod-tile flex min-h-108 flex-col rounded bg-surface-mid" data-e2eid="mod-tile">
+      <a data-e2eid="mod-tile-title" href="https://www.nexusmods.com/${gameId}/mods/2">Gameplay</a>
+      <a data-e2eid="user-link" href="https://www.nexusmods.com/profile/28-Days?gameId=1059"><span class="truncate">28 Days</span></a>
+      <div class="flex flex-col"><a class="nxm-link text-body-sm inline" data-e2eid="mod-tile-category" href="https://www.nexusmods.com/games/${gameId}/mods?categoryName=Items%20and%20Loot">Items and Loot</a></div>
+      <div data-e2eid="mod-tile-summary">A user description mentioning Avatars (10) and Quests.</div>
+    </div>
+  </div>
+</body></html>`;
+}
+
+const NX_TIME_PANEL_HTML = `<div id="headlessui-popover-panel-_r_7t_" class="scrollbar z-dropdown flex flex-col overflow-auto rounded border border-stroke-weak bg-surface-mid py-1.5 text-left shadow-md">
+  <button type="button"><span class="flex items-center gap-x-3"><span class="text-body-md line-clamp-2 grow text-left">All time</span></span></button>
+  <button type="button"><span class="flex items-center gap-x-3"><span class="text-body-md line-clamp-2 grow text-left">24 Hours</span></span></button>
+  <button type="button"><span class="flex items-center gap-x-3"><span class="text-body-md line-clamp-2 grow text-left">7 Days</span></span></button>
+  <button type="button"><span class="flex items-center gap-x-3"><span class="text-body-md line-clamp-2 grow text-left">14 Days</span></span></button>
+  <button type="button"><span class="flex items-center gap-x-3"><span class="text-body-md line-clamp-2 grow text-left">28 Days</span></span></button>
+  <button type="button"><span class="flex items-center gap-x-3"><span class="text-body-md line-clamp-2 grow text-left">1 Year</span></span></button>
+  <div class="mt-1.5 border-t border-stroke-weak pt-1.5"><form class="space-y-2 px-3 py-2"><div class="flex items-end gap-x-2">
+    <div class="space-y-1"><p class="text-body-sm text-neutral-subdued">From</p><div class="w-full min-w-0">
+      <label class="mb-2 flex gap-x-1 text-sm sr-only" for="datepicker-from"><span class="text-body-md text-neutral-strong">From date</span></label>
+      <input id="datepicker-from" type="date" placeholder="From" name="from" max="2026-10-27"></div></div>
+    <div class="space-y-1"><p class="text-body-sm text-neutral-subdued">To</p><div class="w-full min-w-0">
+      <label class="mb-2 flex gap-x-1 text-sm sr-only" for="datepicker-to"><span class="text-body-md text-neutral-strong">To date</span></label>
+      <input id="datepicker-to" type="date" placeholder="To" name="to" max="2026-10-27"></div></div>
+    <button type="submit" class="nxm-button nxm-button-secondary"><span>Go</span></button>
+  </div></form></div>
+</div>`;
+
+console.log('');
+console.log('[jsdom · Nexus Mods 浏览页固定 UI]');
+
+await test('浏览页分类筛选：拆分节点与同节点计数都翻译且计数原样保留', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods?timeRange=28');
+    const d = dom.window.document;
+    const rows = [...d.querySelectorAll('[data-e2eid="category-filter"] [data-e2eid^="checkbox-filter-"]')];
+    assert.strictEqual(rows.length, NX_BROWSE_7DTD_CATS.length, '夹具分类行数量');
+    NX_BROWSE_7DTD_CATS.forEach(([name, count], i) => {
+        const row = rows[i].parentElement;
+        assert.strictEqual(row.querySelector('label span.truncate').textContent, NX_BROWSE_CAT_ZH[name],
+            '分类名 ' + name + ' 未翻译');
+        assert.strictEqual(row.querySelector('label span.text-neutral-subdued').textContent, '(' + count + ')',
+            '计数节点必须原样保留：' + name);
+    });
+    assert.strictEqual(d.querySelector('[data-nodeform="counted"]').textContent, '僵尸 (195)',
+        '同节点形态 "Zombies (195)" 应保留计数');
+    assert.ok(!/[A-Za-z]{3}/.test(d.querySelector('[data-e2eid="category-filter"]').textContent.replace(/\b(Audio|XML)\b/g, '')),
+        '分类面板不得残留英文词：' + d.querySelector('[data-e2eid="category-filter"]').textContent);
+    dom.window.close();
+});
+
+await test('浏览页卡片分类元数据翻译，标题/作者/描述与同名 UGC 保持原字节', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const tiles = [...d.querySelectorAll('[data-e2eid="mod-tile"]')];
+    assert.strictEqual(tiles.length, 2);
+
+    assert.strictEqual(tiles[0].querySelector('[data-e2eid="mod-tile-category"]').textContent, '载具',
+        '卡片分类值 Vehicles 应翻译（href 含 /games/ 但属固定分类元数据）');
+    assert.strictEqual(tiles[0].querySelector('[data-e2eid="mod-tile-title"]').textContent, 'Vehicles',
+        'mod 标题恰好叫 Vehicles 时必须保持原字节');
+    assert.strictEqual(tiles[0].querySelector('[data-e2eid="user-link"]').textContent, 'Avatars',
+        '作者名恰好叫 Avatars 时必须保持原字节');
+    assert.strictEqual(tiles[0].querySelector('[data-e2eid="mod-tile-summary"]').textContent,
+        '28 Days later: Cheats and 20 Items appear.', '用户描述必须保持原字节');
+
+    assert.strictEqual(tiles[1].querySelector('[data-e2eid="mod-tile-category"]').textContent, '物品与战利品');
+    assert.strictEqual(tiles[1].querySelector('[data-e2eid="mod-tile-title"]').textContent, 'Gameplay',
+        'mod 标题恰好等于界面词条 Gameplay 时必须保持原字节');
+    assert.strictEqual(tiles[1].querySelector('[data-e2eid="user-link"]').textContent, '28 Days',
+        '作者名恰好叫 28 Days 时必须保持原字节');
+    assert.strictEqual(tiles[1].querySelector('[data-e2eid="mod-tile-summary"]').textContent,
+        'A user description mentioning Avatars (10) and Quests.');
+    dom.window.close();
+});
+
+await test('浏览页页头只换固定 " mods" 后缀并保留游戏名，mod 详情页 h1 不受影响', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    assert.strictEqual(d.querySelector('h1 > span.line-clamp-2').textContent, '7 Days To Die 模组',
+        '页头应只替换固定后缀');
+    assert.strictEqual(d.querySelector('nav[aria-label] a[href*="/games/"]').textContent, '7 Days To Die',
+        '面包屑里的游戏名不得翻译');
+    dom.window.close();
+
+    const sky = boot(nxBrowsePage({ gameId: 'skyrimspecialedition', gameName: 'Skyrim Special Edition' }),
+        'https://www.nexusmods.com/games/skyrimspecialedition/mods');
+    assert.strictEqual(sky.window.document.querySelector('h1 > span.line-clamp-2').textContent,
+        'Skyrim Special Edition 模组');
+    sky.window.close();
+
+    const mod = boot('<!DOCTYPE html><html><body><h1><span>Vehicles mods</span></h1><h1>Skyrim Special Edition mods</h1></body></html>',
+        'https://www.nexusmods.com/7daystodie/mods/13366');
+    const md = mod.window.document;
+    assert.deepStrictEqual([...md.querySelectorAll('h1')].map(h => h.textContent),
+        ['Vehicles mods', 'Skyrim Special Edition mods'], 'mod 详情页标题不得被页头规则改写');
+    mod.window.close();
+});
+
+await test('会员横幅整句与 CTA 翻译', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const banner = d.querySelector('p.text-body-md.text-neutral-moderate');
+    assert.strictEqual(banner.textContent, '免费试用 Premium - 解锁更快的下载速度与一键安装',
+        '横幅由 span + 文本节点拆分，需整体可读：' + banner.textContent);
+    assert.strictEqual(banner.querySelector('span').textContent, '免费试用 Premium',
+        '粗体 span 的译文不得带前导空格');
+    assert.strictEqual(d.querySelector('a[href*="account/billing/premium"]').textContent, '免费试用');
+    dom.window.close();
+});
+
+await test('时间范围下拉首次打开、关闭后重新插入都被翻译（含 From/To 与 placeholder）', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods?timeRange=28');
+    const d = dom.window.document;
+
+    const expectations = [
+        ['All time', '所有时间'], ['24 Hours', '24 小时'], ['7 Days', '7 天'],
+        ['14 Days', '14 天'], ['28 Days', '28 天'], ['1 Year', '1 年'],
+        ['From', '起始日期'], ['To', '截止日期'], ['Go', '跳转'],
+    ];
+
+    const assertPanel = (label) => {
+        const panel = d.querySelector('[id^="headlessui-popover-panel"]');
+        assert.ok(panel, label + '：面板未挂载');
+        const opts = [...panel.querySelectorAll('button[type="button"] > span > span')].map(s => s.textContent);
+        assert.deepStrictEqual(opts, ['所有时间', '24 小时', '7 天', '14 天', '28 天', '1 年'],
+            label + '：时间选项译文 ' + JSON.stringify(opts));
+        const labels = [...panel.querySelectorAll('form p')].map(p => p.textContent);
+        assert.deepStrictEqual(labels, ['起始日期', '截止日期'], label + '：From/To 标签');
+        const srOnly = [...panel.querySelectorAll('label.sr-only span')].map(s => s.textContent);
+        assert.deepStrictEqual(srOnly, ['起始日期', '截止日期'], label + '：From date/To date');
+        assert.strictEqual(panel.querySelector('input[name="from"]').getAttribute('placeholder'), '起始日期');
+        assert.strictEqual(panel.querySelector('input[name="to"]').getAttribute('placeholder'), '截止日期');
+        assert.strictEqual(panel.querySelector('button[type="submit"]').textContent.trim(), '跳转');
+        for (const [en, zh] of expectations) assert.ok(zh.length > 0, en);
+    };
+
+    // 首次打开：节点由 HeadlessUI 动态插入
+    d.body.insertAdjacentHTML('beforeend', NX_TIME_PANEL_HTML);
+    await wait(200);
+    assertPanel('首次打开');
+
+    // 关闭：面板被整体移除，再插回一份全新节点
+    d.querySelector('[id^="headlessui-popover-panel"]').remove();
+    await wait(20);
+    d.body.insertAdjacentHTML('beforeend', NX_TIME_PANEL_HTML);
+    await wait(200);
+    assertPanel('关闭后重新打开');
+
+    // 关闭开关后属性逐字还原（同一宿主上的 placeholder 各自独立）
+    const api = dom.window.__MODS_ZH__;
+    api.setEnabled(false);
+    const restored = d.querySelector('[id^="headlessui-popover-panel"]');
+    assert.strictEqual(restored.querySelector('input[name="from"]').getAttribute('placeholder'), 'From');
+    assert.strictEqual(restored.querySelector('input[name="to"]').getAttribute('placeholder'), 'To');
+    assert.strictEqual(restored.querySelector('button[type="submit"]').textContent.trim(), 'Go');
+    assert.deepStrictEqual([...restored.querySelectorAll('button[type="button"] > span > span')].map(s => s.textContent),
+        ['All time', '24 Hours', '7 Days', '14 Days', '28 Days', '1 Year'], '关闭后时间选项逐字还原');
+    dom.window.close();
+});
+
+await test('已选筛选 chip、Clear all 与页大小大写变体翻译且数字保留', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods?timeRange=28');
+    const d = dom.window.document;
+    const chip = d.querySelector('[data-e2eid="remove-filter-time-range-28-days"]');
+    assert.strictEqual(chip.querySelector('.text-body-sm').textContent, '时间范围：28 天');
+    assert.strictEqual(chip.querySelector('.sr-only').textContent.trim(), '移除筛选');
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-all-filters"]').textContent, '全部清除');
+
+    const selects = [...d.querySelectorAll('[class~="group/select"]')];
+    assert.strictEqual(selects[0].textContent.trim(), '28 天', '时间下拉当前值');
+    assert.strictEqual(selects[1].textContent.trim(), '每页 20 项', '页大小大写 "20 Items" 变体');
+    assert.strictEqual(d.querySelector('button[aria-label="每页模组数"]') ? 1 : 0, 1, 'aria-label 仍应翻译');
+
+    // 小写 / 复数 / 数字变体
+    const variants = boot(`<!DOCTYPE html><html><body>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" data-e2eid="remove-filter-time-range-7-days"><span class="text-body-sm">Time range: 7 Days</span></button>
+        <button type="button" data-e2eid="remove-filter-time-range-custom"><span class="text-body-sm">Time range: custom</span></button>
+      </div>
+      <button type="button" class="group/select"><span>20 items</span></button>
+      <button type="button" class="group/select"><span>1 year</span></button>
+      <div>9,479 results</div>
+      <time>4 minutes ago</time>
+    </body></html>`, 'https://www.nexusmods.com/games/7daystodie/mods');
+    const vd = variants.window.document;
+    assert.deepStrictEqual([...vd.querySelectorAll('[data-e2eid^="remove-filter-"]')].map(b => b.textContent.trim()),
+        ['时间范围：7 天', '时间范围：自定义'], 'chip 的日期值与自定义值都要保留含义');
+    assert.deepStrictEqual([...vd.querySelectorAll('[class~="group/select"]')].map(b => b.textContent.trim()),
+        ['每页 20 项', '1 年'], '大小写变体');
+    assert.ok(vd.body.textContent.includes('共 9,479 条结果'), '结果计数数字保留');
+    assert.ok(vd.body.textContent.includes('4 分钟前'), '相对时间数字保留');
+    variants.window.close();
+    dom.window.close();
+});
+
+await test('浏览页关闭开关逐字还原（含分类/页头/chip/属性）并再次启用恢复', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods?timeRange=28');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    assert.ok(api, '调试出口 __MODS_ZH__ 缺失');
+    d.body.insertAdjacentHTML('beforeend', NX_TIME_PANEL_HTML);
+    await wait(200);
+
+    const panel = () => d.querySelector('[id^="headlessui-popover-panel"]');
+    assert.strictEqual(d.querySelector('h1 > span').textContent, '7 Days To Die 模组');
+
+    api.setEnabled(false);
+
+    assert.strictEqual(d.querySelector('h1 > span').textContent, '7 Days To Die mods', '页头未还原');
+    const firstRow = d.querySelector('[data-e2eid^="checkbox-filter-"]').parentElement;
+    assert.strictEqual(firstRow.querySelector('label span.truncate').textContent, 'Avatars', '分类名未还原');
+    assert.strictEqual(d.querySelector('[data-nodeform="counted"]').textContent, 'Zombies (195)', '同节点计数未还原');
+    assert.strictEqual(d.querySelector('[data-e2eid="mod-tile-category"]').textContent, 'Vehicles', '卡片分类未还原');
+    assert.strictEqual(d.querySelector('[data-e2eid="mod-tile-title"]').textContent, 'Vehicles', '标题本就不该改');
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-filter-time-range-28-days"] .text-body-sm').textContent,
+        'Time range: 28 Days');
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-all-filters"]').textContent, 'Clear all');
+    assert.deepStrictEqual([...d.querySelectorAll('[class~="group/select"]')].map(b => b.textContent.trim()),
+        ['28 Days', '20 Items']);
+    assert.strictEqual(panel().querySelector('input[name="from"]').getAttribute('placeholder'), 'From');
+    assert.strictEqual(d.querySelector('p.text-body-md.text-neutral-moderate').textContent,
+        'Try Premium free - unlock faster downloads & 1-click installs', '横幅未逐字还原');
+
+    api.setEnabled(true);
+    assert.strictEqual(d.querySelector('h1 > span').textContent, '7 Days To Die 模组', '再次开启未恢复');
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-all-filters"]').textContent, '全部清除');
+    assert.strictEqual(panel().querySelector('input[name="from"]').getAttribute('placeholder'), '起始日期');
+    dom.window.close();
+});
+
+await test('浏览页 SPA 路由内异步更新与跨游戏切换都按页型上下文翻译', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    assert.strictEqual(api.page, 'browse');
+
+    // 异步追加一张新卡片（列表翻页/无限滚动形态）
+    d.querySelector('[data-e2eid="mod-tile"]').insertAdjacentHTML('afterend',
+        '<div data-e2eid="mod-tile"><a data-e2eid="mod-tile-title" href="https://www.nexusmods.com/7daystodie/mods/3">Zombies</a>' +
+        '<div><a data-e2eid="mod-tile-category" href="https://www.nexusmods.com/games/7daystodie/mods?categoryName=Zombies">Zombies</a></div></div>');
+    await wait(200);
+    const added = [...d.querySelectorAll('[data-e2eid="mod-tile"]')][1];
+    assert.strictEqual(added.querySelector('[data-e2eid="mod-tile-category"]').textContent, '僵尸', '异步插入的分类未翻译');
+    assert.strictEqual(added.querySelector('[data-e2eid="mod-tile-title"]').textContent, 'Zombies', '异步插入的标题不得翻译');
+
+    // SPA 切到另一款游戏的浏览页：仍是 browse 页型，上下文规则继续生效
+    dom.window.history.pushState({}, '', '/games/skyrimspecialedition/mods');
+    await wait(400);
+    assert.strictEqual(api.page, 'browse');
+    d.body.insertAdjacentHTML('beforeend',
+        '<div data-e2eid="mod-tile"><div><a data-e2eid="mod-tile-category" href="https://www.nexusmods.com/games/skyrimspecialedition/mods?categoryName=Immersion">Immersion</a></div></div>');
+    await wait(200);
+    const last = [...d.querySelectorAll('[data-e2eid="mod-tile-category"]')].pop();
+    assert.strictEqual(last.textContent, '沉浸感', '切换游戏后卡片分类仍应翻译');
+    dom.window.close();
+});
+
+await test('浏览页分类与筛选上下文不溢出到 mod 详情页/其它页型', async () => {
+    const html = `<!DOCTYPE html><html><body>
+      <div data-e2eid="mod-tile-category"><a href="https://www.nexusmods.com/games/7daystodie/mods?categoryName=Vehicles">Vehicles</a></div>
+      <h1 class="text-heading-md"><span class="line-clamp-2 break-words">Vehicles mods</span></h1>
+      <div class="flex flex-wrap gap-2"><button type="button" data-e2eid="remove-all-filters">Clear all</button></div>
+      <button type="button" class="group/select"><span>28 Days</span></button>
+      <button type="button" aria-label="Time" class="group/select"><span>28 Days</span></button>
+    </body></html>`;
+    const mod = boot(html, 'https://www.nexusmods.com/7daystodie/mods/13366');
+    const md = mod.window.document;
+    assert.strictEqual(md.querySelector('[data-e2eid="mod-tile-category"]').textContent, 'Vehicles',
+        'mod 页不得套用浏览页分类规则');
+    assert.strictEqual(md.querySelector('h1 span').textContent, 'Vehicles mods');
+    assert.strictEqual(md.querySelector('[data-e2eid="remove-all-filters"]').textContent, 'Clear all');
+    assert.deepStrictEqual([...md.querySelectorAll('[class~="group/select"]')].map(b => b.textContent.trim()),
+        ['28 Days', '28 Days'], 'mod 页不得套用时间范围规则');
+    mod.window.close();
+});
+console.log('');
+console.log('[jsdom · Nexus Mods 浏览页固定 UI 补充：页大小营销说明与搜索条件 chip]');
+
+/* 真实 DOM（2026-10-27 实机，/games/7daystodie/mods 页大小下拉面板 id^="headlessui-listbox-options"）：
+ *   <div class="mt-4 md:hidden"><p class="text-body-sm text-translucent-moderate">
+ *     <span>View more results for mods, collections and media with </span>
+ *     <a class="nxm-link nxm-link-variant-secondary text-premium-strong" href="…/premium">premium</a>
+ *     <span>.</span></p></div>
+ * 三节点拆分，故逐节点按固定 UI 文案翻译（首节点带尾随空格）。 */
+const NX_PERPAGE_PANEL_HTML = `<div id="headlessui-listbox-options-_r_8e_" class="z-dropdown flex flex-col rounded border border-stroke-weak bg-surface-mid text-left shadow-md" tabindex="0" role="listbox" data-headlessui-state="open">
+  <div class="scrollbar flex max-h-128 flex-col overflow-auto py-1.5">
+    <div role="option" id="headlessui-listbox-option-1" aria-selected="true" class="w-full px-3 py-2"><span class="flex items-center gap-x-3"><span class="text-body-md flex min-w-0 grow items-center gap-x-1 text-left"><span class="line-clamp-2 grow">20 Items</span></span></span></div>
+    <div role="option" id="headlessui-listbox-option-2" aria-disabled="true" class="w-full px-3 py-2 opacity-40"><span class="flex items-center gap-x-3"><span class="text-body-md flex min-w-0 grow items-center gap-x-1 text-left"><span class="line-clamp-2 grow">40 Items</span></span></span></div>
+  </div>
+  <div class="mt-4 md:hidden"><p class="text-body-sm text-translucent-moderate"><span>View more results for mods, collections and media with </span><a class="nxm-link nxm-link-variant-secondary text-premium-strong" href="https://www.nexusmods.com/premium">premium</a><span>.</span></p></div>
+  <div class="mt-1.5 hidden border-t border-stroke-weak px-3 pt-3.5 pb-1.5 md:block"><div class="flex items-center justify-between gap-x-4"><p class="text-heading-xs text-neutral-strong"><span>Learn more</span><span class="block text-premium-strong">with premium</span></p></div><p class="text-body-sm text-translucent-moderate mt-2.5 mb-4">Browse more results for mods, collections and media everywhere.</p></div>
+</div>`;
+
+/* 真实 DOM（同上，搜索条件筛选后）：chip 是 button[data-e2eid^="remove-filter-<field>-"]，
+ * 标签为单个文本节点 "Title: <用户输入>"（生产 bundle 里是 `${humanize(field)}: ${value}`），
+ * 实测值含冒号、空格、$1、$&、反引号与中文。 */
+const NX_SEARCH_CHIP_CASES = [
+    ['title', 'Title: 24 Hours: Avatars $1 中文 x', '标题：24 Hours: Avatars $1 中文 x'],
+    ['description', 'Description: Author: $& $` 值', '描述：Author: $& $` 值'],
+    ['author', 'Author: Vehicles', '作者：Vehicles'],
+    ['uploader', 'Uploader: 28 Days', '上传者：28 Days'],
+];
+
+function nxSearchChipHTML(field, label) {
+    return '<button type="button" data-e2eid="remove-filter-' + field + '-x">' +
+        '<div class="relative"><span class="flex items-center gap-x-1 px-2">' +
+        '<span class="sr-only">Remove filter for </span>' +
+        '<span class="text-body-sm grow text-left">' + label + '</span>' +
+        '<svg viewBox="0 0 24 24" role="presentation" class="shrink-0"></svg>' +
+        '</span></div></button>';
+}
+
+function nxSearchChipsPage() {
+    const chips = NX_SEARCH_CHIP_CASES.map(([field, label]) => nxSearchChipHTML(field, label)).join('');
+    return `<!DOCTYPE html><html><body>
+  <div class="flex flex-wrap gap-2">${chips}<button type="button" data-e2eid="remove-all-filters">Clear all</button></div>
+  <div class="mods-grid">
+    <div data-e2eid="mod-tile">
+      <a data-e2eid="mod-tile-title" href="https://www.nexusmods.com/7daystodie/mods/1">Title: 24 Hours: Avatars $1 中文 x</a>
+      <a data-e2eid="user-link" href="https://www.nexusmods.com/profile/Author"><span class="truncate">Author: Vehicles</span></a>
+      <div data-e2eid="mod-tile-summary">View more results for mods, collections and media with premium.</div>
+      <div><a data-e2eid="mod-tile-category" href="https://www.nexusmods.com/games/7daystodie/mods?categoryName=Vehicles">Vehicles</a></div>
+    </div>
+  </div>
+</body></html>`;
+}
+
+await test('页大小下拉营销说明（三节点拆分）翻译，首次打开/关闭重开/禁用还原都对', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+
+    const mountPanel = () => {
+        d.body.insertAdjacentHTML('beforeend', NX_PERPAGE_PANEL_HTML);
+        return d.querySelector('[id^="headlessui-listbox-options"]');
+    };
+    const marketing = panel => panel.querySelector('div.mt-4 p');
+    const assertTranslated = (label) => {
+        const panel = d.querySelector('[id^="headlessui-listbox-options"]');
+        assert.ok(panel, label + '：面板不存在');
+        const p = marketing(panel);
+        const parts = ['查看更多模组、合集与媒体结果，需升级为 ', '高级会员', '。'];
+        assert.deepStrictEqual([...p.querySelectorAll('span, a')].map(n => n.textContent), parts,
+            label + '：营销说明三节点译文 ' + JSON.stringify([...p.querySelectorAll('span, a')].map(n => n.textContent)));
+        assert.deepStrictEqual([...panel.querySelectorAll('[role="option"] span.line-clamp-2')].map(n => n.textContent),
+            ['每页 20 项', '每页 40 项'], label + '：页大小选项');
+        assert.strictEqual(p.querySelector('a').getAttribute('href'), 'https://www.nexusmods.com/premium',
+            label + '：链接 href 不得改动');
+    };
+
+    mountPanel();
+    await wait(250);
+    assertTranslated('首次打开');
+
+    d.querySelector('[id^="headlessui-listbox-options"]').remove();
+    await wait(30);
+    mountPanel();
+    await wait(250);
+    assertTranslated('关闭后重新打开');
+
+    api.setEnabled(false);
+    const restored = marketing(d.querySelector('[id^="headlessui-listbox-options"]'));
+    assert.deepStrictEqual([...restored.querySelectorAll('span, a')].map(n => n.textContent),
+        ['View more results for mods, collections and media with ', 'premium', '.'],
+        '关闭后营销说明必须逐字还原（含首节点尾随空格）');
+    api.setEnabled(true);
+    assertTranslated('再次开启');
+    dom.window.close();
+});
+
+await test('营销说明同串出现在 mod 标题/描述时保持原字节（只有固定 UI 面板才翻）', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    await wait(200);
+    const tile = d.querySelector('[data-e2eid="mod-tile"]');
+    assert.strictEqual(tile.querySelector('[data-e2eid="mod-tile-summary"]').textContent,
+        'View more results for mods, collections and media with premium.', 'mod 描述里的同串不得翻译');
+    assert.strictEqual(tile.querySelector('[data-e2eid="mod-tile-title"]').textContent,
+        'Title: 24 Hours: Avatars $1 中文 x', 'mod 标题里的同串不得翻译');
+
+    // 同一串进入固定 UI 面板（页大小下拉）时才翻译
+    d.body.insertAdjacentHTML('beforeend', NX_PERPAGE_PANEL_HTML);
+    await wait(250);
+    const p = d.querySelector('div.mt-4 p');
+    assert.strictEqual(p.textContent, '查看更多模组、合集与媒体结果，需升级为 高级会员。');
+    dom.window.close();
+});
+
+await test('已选搜索条件 chip：四种前缀翻译，用户输入值逐字节保留', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    for (const [field, label, expected] of NX_SEARCH_CHIP_CASES) {
+        const chip = d.querySelector('[data-e2eid="remove-filter-' + field + '-x"]');
+        assert.ok(chip, '缺少 chip：' + field);
+        assert.strictEqual(chip.querySelector('.text-body-sm').textContent, expected,
+            field + '：chip 前缀译文/值被改动');
+        assert.strictEqual(chip.querySelector('.sr-only').textContent.trim(), '移除筛选', 'sr-only 无障碍文案');
+    }
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-all-filters"]').textContent, '全部清除');
+
+    api.setEnabled(false);
+    for (const [field, label] of NX_SEARCH_CHIP_CASES) {
+        assert.strictEqual(d.querySelector('[data-e2eid="remove-filter-' + field + '-x"] .text-body-sm').textContent,
+            label, field + '：关闭后未逐字还原');
+    }
+    api.setEnabled(true);
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-filter-title-x"] .text-body-sm').textContent,
+        '标题：24 Hours: Avatars $1 中文 x', '再次开启未恢复');
+    dom.window.close();
+});
+
+await test('chip 同串出现在 mod 标题/描述/作者名时不得翻译（无无界替换）', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    await wait(200);
+    const tile = d.querySelector('[data-e2eid="mod-tile"]');
+    assert.strictEqual(tile.querySelector('[data-e2eid="mod-tile-title"]').textContent,
+        'Title: 24 Hours: Avatars $1 中文 x', 'mod 标题里的 "Title: …" 不得翻');
+    assert.strictEqual(tile.querySelector('[data-e2eid="user-link"]').textContent,
+        'Author: Vehicles', '作者名里的 "Author: …" 不得翻');
+    assert.strictEqual(tile.querySelector('[data-e2eid="mod-tile-category"]').textContent, '载具');
+
+    // 非 chip 容器的普通固定 UI 文本也不得被前缀规则改写
+    d.body.insertAdjacentHTML('beforeend',
+        '<div id="plain"><span class="text-body-sm">Title: 24 Hours: Avatars $1 中文 x</span></div>');
+    await wait(200);
+    assert.strictEqual(d.getElementById('plain').textContent, 'Title: 24 Hours: Avatars $1 中文 x',
+        'chip 前缀规则只在 chip 容器内生效');
+    dom.window.close();
+});
+console.log('');
+console.log('[jsdom · Code Review 定点回归：SPA 原文保真 / 站点原地改写 / Items 与横幅作用域]');
+
+await test('SPA 切页往返后关闭开关：导航与分类的原文不丢，逐字还原', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+
+    // 站点级导航与分类筛选（均为翻译后仍保留在 DOM 的节点）
+    d.body.insertAdjacentHTML('afterbegin', '<header><button>GAMES</button><button>MODS</button></header>');
+    await wait(200);
+    assert.ok(d.querySelector('header').textContent.includes('游戏'), '导航未翻译');
+    assert.strictEqual(d.querySelector('[data-e2eid="category-filter"] label span.truncate').textContent, '头像');
+
+    // 浏览页 → mod 详情页（pushState，SPA 不销毁导航/筛选节点）
+    dom.window.history.pushState({}, '', '/games/7daystodie/mods/999');
+    await wait(120);
+    assert.strictEqual(api.page, 'mod', '页型未切换');
+
+    // popstate 回到浏览页
+    dom.window.history.pushState({}, '', '/games/7daystodie/mods');
+    dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+    await wait(120);
+    assert.strictEqual(api.page, 'browse', '页型未切回');
+
+    api.setEnabled(false);
+    assert.strictEqual(d.querySelector('header').textContent, 'GAMESMODS',
+        'SPA 切页后导航原文丢失：' + d.querySelector('header').textContent);
+    assert.strictEqual(d.querySelector('[data-e2eid="category-filter"] label span.truncate').textContent, 'Avatars',
+        'SPA 切页后分类原文丢失');
+    assert.strictEqual(d.querySelector('[data-e2eid="remove-filter-time-range-28-days"] .text-body-sm').textContent,
+        'Time range: 28 Days', 'SPA 切页后 chip 原文丢失');
+
+    api.setEnabled(true);
+    assert.ok(d.querySelector('header').textContent.includes('游戏'), '再次开启未恢复翻译');
+    assert.strictEqual(d.querySelector('[data-e2eid="category-filter"] label span.truncate').textContent, '头像');
+    dom.window.close();
+});
+
+await test('站点原地改写同一文本节点：以站点新值为准，关闭后不恢复旧值', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const spanOf = field => d.querySelector('[data-e2eid="remove-filter-' + field + '-x"] .text-body-sm');
+    const author = spanOf('author');
+    assert.strictEqual(author.textContent, '作者：Vehicles');
+
+    // 站点原地改写（同一个 Text 节点）
+    const textNode = author.firstChild;
+    textNode.nodeValue = 'Author: Vehicles 2';
+    await wait(250);
+    assert.strictEqual(author.textContent, '作者：Vehicles 2', '站点改写后应重新翻译新值');
+
+    textNode.nodeValue = 'Author: $& 中文  双空格';
+    await wait(250);
+    assert.strictEqual(author.textContent, '作者：$& 中文  双空格', '多次改写后仍按原始文本保值');
+
+    api.setEnabled(false);
+    assert.strictEqual(author.textContent, 'Author: $& 中文  双空格',
+        '关闭开关必须恢复站点当前值，而不是第一次翻译前的旧值');
+    api.setEnabled(true);
+    assert.strictEqual(author.textContent, '作者：$& 中文  双空格', '再次开启未重新翻译');
+    api.setEnabled(false);
+    assert.strictEqual(author.textContent, 'Author: $& 中文  双空格', '二次关闭仍要恢复站点值');
+
+    // 站点在本脚本写入之后再改写（翻译态被覆盖）
+    api.setEnabled(true);
+    await wait(120);
+    author.firstChild.nodeValue = 'Author: Vehicles 3';
+    await wait(250);
+    assert.strictEqual(author.textContent, '作者：Vehicles 3');
+    api.setEnabled(false);
+    assert.strictEqual(author.textContent, 'Author: Vehicles 3');
+
+    // 站点改成"没有词条的新文本"：不能在关闭时被旧原文覆盖
+    api.setEnabled(true);
+    await wait(120);
+    author.firstChild.nodeValue = 'a plain site value';
+    await wait(250);
+    assert.strictEqual(author.textContent, 'a plain site value', '无词条的新文本不应被翻译');
+    api.setEnabled(false);
+    assert.strictEqual(author.textContent, 'a plain site value', '关闭时必须恢复站点当前文本（含无词条值）');
+    dom.window.close();
+});
+
+await test('站点原地改写属性：同一宿主多个属性各自独立，关闭后恢复站点新值', async () => {
+    const dom = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    d.body.insertAdjacentHTML('beforeend', NX_TIME_PANEL_HTML);
+    await wait(250);
+
+    const input = d.querySelector('[id^="headlessui-popover-panel"] input[name="from"]');
+    assert.strictEqual(input.getAttribute('placeholder'), '起始日期');
+    input.setAttribute('aria-label', 'From');
+    input.setAttribute('placeholder', 'From date');
+    await wait(250);
+    assert.strictEqual(input.getAttribute('placeholder'), '起始日期', '新占位符未翻译');
+    assert.strictEqual(input.getAttribute('aria-label'), '起始日期', '新增属性未翻译');
+
+    // 站点把属性改成"没有词条的新值"：也不能在关闭时被旧原文覆盖
+    input.setAttribute('placeholder', 'From date (updated)');
+    await wait(200);
+    assert.strictEqual(input.getAttribute('placeholder'), 'From date (updated)', '无词条的新值不应被翻译');
+
+    api.setEnabled(false);
+    assert.strictEqual(input.getAttribute('placeholder'), 'From date (updated)', '属性还原必须用站点当前值（含无词条值）');
+    assert.strictEqual(input.getAttribute('aria-label'), 'From', 'aria-label 独立还原');
+    api.setEnabled(true);
+    assert.strictEqual(input.getAttribute('aria-label'), '起始日期');
+    assert.strictEqual(input.getAttribute('placeholder'), 'From date (updated)');
+    dom.window.close();
+});
+
+await test('Items 分页规则只作用于分页控件：mod 详情正文与用户 title/summary 保持原文', async () => {
+    const browse = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const bd = browse.window.document;
+    await wait(200);
+    assert.strictEqual(bd.querySelector('[data-e2eid="select-mods-per-page"] span').textContent, '每页 20 项',
+        '真实分页控件必须仍翻译');
+    assert.strictEqual(bd.querySelector('[data-e2eid="mod-tile-summary"]').textContent,
+        '28 Days later: Cheats and 20 Items appear.', '用户摘要里的同串不得翻译');
+    browse.window.close();
+
+    // 大小写 / 单数变体：分页控件上下文（浏览页）翻，同页普通正文不翻
+    const ctl = boot(`<!DOCTYPE html><html><body>
+      <button type="button" class="group/select"><span>1 Item</span></button>
+      <button type="button" class="group/select"><span>40 Items</span></button>
+      <div id="plain"><p>20 Items</p><p>1 Item</p></div>
+    </body></html>`, 'https://www.nexusmods.com/games/7daystodie/mods');
+    const cd = ctl.window.document;
+    await wait(200);
+    assert.deepStrictEqual([...cd.querySelectorAll('[class~="group/select"]')].map(b => b.textContent.trim()),
+        ['每页 1 项', '每页 40 项'], '分页控件的单数/大写变体应翻译');
+    assert.deepStrictEqual([...cd.querySelectorAll('#plain p')].map(p => p.textContent), ['20 Items', '1 Item'],
+        '普通正文里的 "20 Items" / "1 Item" 不得翻译');
+    ctl.window.close();
+
+    // mod 详情页：同样没有分页控件上下文，正文保持原文
+    const det = boot('<!DOCTYPE html><html><body><article id="mod-detail"><p>20 Items</p><p>1 Item</p></article></body></html>',
+        'https://www.nexusmods.com/games/7daystodie/mods/999');
+    const dd = det.window.document;
+    await wait(200);
+    assert.deepStrictEqual([...dd.querySelectorAll('#mod-detail p')].map(p => p.textContent), ['20 Items', '1 Item'],
+        'mod 详情正文不得翻译');
+    det.window.close();
+});
+
+await test('Try Premium free 只在会员横幅容器内翻译，详情正文同串保持原文', async () => {
+    const browse = boot(nxBrowsePage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const bd = browse.window.document;
+    await wait(200);
+    const banner = bd.querySelector('p.text-body-md.text-neutral-moderate');
+    assert.strictEqual(banner.textContent, '免费试用 Premium - 解锁更快的下载速度与一键安装', '横幅必须仍翻译');
+    browse.window.close();
+
+    // mod 详情页：同结构横幅翻，普通段落/标题里的同串不翻
+    const det = boot(`<!DOCTYPE html><html><body>
+      <p class="text-body-md text-neutral-moderate min-w-0"><span class="font-semibold text-neutral-strong">Try Premium free</span> - unlock faster downloads &amp; 1-click installs</p>
+      <h1><span>Try Premium free</span></h1>
+      <article class="mod-description"><p>Try Premium free</p><p>- unlock faster downloads &amp; 1-click installs</p></article>
+    </body></html>`, 'https://www.nexusmods.com/games/7daystodie/mods/999');
+    const dd = det.window.document;
+    await wait(200);
+    assert.strictEqual(dd.querySelector('body > p').textContent, '免费试用 Premium - 解锁更快的下载速度与一键安装',
+        '站点级横幅在 mod 页也应翻译');
+    assert.strictEqual(dd.querySelector('h1').textContent, 'Try Premium free', 'mod 标题里的同串不得翻译');
+    assert.deepStrictEqual([...dd.querySelectorAll('.mod-description p')].map(p => p.textContent),
+        ['Try Premium free', '- unlock faster downloads & 1-click installs'], '描述正文里的同串不得翻译');
+    det.window.close();
+});
+console.log('');
+console.log('[jsdom · 关闭期间站点改写：再次开启/关闭不得复活过期原文]');
+
+/* 真实时序（独立复验给出）：
+ *   启用 → 关闭（restoreAll 删 lastWritten，但 originals 保留旧值）→ 站点在关闭期间改写同一节点
+ *   → 再次启用（refreshOriginal 因 lastWritten===undefined 直接 return）→ 再关闭 → 旧原文复活。
+ * 覆盖 text / 同一元素多属性 / 非词条新值 / 可翻译新值 / 输入 value 不变 / 关闭期间移除属性。 */
+const NX_ATTR_PANEL_HTML = `<!DOCTYPE html><html><body>
+  <div id="headlessui-popover-panel-mz" class="z-dropdown flex flex-col rounded border" role="dialog">
+    <form class="space-y-2 px-3 py-2">
+      <input id="mz-attr-host" type="date" placeholder="From" aria-label="To" title="Go" value="keep-me">
+      <input id="mz-attr-host2" type="date" placeholder="From" aria-label="To" title="Go">
+    </form>
+  </div>
+</body></html>`;
+
+const nxChipSpan = (d, field) => d.querySelector('[data-e2eid="remove-filter-' + field + '-x"] .text-body-sm');
+
+await test('关闭期间站点改写文本节点（非词条新值）：再次开启/关闭都保持站点新值', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const span = nxChipSpan(d, 'author');
+    assert.strictEqual(span.textContent, '作者：Vehicles');
+    const node = span.firstChild;
+
+    api.setEnabled(false);
+    assert.strictEqual(span.textContent, 'Author: Vehicles', '关闭后应逐字还原');
+
+    // 站点在关闭期间改写同一 Text 节点（无词条）
+    node.nodeValue = 'a plain site value';
+    api.setEnabled(true);
+    assert.strictEqual(span.textContent, 'a plain site value', '无词条的新值不应被翻译');
+
+    api.setEnabled(false);
+    assert.strictEqual(span.textContent, 'a plain site value',
+        '关闭不能复活旧原文（实际 ' + JSON.stringify(span.textContent) + '）');
+
+    api.setEnabled(true);
+    api.setEnabled(false);
+    assert.strictEqual(span.textContent, 'a plain site value', '二次开关仍不得复活旧值');
+    dom.window.close();
+});
+
+await test('关闭期间站点改写文本节点（新的可翻译原文）：按新值翻译，关闭后恢复新值', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const span = nxChipSpan(d, 'author');
+    const node = span.firstChild;
+    api.setEnabled(false);
+    node.nodeValue = 'Author: Vehicles 9';
+    api.setEnabled(true);
+    assert.strictEqual(span.textContent, '作者：Vehicles 9', '新可翻译原文应按新值翻译');
+    api.setEnabled(false);
+    assert.strictEqual(span.textContent, 'Author: Vehicles 9', '关闭应恢复新值而不是最初的 Vehicles');
+    dom.window.close();
+});
+
+await test('关闭期间站点改写属性：非词条/可翻译新值都保留，多属性独立，输入 value 不变', async () => {
+    const dom = boot(NX_ATTR_PANEL_HTML, 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const el = d.getElementById('mz-attr-host');
+    const other = d.getElementById('mz-attr-host2');
+    assert.strictEqual(el.getAttribute('placeholder'), '起始日期');
+    assert.strictEqual(el.getAttribute('aria-label'), '截止日期');
+    assert.strictEqual(el.getAttribute('title'), '跳转');
+    assert.strictEqual(el.getAttribute('value'), 'keep-me', '输入 value 不得被改动');
+
+    api.setEnabled(false);
+    assert.strictEqual(el.getAttribute('placeholder'), 'From');
+    assert.strictEqual(el.getAttribute('aria-label'), 'To');
+    assert.strictEqual(el.getAttribute('title'), 'Go');
+    assert.strictEqual(el.getAttribute('value'), 'keep-me');
+
+    // 关闭期间站点改写：placeholder → 非词条新值；aria-label → 可翻译新值
+    el.setAttribute('placeholder', 'Site placeholder');
+    el.setAttribute('aria-label', 'From date');
+    api.setEnabled(true);
+    assert.strictEqual(el.getAttribute('placeholder'), 'Site placeholder', '无词条新值不应被翻译');
+    assert.strictEqual(el.getAttribute('aria-label'), '起始日期', '新的可翻译值应翻译');
+    assert.strictEqual(el.getAttribute('value'), 'keep-me', '输入 value 不得被改动');
+
+    api.setEnabled(false);
+    assert.strictEqual(el.getAttribute('placeholder'), 'Site placeholder',
+        '关闭不能复活旧占位符 From（实际 ' + JSON.stringify(el.getAttribute('placeholder')) + '）');
+    assert.strictEqual(el.getAttribute('aria-label'), 'From date', '关闭应恢复新 aria-label 而不是 To');
+    assert.strictEqual(el.getAttribute('title'), 'Go', '未改动的属性照常还原');
+    assert.strictEqual(el.getAttribute('value'), 'keep-me');
+
+    // 同一宿主的另一个元素不受影响
+    assert.strictEqual(other.getAttribute('placeholder'), 'From');
+    assert.strictEqual(other.getAttribute('value'), null);
+    dom.window.close();
+});
+
+await test('关闭期间站点移除属性：再次开启/关闭不得复活该属性', async () => {
+    const dom = boot(NX_ATTR_PANEL_HTML, 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const el = d.getElementById('mz-attr-host');
+    assert.strictEqual(el.getAttribute('title'), '跳转');
+
+    api.setEnabled(false);
+    el.removeAttribute('title');
+    api.setEnabled(true);
+    assert.strictEqual(el.hasAttribute('title'), false, '已移除的 title 不应被重新翻译出来');
+    api.setEnabled(false);
+    assert.strictEqual(el.hasAttribute('title'), false, '关闭不能复活站点已移除的属性');
+
+    // 其它属性仍照常工作（不破坏 placeholder / aria-label 的还原能力）
+    assert.strictEqual(el.getAttribute('placeholder'), 'From');
+    assert.strictEqual(el.getAttribute('aria-label'), 'To');
+    dom.window.close();
+});
+
+await test('textarea 的 placeholder 在开关往返后逐字不变，input 的 aria-label/title 照常翻译还原', async () => {
+    // 说明：TEXTAREA 在引擎里属 SKIP_TAGS，scanRoot 会整元素跳过（translateAttributes 里的
+    // TEXTAREA 豁免在 scanRoot 过滤之后不可达，属既有行为，本轮不改）。这条用例只锁定
+    // "属性恢复收窄不能损坏 textarea 上的既有属性"，以及 input 的 aria-label/title 仍各自独立还原。
+    const html = `<!DOCTYPE html><html><body>
+      <div id="headlessui-popover-panel-mz" class="z-dropdown" role="dialog">
+        <textarea id="mz-ta" placeholder="From" aria-label="To" title="Go"></textarea>
+        <input id="mz-inp" placeholder="From" aria-label="To" title="Go">
+      </div>
+    </body></html>`;
+    const dom = boot(html, 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const ta = d.getElementById('mz-ta');
+    const before = ['placeholder', 'aria-label', 'title'].map(a => ta.getAttribute(a));
+    const inp = d.getElementById('mz-inp');
+    assert.strictEqual(inp.getAttribute('aria-label'), '截止日期');
+    assert.strictEqual(inp.getAttribute('title'), '跳转');
+
+    api.setEnabled(false);
+    assert.deepStrictEqual(['placeholder', 'aria-label', 'title'].map(a => ta.getAttribute(a)), before,
+        'textarea 上的属性在开关往返后必须逐字不变');
+    assert.strictEqual(inp.getAttribute('aria-label'), 'To');
+    assert.strictEqual(inp.getAttribute('title'), 'Go');
+    api.setEnabled(true);
+    assert.strictEqual(inp.getAttribute('aria-label'), '截止日期', '再次开启后 aria-label 仍应翻译');
+    dom.window.close();
+});
+
+await test('重复扫描与 SPA 往返不改变"关闭期间站点新值"的结论', async () => {
+    const dom = boot(nxSearchChipsPage(), 'https://www.nexusmods.com/games/7daystodie/mods');
+    const d = dom.window.document;
+    const api = dom.window.__MODS_ZH__;
+    await wait(200);
+
+    const span = nxChipSpan(d, 'author');
+    api.setEnabled(false);
+    span.firstChild.nodeValue = 'plain spa value';
+    api.setEnabled(true);
+    api.rescan();
+    api.rescan();
+    await wait(200);
+    assert.strictEqual(span.textContent, 'plain spa value', '重复扫描后仍不应翻译非词条新值');
+
+    dom.window.history.pushState({}, '', '/games/7daystodie/mods/999');
+    await wait(120);
+    dom.window.history.pushState({}, '', '/games/7daystodie/mods');
+    dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+    await wait(150);
+    assert.strictEqual(api.page, 'browse');
+
+    api.rescan();
+    api.setEnabled(false);
+    assert.strictEqual(span.textContent, 'plain spa value', 'SPA 往返 + 重扫后关闭仍不得复活旧值');
+
+    // 开启状态下站点改写后"立刻关闭"（不等 80ms 防抖）：也不能复活过期原文
+    api.setEnabled(true);
+    await wait(150);
+    span.firstChild.nodeValue = 'immediate site value';
+    api.setEnabled(false);
+    assert.strictEqual(span.textContent, 'immediate site value', '关闭前未及观察的站点改写不得被旧原文覆盖');
+    dom.window.close();
+});
 console.log('\n' + passed + ' passed, ' + failures.length + ' failed');
 if (failures.length) {
     for (const f of failures) console.error('\n--- ' + f.name + '\n' + (f.error && f.error.stack || f.error));

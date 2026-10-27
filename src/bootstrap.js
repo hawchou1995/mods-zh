@@ -50,8 +50,7 @@ function registerMenu() {
     GM_registerMenuCommand('重新扫描当前页面', () => {
         if (!State.enabled) return;
         State.cache.clear();
-        State.originals = new WeakMap();
-        State.attrOriginals = new WeakMap();
+        // 原文容器不清空：重扫不能丢掉已翻译节点的原文，否则关闭开关无法逐字还原
         State.protectedNodes = new WeakSet();
         scanRoot(document.body);
     });

@@ -178,3 +178,127 @@ npm run verify
 - **回归测试（先负后正）**：新增 3 条 jsdom 用例 —— ①四个固定 UI 页（真实面包屑结构：Home `<a>` + 非链接 `span.breadcrumbs__segment`）面包屑与页头都要翻译、关闭后逐字还原、再开启复原；②名称保护不下降（包名 `Tools`、社区名 `Tools` 与界面词条同串时末段保持原文，同时详情页 `Changelog`→`更新日志` 照常）；③SPA 转换页型 `community → communities → author` 时保护随页型撤销/装配（社区总览末段要翻、作者名要保留）。负向记录：jsdom `34 passed, 2 failed`（`'Communities' !== '社区'` 与 SPA 后仍 `Communities`）；修复后 jsdom **36 passed / 0 failed**、smoke 19 passed / 0 failed。
 - **真实 SSR 复测（10 个已抓页面，jsdom 跑产物）**：四个固定 UI 页面包屑恢复为 `社区`/`上传`/`Markdown 预览`/`清单校验器`，与 HEAD 逐项一致；作者页 `["社区","GTFO","Kaldea"]`、`["社区","Risk of Rain 2","Misc"]` 与 h1「上传者 …」不变；包详情（含 `/changelog/`、`/required/`）`["社区","GTFO","BepInExPack_GTFO"]` 且 `详情/必需依赖（0）/Wiki/更新日志` 照常；社区页 `["社区","GTFO"]`。全部页面“关闭 → 再开启”后与首次翻译结果逐字一致。
 - **验证**：`npm run verify` rc=0 —— smoke 19 条 + jsdom 36 条全过；覆盖率不变（Thunderstore 203/203、动态 100/100、作者页 37/37 `--page author`、Nexus 230/230 与 210/210）；产物 82,136 B / 1,812 行，版本仍 `1.0.4`（未提交、未推送、未升版本、未发布）。
+
+## 16. Nexus 浏览页（7 Days To Die）筛选分类、时间范围、页头固定 UI 漏翻修复（2026-10-27）
+
+用户反馈 Nexus 仍有固定 UI 漏翻并附 `/games/7daystodie/mods`（endorsements + 28 天时间范围）截图。本轮新增证据快照 `docs/evidence/nexus-browse-2026-10-27.txt`。
+
+- **取证（三路交叉，互不替代）**：
+  1. **生产 JS chunk 原文**（实机页面内抓 40 个 `/_next/static` chunk，0 失败）：时间范围枚举 `All time` / `24 Hours` / `7 Days` / `14 Days` / `28 Days` / `1 Year`；页大小 `20 Items` / `40 Items` / `60 Items` / `80 Items`（**大写 I**）；chip 模板 `` `Time range: ${label}` ``（含 `custom` 兜底）；`Clear all`（`data-e2eid="remove-all-filters"`）；会员横幅两个子节点 `<span class="font-semibold …">Try Premium free</span>` + `" - unlock faster downloads & 1-click installs"`；CTA `Start free trial`。
+  2. **SSR 原始 HTML**（页内同源 `fetch('/games/7daystodie/mods')`，124,566 B，无第三方翻译污染）：页头 `<h1 class="text-heading-md …"><span class="line-clamp-2 break-words">7 Days To Die mods</span></h1>`；`skyrimspecialedition/mods` 同构（`Skyrim Special Edition mods`）。
+  3. **实机 DOM**（bsk Agent Window，真实 Chrome）：分类名与计数是**两个相邻 span**（`label > p > span.truncate` + `span.text-neutral-subdued`，计数形如 `(269)`）；卡片分类元数据是 `a[data-e2eid="mod-tile-category"]`，`href` 同时含 `/games/` 与 `?categoryName=`；时间范围是 HeadlessUI **Popover**（面板 `[id^="headlessui-popover-panel"]`，日期输入 `placeholder="From"/"To"`，另有 `From date` / `To date` 的 sr-only 文本与 `Go` 按钮）；chip 是 `button[data-e2eid^="remove-filter-time-range-"]`。
+- **根因（三条，均由现场 DOM 与仓库代码证明，非推测）**：
+  1. 计数正则 `^(.+) \(([\d,]+)\)$` 只认「同一文本节点」，实机却是「分类名 span + 计数 span」两个节点；分类名单独查表时又不在浏览页词库里 → `Avatars / Cheats / Creatures / Environment / Items - Food / Items and Loot / Maps / Prefabs / Quests / Vehicles / XML Edits / Zombies` 全部保持英文。
+  2. `ignore` 里的 `[href*="/games/"]` 把卡片分类链接 `a[data-e2eid="mod-tile-category"]` 一并吞掉（其 `href` 同时含 `/games/` 与 `?categoryName=`）→ 卡片上的分类值（`Vehicles` / `Items and Loot` …）翻不出来。
+  3. 页大小正则写成小写 `^([\d,]+) items$`，站点实际是 `20 Items`；时间范围枚举、`From`/`To`（此前只存在于 `news` 分组）、`Clear all`、chip 文案、横幅整句、`Start free trial` 既无词条也无规则。页头 `7 Days To Die mods` 同理（原注释也承认没处理）。
+- **修复**：
+  - `src/engine.js` 新增**上下文规则**能力：`buildScopedRules()`（按页型装配 `site.scoped`）+ `lookupScoped()`（`closest(rule.selector)` 判定，命中即停，结果不进全局缓存；文本节点与 `placeholder`/`aria-label`/`title` 属性都走同一入口）。
+  - `src/locals/nexus.js` 用 5 条 `scoped` 规则（全部 `pages: ['browse']`）覆盖：分类筛选与卡片分类（含同节点计数形态 `Avatars (10)`）、时间 Popover（枚举 + `From/To` + `From date/To date` + `Go`）、选择器当前值（`[class~="group/select"]`）、chip 与 `Clear all`、页头固定 `mods` 后缀（`^(.+?) mods$` → `$1 模组`，游戏名原样）。
+  - `ignore`：`[href*="/games/"]` 收窄为 `[href*="/games/"]:not([data-e2eid="mod-tile-category"])`；补 2026 新前端 UGC 守卫 `[data-e2eid="mod-tile-title"]` / `[data-e2eid="mod-tile-summary"]` / `[data-e2eid="user-link"]`。
+  - 页大小正则改 `^([\d,]+)\s+items?$/i`（大小写/单复数变体，数字原样保留）；会员横幅第二节点加完整锚定规则 `^([-\u2013\u2014])?\s*unlock faster downloads\s*&\s*1-click installs$`。
+  - 与 UGC 可能同形的串（分类枚举、时间枚举、`Clear all`、`20 Items`）**不进**全局 `dict`/`patterns`，只待在 `scoped` 里；`test/smoke.test.mjs` 增加门禁断言（scoped 必须声明 `pages`、selector 非空、正则完整锚定、译文≠原文，且这批键不得出现在全局词库）。
+- **回归测试（先负后正）**：新增 9 条 jsdom + 1 条 smoke 词库审计。负向记录：jsdom `37 passed, 8 failed`（分类未翻译、卡片分类未翻译、页头未替换、横幅未翻译、时间选项只命中 `All time`、chip/页大小失败、开关还原失败、SPA 动态插入未翻译）+ smoke `19 passed`；修复后 jsdom **45 passed / 0 failed**、smoke **20 passed / 0 failed**。用例覆盖：拆分节点与同节点计数、卡片分类 vs 同名 UGC（标题 `Vehicles` / `Gameplay`、作者 `Avatars` / `28 Days`、摘要含 `Avatars (10)`）、页头只换后缀且 mod 页 `<h1>` 不受影响、横幅整句、时间下拉首次打开/关闭后重新插入/关闭开关后属性逐字还原、chip 与 `Clear all`、页大小大小写变体、SPA 跨游戏切换、以及「上下文不溢出到 mod 详情页」。
+- **覆盖率（page-aware，静态口径）**：新快照 60 行。修前 `node tools/coverage.mjs nexus docs/evidence/nexus-browse-2026-10-27.txt --page browse` → `15/60 (25.0%)`，未命中 45 条（与截图清单逐项对应）；修后 `60/60 (100.0%)`。`tools/coverage.mjs` 同步支持 `scoped`（按页型装配），输出多一行「上下文规则 N 条」，避免上下文词条被误算成缺口。**`60/60` 只说明"按页型装配后能产出译文"，不验证 selector 是否命中、ignore 是否生效、真实 DOM/弹层是否出现**（见第 18 节的口径更正）；运行期证明是本节下面的真实浏览器注入复验与 jsdom 用例。
+- **真实浏览器（bsk Agent Window + 真实 Chrome）**：脚本以 base64 分块注入页面（非扩展安装、未改扩展设置、未复制 Cookie、未碰用户标签页），`/games/7daystodie/mods` 实测：
+  - 分类筛选 21 项全部中文且计数原样：`头像 (269)`、`作弊 (99)`、`生物 (130)`、`环境 (139)`、`物品 - 食品 (212)`、`物品和战利品 (782)`、`地图 (202)`、`预制建筑 (660)`、`任务 (101)`、`载具 (370)`、`XML 修改 (484)`、`僵尸 (195)` …
+  - 卡片分类 `Vehicles` → `载具`，同卡片标题 `Vehicles`、作者 `28 Days`、摘要原文不变（合成卡片节点复验：`载具` / `Vehicles` / `28 Days` / `Avatars (10) and Cheats in 20 Items.`）。
+  - 时间 Popover：`From`/`To` 的 placeholder 与 `From date`/`To date` → `起始日期`/`截止日期`，选项 `所有时间 / 24 小时 / 7 天 / 14 天 / 28 天 / 1 年`，`Go` → `跳转`；选择器当前值 `28 Days` → `28 天`。
+  - 合成节点（走真实 MutationObserver 路径）：`Time range: 7 Days` → `时间范围：7 天`、`Clear all` → `全部清除`、`20 Items` → `每页 20 项`、横幅 → `免费试用 Premium - 解锁更快的下载速度与一键安装`、`Skyrim Special Edition mods` → `Skyrim Special Edition 模组`。
+  - 关闭开关：上述文本逐字回到英文（`Time range: 7 Days` / `Try Premium free - unlock faster downloads & 1-click installs` / `20 Items` / `Vehicles` / `Skyrim Special Edition mods`），两个日期占位符各自独立还原（`from=From`、`to=To`），再开启恢复。
+  - 会话用完后 `bsk session stop axwo`，`bsk session list` 为空。
+- **限制（明确留口）**：同一浏览器里还有第三方翻译扩展在运行（DOM 上可见 `read-frog` 标记，只能证明"它在该页运行过"，不能逐条证明某段文案的归属）。因此**页头、页大小、真实 chip 文本、横幅**在实机上已有中文时无法判定是谁写的，改用「真实 DOM 结构 + 合成节点 + 关闭/再开启逐字还原」取证；能确证归属的是本脚本独有格式的项（`24 小时` 带空格、`起始日期`、`28 天`）。凡实机文本与本脚本规则输出不一致时，一律按"非本脚本所为"处理，不把第三方扩展的改写当成自己的效果。
+- **验证**：`npm run verify` rc=0 —— smoke 20 条 + jsdom 45 条全过；覆盖率 Thunderstore 203/203、动态 100/100、作者页 37/37（`--page author`）、Nexus 230/230 与 210/210、Nexus 浏览页 60/60（`--page browse`）。`git diff --check` rc=0，改动文件 `node --check` 全 rc=0，两次 `node build.mjs` 产物 SHA256 一致（`98AEB6607BC4C9047A403768CFC6C11F2A4D42BDB968D022B9B58B081B1E7F07`），产物 89,398 B / 1,973 行。HEAD 仍为 `16bd784`，版本仍 `1.0.5`（未升版本、未提交、未推送、未发布）。
+
+## 17. 页大小营销说明与已选搜索条件 chip 补译（2026-10-27，定点补齐）
+
+第 16 节报告里标注的两处留口，本轮定点补齐；范围不外扩。
+
+- **真实证据（实机 DOM，2026-10-27，`/games/7daystodie/mods`）**：
+  1. 页大小下拉面板 `[id^="headlessui-listbox-options"]` 里，营销说明是**三节点拆分**：
+     `<div class="mt-4 md:hidden"><p class="text-body-sm text-translucent-moderate"><span>View more results for mods, collections and media with </span><a class="nxm-link … text-premium-strong" href="https://www.nexusmods.com/premium">premium</a><span>.</span></p></div>`（首节点带尾随空格，`.md:hidden` 说明窄屏可见）。
+  2. 已选搜索条件 chip（在搜索参数里填 Title/Description/Author/Uploader 后点应用生成）是
+     `<button data-e2eid="remove-filter-title-…"><div><span class="flex items-center gap-x-1 px-2"><span class="sr-only">Remove filter for </span><span class="text-body-sm grow text-left">Title: <用户输入></span><svg/></span></div></button>`，
+     标签由生产 bundle 的 `${humanize(field)}: ${value}`（field ∈ title/description/author/uploader）拼成，冒号后就是用户输入。实机值实测含冒号、空格、`$1`、`$&`、反引号与中文（`Title: 24 Hours: Avatars $1 中文 x`、`Description: Author: $& $` + 反引号 + ` 值`）。
+- **根因**：营销说明三节点各自都查不到词条；chip 标签是「固定前缀 + 动态值」单节点，既无规则，且引擎常规查表会先做空白归一化（`text.replace(/\\s+/g, ' ')` + `trim`），直接拿归一化后的 key 回写会破坏值里的连续空格，因此不能用普通 `patterns` 处理。
+- **修复（最小）**：
+  - `src/engine.js`：新增 `rawPatterns` + `translateScopedRaw()`（L156-190 一带）——与 `lookupScoped` 同样是 `closest(rule.selector)` 上下文限定，但直接匹配 `node.nodeValue` 的**原始文本**（不归一化、不做 CJK/纯符号跳过），替换一律走函数形式（值里的 `$1`/`$&`/`` $` `` 不会被 `String.replace` 当替换模式）；原文写回 `State.originals`，关闭开关照常逐字还原；`isIgnored(parent)` 区域不参与。
+  - `src/locals/nexus.js`：chip 规则补 `rawPatterns: [/^(Title|Description|Author|Uploader): ([\\s\\S]*)$/, nxSearchChipLabel]`（`NX_SEARCH_FIELD_ZH` = 标题/描述/作者/上传者，分隔符换成全角 `：`，值原样拼接）；新增一条 `scoped` 规则把选择器钉在 `[id^="headlessui-listbox-options"] div[class~="md:hidden"][class~="mt-4"]`，用三条 raw 规则翻译营销说明的三个节点（`查看更多模组、合集与媒体结果，需升级为 ` / `高级会员` / `。`）。
+  - `tools/coverage.mjs`：page-aware 命中集合纳入 `rawPatterns`；`test/smoke.test.mjs`：上下文正则门禁扩到 `rawPatterns`（同样必须 `^…$` 完整锚定）。
+- **测试（先负后正）**：新增 4 条 jsdom → 总数 **49**；smoke 仍 20 条。负向记录（dist 未修复）：`46 passed, 3 failed` —— ①营销说明三节点仍全英文；②同串在固定 UI 面板里仍不翻译；③chip 前缀未翻译。第 4 条（同串出现在 mod 标题/描述/作者名时不得翻译）修前即通过，修后必须继续通过（回归护栏）。修后 **49 passed / 0 failed**。
+- **覆盖率（静态口径）**：快照由 60 行扩到 66 行（新增 7 条实机串里 1 条纯符号行计入命中）。用运行时口径单独测量本轮 6 条新串：修前 6/6 未命中、修后 0 未命中；`node tools/coverage.mjs nexus docs/evidence/nexus-browse-2026-10-27.txt --page browse` → `66/66 (100.0%)`，上下文规则 6 条。**该数字不验证 selector/ignore/DOM（见第 18 节）**。
+- **真实浏览器复验（bsk Agent Window，脚本 base64 分块注入）**：真实 chip `Title: 24 Hours: Avatars $1 中文 x` → `标题：24 Hours: Avatars $1 中文 x`、`Description: Author: $& $\` 值` → `描述：Author: $& $\` 值`（前缀翻、值逐字节不变）；合成真实结构 chip `Author: Vehicles` → `作者：车辆`、`Uploader: 28 Days` → `上传者：28 天`、`Title:   double  spaces` → `标题：  double  spaces`（多余空格保留）；打开页大小下拉后营销块三节点 → `查看更多模组、合集与媒体结果，需升级为 ` / `高级会员` / `。`。关闭开关：营销三节点逐字回到 `View more results … with ` / `premium` / `.`，两个 chip 回到 `Title: …` / `Description: …`；author chip 在注入本脚本之前就已经是 `作者：车辆`（见第 18 节的时间线证据），关闭时保持原样，说明还原只作用于本脚本写过的节点；再开启复原。会话 `bsk session stop sczj` 已清理（`session list` 中只剩非本代理创建的会话）。
+- **仍有留口（不猜、不扩）**：
+  1. 桌面端同一面板的营销块（`Learn more` / `with premium` / `Browse more results for mods, collections and media everywhere.` / `Upgrade to premium`）**未翻**：截图与 bundle 里没有它们的原始英文证据（抓取时已被同机第三方翻译扩展改写），按"不猜"原则保留原文，待有干净证据再补。
+  2. chip 前缀只在 `browse` 页型生效；collections / media 浏览页也有同类 chip 容器，但本轮未取证，不扩匹配。
+  3. chip 前缀要求站点原样的 `Field: ` 形态（含单个半角空格）；大小写或分隔符变化一律不匹配（fail-closed）。
+  4. 同一浏览器还有第三方翻译扩展在运行，真实页面上存在"谁先写谁生效"的竞争；实机归属只按"本脚本独有格式"与"禁用前后差异"判定，未做逐条归因。
+- **验证**：`npm run verify` rc=0 —— smoke 20 + jsdom 49 全过；覆盖率 Thunderstore 203/203、动态 100/100、作者页 37/37、Nexus 230/230 与 210/210、浏览页 66/66（`--page browse`）；`git diff --check` rc=0；改动文件 `node --check` 全 rc=0；两次 `node build.mjs` 产物 SHA256 一致；HEAD 仍 `16bd784`，版本仍 `1.0.5`（未提交、未推送、未发布）。
+
+## 18. 独立 Code Review 定点修复：SPA 原文保真、站点原地改写、Items/横幅作用域、覆盖率口径（2026-10-27）
+
+Review 指出的五项全部按「先加失败测试 → 最小修复 → 回归」处理；范围未外扩，未升版本。
+
+### A. SPA 切页后关闭开关丢失原文（阻塞）
+
+- **根因**：`src/engine.js` 的 `onLocationChange()` 在页型变化时重建 `State.originals` / `State.attrOriginals`（`new WeakMap()`）。SPA 切页不会销毁导航、筛选控件等节点，重建后这些节点已翻译但原文没了，关闭开关无法还原。`src/bootstrap.js` 的手动「重新扫描当前页面」有同一缺陷（同样重建原文容器）。
+- **复现（修前失败）**：jsdom 用例「SPA 切页往返后关闭开关：导航与分类的原文不丢」→ 失败信息 `SPA 切页后导航原文丢失：游戏模组`。
+- **修复**：`onLocationChange()` 只重建「按页型装配」的东西（`buildDict` 内的词条/正则/上下文规则/ignore）与页头名称保护；`originals` / `attrOriginals` / `lastWritten` 一律保留（都是 WeakMap，节点销毁后自动回收，不会堆积）。`bootstrap.js` 的手动重扫同样不再清空原文容器。
+- **回归**：切页往返后 `setEnabled(false)` → 导航回到 `GAMESMODS`、分类回到 `Avatars`、chip 回到 `Time range: 28 Days`；再开启恢复中文；换页型后 `scoped` 规则按新页型重建（不跨页污染）。
+
+### B. 站点原地改写节点后关闭开关回滚旧值（阻塞）
+
+- **根因**：原文只在首次翻译时记录（`if (!State.originals.has(node))`），站点在同一 Text 节点写入新内容后，`originals` 仍是旧值；关闭开关会把旧值写回去，覆盖用户当前的筛选值。`MutationObserver` 回调是异步的（微任务之后），`State.writing` 同步标记早已复位，因此**不能**用同步标记区分自写与站点外写。
+- **修复**：新增 `State.lastWritten`（文本节点 → 本脚本最后写入的值）与 `State.attrLastWritten`（元素 → {属性: 值}），以及 `refreshOriginal(node, raw)`：当前值与 lastWritten 不同 ⇒ 判定为站点外写，把原文更新为站点当前值；`restoreAll()` 还原后清掉 lastWritten，避免再次开启时把恢复值误判成外写。所有写入点（文本主路径、`translateScopedRaw`、页头前缀、三个分段处理器、属性）统一登记 lastWritten。
+- **复现（修前失败）**：两条用例失败——文本节点断言 `关闭开关必须恢复站点当前值，而不是第一次翻译前的旧值`；属性断言 `属性还原必须用站点当前值`。
+- **覆盖**：同一节点多次改写（`Author: Vehicles` → `Author: Vehicles 2` → `Author: $& 中文  双空格`）、翻译态被站点再覆盖、再次开启/再次关闭、同一宿主 `placeholder` + `aria-label` 独立记录、值里的 `$&` / 中文 / 连续空格逐字节保留；另外覆盖「站点改成的新值本身没有词条」的两种形态（文本 `a plain site value`、属性 `From date (updated)`）——此时也必须把原文换成站点值，否则关闭开关会把站点新值冲回旧值（属性路径曾有此缺陷，已把「刷新原文」提到「是否需要翻译」判定之前并加断言）。
+- **实机复验**（bsk Agent Window，真实 Chrome，合成节点走真实 `MutationObserver`）：`Author: Vehicles` → `作者：Vehicles`；站点改写为 `Author: Vehicles 2` → `作者：Vehicles 2`；再改为 `Author: $& 中文  双空格` → `作者：$& 中文  双空格`；关闭开关 → `Author: $& 中文  双空格`（站点最新值，不是第一次的旧值），再开启复原。
+
+### C. 本轮把 Items 规则扩大成全局大小写/单数（直接伤到 UGC）
+
+- **根因**：第 16 节把全局正则从 HEAD 的 `^([\d,]+) items$`（小写复数）改成了 `^([\d,]+)\s+items?$/i`，导致 mod 详情页普通 `<p>20 Items</p>` 也被翻成「每页 20 项」。
+- **修复**：全局正则**回退到 HEAD 形态** `^([\d,]+) items$`（collections / media / news 旧前端的既有行为不变）；本轮新增的大小写/单数扩展改为 `pages: ['browse']` 的上下文规则，选择器 `[class~="group/select"], [id^="headlessui-listbox-options"]`（实测的页大小控件与其下拉面板）。
+- **同时收窄**：`Try Premium free` 原本被第 16 节写进全局 `dict`（HEAD 只在 `home` 组）。现改为站点级上下文规则 `pages: 'all'` + 选择器 `p[class~="min-w-0"][class~="text-neutral-moderate"]`（实测横幅容器），横幅尾部说明的正则也从全局移进同一条规则；`pages: 'all'` 是新加的显式哨兵，smoke 门禁仍要求每条 scoped 规则显式声明页型（数组或 `'all'`），数组元素仍需是已知页型。
+- **复现（修前失败）**：`普通正文里的 "20 Items" / "1 Item" 不得翻译` 与 `mod 标题里的同串不得翻译`。
+- **回归**：真实分页控件 `20 Items` / `40 Items` / `1 Item` 仍翻；同页普通正文、mod 详情正文、用户 title/summary 里的同串保持原文；站点级横幅在 browse 与 mod 页都翻，而 `<h1>Try Premium free</h1>` 与描述正文保持原文；旧页面（collections / media / news 的 `20 items`）行为不变。
+
+### D. 覆盖率口径更正
+
+`tools/coverage.mjs` 只按页型展平 `dict` / `patterns` / `scoped`，**不验证** selector 是否命中、`ignore` 是否生效、真实 DOM/弹层是否出现；把 selector 换成不存在的值它照样 100%。因此：
+
+- 工具输出新增三行「口径说明」，明确它是静态规则匹配、不能当作页面运行覆盖；
+- `README.md` 的 coverage 说明与「加一条词条」第 8 条同步标注；
+- 第 16 / 17 节的 `60/60`、`66/66` 已就地标注为静态口径；
+- 运行期证明改为以 `test/browser.test.mjs` 的真实 DOM 用例（真实树 + 真实 `MutationObserver`）与实机注入复验为准。**未**修改任何测试断言或评分来掩盖问题。
+
+### E. 第三方翻译扩展的归因边界
+
+第 16 / 17 节把 chip 的 `作者：车辆` / `上传者：28 天` 归因给同机翻译扩展，这**不是已证事实**，已改为证据化表述：
+
+- 可证的部分：这两个 chip 在**本脚本注入之前**就已经是中文（同页时间线：注入前 `作者：车辆`、`上传者：28 天`，且 `Description: …` / `Title: …` 仍为英文，`window.__MODS_ZH__ === undefined`）；而本脚本的 chip 规则逐字节保留值，若由本脚本产出应为 `上传者：28 Days`。因此「不是本脚本产出」可证，「具体由哪个扩展产出」未证。
+- 未做：没有为了归因去改任何扩展设置（隔离实验需要改动用户配置，超出授权范围），故明确保留该边界。
+
+### 回归与验证
+
+- 修前：jsdom `49 passed, 5 failed`（A 1 条、B 2 条、C 2 条）；修后：**jsdom 54 passed / 0 failed**、smoke **20 passed / 0 failed**。
+- 覆盖率（静态口径）：Thunderstore 203/203、动态 100/100、作者页 37/37、Nexus 230/230 与 210/210、浏览页 66/66（上下文规则 8 条），工具输出已带口径说明。
+- `npm run verify` rc=0；改动文件 `node --check` 全 rc=0；`git diff --check` rc=0；两次 `node build.mjs` 产物 SHA256 一致；HEAD 仍 `16bd784`，版本仍 `1.0.5`（未提交、未推送、未发布）。
+- 实机会话：`bsk session stop eebl`，`session list` 为空；合成节点已全部移除，URL 已 `replaceState` 回浏览页。
+
+## 19. 定点复验修复：关闭期间站点改写后再次关闭复活过期原文（2026-10-27）
+
+独立复验给出可复现路径：`refreshOriginal()` 对 `written === undefined` 直接 return；`restoreAll()` 关闭时清掉 `lastWritten` 但保留 `originals`，于是**关闭期间**的站点改写不会被记录，再次关闭把过期原文写回去。
+
+- **修前（jsdom 真实 `MutationObserver` 时序，5 条新用例全红）**：
+  - `关闭不能复活旧原文（实际 "Author: Vehicles"）`
+  - `关闭应恢复新值而不是最初的 Vehicles`（关闭期间改成新的**可翻译**原文 `Author: Vehicles 9`，开启会翻成 `作者：Vehicles 9`，关闭却回到 `Author: Vehicles`）
+  - `关闭不能复活旧占位符 From（实际 "From"）`（`placeholder` → `Site placeholder`，`aria-label` → `From date`）
+  - `关闭不能复活站点已移除的属性`（关闭期间 `removeAttribute('title')`，再开关后 `title` 被复活）
+  - `SPA 往返 + 重扫后关闭仍不得复活旧值`
+- **修复（`src/engine.js`）**：
+  1. `refreshOriginal()`：`lastWritten` 存在时按原逻辑判定自写/外写；**缺失时**只要当前值与已记录原文不同，就视为站点（含关闭期间）改写，原文跟进。属性侧同理（`attr in written` 分支 + `attr in record && record[attr] !== raw` 分支）。
+  2. `restoreAll()` 从"无条件回写 `originals`"改为**只回写仍是本脚本写入值的节点/属性**：`current !== lastWritten` ⇒ 站点已改写/尚未观察，把原文更新为当前值并跳过回写；属性被移除（`getAttribute() === null`）⇒ 删记录、**不复活**；属性值被改写 ⇒ 以当前值为准。正常路径（值仍是译文）行为不变。
+  3. 这样同时覆盖"开启状态站点改写后立刻关闭"（不等 80ms 防抖）的竞态：关闭不再用旧原文覆盖站点新内容。
+- **回归（修后 60 passed / 0 failed）**，新增 6 条用例覆盖：text 非词条新值、text 可翻译新值、同一元素 `placeholder`/`aria-label`/`title` 独立 + 输入 `value` 逐字不变、关闭期间属性被移除不复活、重复扫描 + SPA 往返 + 立刻关闭竞态、textarea 属性不被损坏。
+- **守卫有效性佐证（未改仓库文件）**：把 `restoreAll` 单点回退成旧实现（refreshOriginal 保持新实现）后跑「立刻关闭」竞态 → 输出 `Author: Vehicles`（复活旧原文）；新实现 → `immediate site value`。说明该断言确实锁住 `restoreAll` 的守卫，而不是靠 `refreshOriginal` 顺带通过。
+- **顺带发现的既有问题（本轮不改，仅记录）**：`translateAttributes()` 里的 `el.tagName !== 'TEXTAREA'` 豁免在 `scanRoot()` 的 `isIgnored(el)` 过滤之后**不可达**（`TEXTAREA` 在 `SKIP_TAGS` 中），因此 `textarea` 的 `placeholder` 一直不会被翻译。属本次改动之前就存在的行为，本轮未改；新增用例只锁定"开关往返不会损坏 textarea 上的属性"，并断言 `input` 的 `aria-label`/`title` 仍各自独立翻译还原。
+- **验证**：`npm run verify` rc=0 —— smoke 20 + jsdom 60 全过；覆盖率静态口径不变（203/203、100/100、37/37、230/230、210/210、浏览页 66/66）；改动文件 `node --check` 全 rc=0；`git diff --check` rc=0；两次 build 产物 SHA256 一致；HEAD 仍 `16bd784`，版本仍 `1.0.5`（未提交、未推送、未发布）。

@@ -7,7 +7,7 @@
 - 词条：**677 个去重原文键**（Thunderstore 201 / Nexus Mods 476），**45 组**动态规则（17 / 28）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
 - 覆盖：`thunderstore.io`；Nexus Mods 根域及 `www`、`next`、`forums`、`help`、`api-docs`、`users` 一方子域路由
 - 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
-- 当前发布版本：`v1.0.5`
+- 当前发布版本：`v1.0.6`
 
 ## 安装
 
@@ -34,7 +34,7 @@
 
 - **界面中文化：已开启 / 已关闭** —— 一键切回英文原文（原文逐字存于 WeakMap，关闭即还原），状态会记住
 - **重新扫描当前页面** —— 站点改版后手动补扫
-- **版本 v1.0.5（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
+- **版本 v1.0.6（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
 
 ## 项目结构
 
@@ -69,6 +69,7 @@ mods-zh/
 4. `MutationObserver` + 80ms 防抖接管动态渲染的节点；写入用 `State.writing` 标记，且译文本身不会再命中字典，因此扫描天然幂等、不会被自身写入喂成死循环
 5. UGC 防护走三层：站点级 `ignore` 选择器（`closest` 判定整棵子树跳过）、标签黑名单（`CODE/PRE/TEXTAREA…`）、`contenteditable` 判定
 6. 属性翻译同样查表，只处理 `placeholder` / `aria-label` / `title`
+7. **上下文规则（`site.scoped`）**：同一串在不同 DOM 上下文里含义不同的，写在 `scoped: [{ pages, selector, dict, patterns }]` 里，引擎只在 `rule.selector` 命中的子树内查表（`closest` 判定，命中即停，结果不进全局缓存）。典型例子：Nexus 浏览页的分类名 `Vehicles` 要翻，卡片里恰好叫 `Vehicles` 的 mod 标题不能翻；`28 Days` 作为时间范围选项要翻，作为 UGC 文本不能翻。出了上下文一个字节都不动，`pages` 限定页型避免溢出（如 mod 详情页的 `<h1>` 标题）。需要「固定前缀 + 用户输入值」同节点的场景（如已选筛选 chip 的 `Title: <用户输入>`）用 `rawPatterns`：按文本节点**原始值**匹配（不归一化空白），替换走函数形式，值里的 `$1` / `$&` / 反引号与多空格都逐字节保留
 
 因为匹配靠**文本**而不是 CSS 类名，两站前端用 React + 哈希类名（`css-1x2y3z`）改版时不会一改就崩。
 
@@ -77,8 +78,8 @@ mods-zh/
 ```bash
 npm install
 npm run build      # src/ → dist/mods-zh.user.js
-npm test           # 19 条最小 DOM 测试 + 36 条 jsdom 测试
-npm run coverage   # 对照 docs/evidence/ 快照算词条覆盖率
+npm test           # 20 条最小 DOM 测试 + 60 条 jsdom 测试
+npm run coverage   # 对照 docs/evidence/ 快照算词条覆盖率（静态匹配，不验证 selector/ignore/DOM）
 npm run verify     # 以上全套
 ```
 
@@ -93,6 +94,7 @@ npm run verify     # 以上全套
 5. 新页型若与已有页型共用同一套组件（如作者列表页与社区列表页的筛选器），在站点对象里声明 `alias: { 新页型: 已有页型 }` 复用整组词条，不要复制一遍
 6. 同一段 DOM 在不同页型分属 UGC 与固定 UI 时（如 Thunderstore 面包屑末段：作者/包/社区页是名称，社区总览/上传/工具页是固定 UI），用 `ignorePages: { 页型: 选择器 }` 只在对应页型追加忽略规则，不要写进全局 `ignore`
 7. 快照默认按「全部分组并集」口径体检（找缺口）；要证明某页型下真的翻得出来，用 `node tools/coverage.mjs <站点> <快照> --page <页型>`，只装配该页型运行期实际加载的 global + alias + 本页型分组
+8. 与 mod 标题/作者/描述**可能同形**的固定 UI（分类枚举、时间范围、页大小、筛选 chip 的日期值），不要写进 `dict` 或 `patterns`（那等于全局无界替换），写进 `scoped` 并声明 `pages` + 稳定的上下文 `selector`（如 `[data-e2eid="category-filter"]`、`[class~="group/select"]`）。`npm run coverage ... --page <页型>` 会把该页型的 `scoped` 规则算进可命中集合，所以这类词条不会在覆盖率里被误报成缺口。注意覆盖率是**静态口径**：它只证明"按该页型装配后能产出译文"，不验证 selector 是否真的命中、ignore 是否生效、真实 DOM/弹层是否出现；运行期是否真的翻出来由 `test/browser.test.mjs` 的真实 DOM 用例负责
 
 ### 本地手测
 

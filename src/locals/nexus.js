@@ -49,6 +49,82 @@ function nxCountedLabel(all, label, count) {
     return event ? '截图社区活动 #' + event[1] + ' (' + count + ')' : all;
 }
 
+/* ---- 模组浏览页（2026 新前端）固定 UI 枚举 ----
+ * 取证：docs/evidence/nexus-browse-2026-10-27.txt
+ *   · 实机 DOM 里分类名与计数是两个相邻 span：
+ *     <label><p><span class="truncate …">Avatars</span><span class="text-neutral-subdued">(269)</span></p></label>
+ *   · 卡片分类元数据是 a[data-e2eid="mod-tile-category"]，href 同时含 /games/ 与 ?categoryName=
+ *   · 时间范围是 HeadlessUI Popover 按钮文本，已选 chip 是 "Time range: 28 Days"
+ *   · 页大小 label 是大写 "20 Items"（生产 JS 字面量），旧正则只认小写 items
+ * 这些串与 mod 标题/作者/描述可能同形（标题就叫 Vehicles / 28 Days / 20 Items），
+ * 所以只放进 site.scoped 的上下文规则，不进全局 dict。 */
+const NX_BROWSE_CATEGORY_ZH = Object.freeze({
+    'Avatars': '头像',
+    'Cheats': '作弊',
+    'Creatures': '生物',
+    'Environment': '环境',
+    'Items - Food': '物品 - 食品',
+    'Items – Food': '物品 – 食品',
+    'Items and Loot': '物品与战利品',
+    'Maps': '地图',
+    'Prefabs': '预制建筑',
+    'Quests': '任务',
+    'Vehicles': '载具',
+    'XML Edits': 'XML 修改',
+    'Zombies': '僵尸',
+});
+
+const NX_TIME_RANGE_ZH = Object.freeze({
+    'all time': '所有时间',
+    '24 hours': '24 小时',
+    '7 days': '7 天',
+    '14 days': '14 天',
+    '28 days': '28 天',
+    '1 year': '1 年',
+    'custom': '自定义',
+});
+
+/* "Avatars (10)" -> "头像 (10)"：同节点形态，计数一位不动 */
+function nxCategoryCounted(all, label, count) {
+    const zh = NX_BROWSE_CATEGORY_ZH[label];
+    return zh ? zh + ' (' + count + ')' : all;
+}
+
+/* "Time range: 28 Days" -> "时间范围：28 天"；custom 与大小写变体都保留含义 */
+function nxTimeRangeChip(all, value) {
+    const raw = value.trim();
+    return '时间范围：' + (NX_TIME_RANGE_ZH[raw.toLowerCase()] || raw);
+}
+
+/* 会员横幅的第二个文本节点（前半句 "Try Premium free" 是粗体 span，见取证文件）：
+ * 整句是站点点级固定营销文案，但只在横幅容器里翻，避免把同名 UGC 段落牵连进来。 */
+function nxPremiumBannerTail(all, dash) {
+    return (dash ? dash + ' ' : '') + '解锁更快的下载速度与一键安装';
+}
+
+/* ---- 已选搜索条件 chip："Title: <用户输入>"（实机 chip 标签是单文本节点）----
+ * 生产 bundle 里标签由 `${humanize(field)}: ${value}` 拼成，field ∈ title/description/author/uploader。
+ * 只翻固定前缀，冒号后的用户输入逐字节保留（含 "24 Hours"、中文、冒号、多个空格、$1 / $& / $`）。
+ * 用函数式替换，避免 String.replace 把值里的 $ 序列当替换模式。 */
+const NX_SEARCH_FIELD_ZH = Object.freeze({
+    Title: '标题',
+    Description: '描述',
+    Author: '作者',
+    Uploader: '上传者',
+});
+
+function nxSearchChipLabel(all, field, value) {
+    const zh = NX_SEARCH_FIELD_ZH[field];
+    return zh ? zh + '：' + value : all;
+}
+
+/* 时间范围枚举："24 Hours" / "7 days" / "1 Year"：数字原样保留，只本地化单位 */
+const NX_TIME_OPTION_PATTERNS = [
+    [/^([\d,]+)\s*hours?$/i, (all, n) => n + ' 小时'],
+    [/^([\d,]+)\s*days?$/i, (all, n) => n + ' 天'],
+    [/^([\d,]+)\s*years?$/i, (all, n) => n + ' 年'],
+];
+
 SITES.push({
     id: 'nexus',
     name: 'Nexus Mods',
@@ -65,7 +141,11 @@ SITES.push({
         '[class*="comment"]', '[class*="Comment"]',
         '[class*="markdown"]', '[class*="prose"]',
         '[class*="mod-title"]', '[class*="file-name"]',
-        '[href*="/games/"]', '[href*="/collections/"]', '[href*="/images/"]', '[href*="/videos/"]',
+        // 2026 新前端的卡片结构（data-e2eid 稳定标识）：标题/作者/摘要都是 UGC
+        '[data-e2eid="mod-tile-title"]', '[data-e2eid="mod-tile-summary"]', '[data-e2eid="user-link"]',
+        // 游戏名链接仍整棵跳过；卡片上的分类元数据是同一 URL 族里的固定 UI，单独放行
+        '[href*="/games/"]:not([data-e2eid="mod-tile-category"])',
+        '[href*="/collections/"]', '[href*="/images/"]', '[href*="/videos/"]',
         '[href*="/topic/"]', '[class*="featured-article"]',
         '.ipsType_richText',
         '.ipsDataItem_lastPoster',
@@ -516,6 +596,8 @@ SITES.push({
             'Learn More': '了解更多',
             'Endorsements': '认可数',
             'Downloads': '下载量',
+            'Start free trial': '免费试用',
+            'Display': '显示',
 
             /* 语言枚举 */
             'Afrikaans': '南非荷兰语',
@@ -719,5 +801,79 @@ SITES.push({
         // Dynamic UI labels preserve the numeric value and game name.
         [/^Served in ([\d.]+|--)s$/, '服务器响应耗时 $1 秒'],
         [/^Bookmark (.+)$/, '收藏 $1'],
+    ],
+
+    /* 页型上下文规则：引擎按 rule.selector 判定「当前文本节点是不是在这个固定 UI 子树里」，
+     * 命中才翻，出了上下文一律不动。这样恰好叫 Vehicles / 28 Days / 20 Items 的
+     * mod 标题、作者名、描述不会因为新增词条被牵连。pages 限定页型，避免溢出到 mod 详情页。 */
+    scoped: [
+        {
+            pages: ['browse'],
+            selector: '[data-e2eid="category-filter"], [data-e2eid="mod-tile-category"]',
+            dict: NX_BROWSE_CATEGORY_ZH,
+            patterns: [[/^(.+) \(([\d,]+)\)$/, nxCategoryCounted]],
+        },
+        {
+            pages: ['browse'],
+            selector: '[id^="headlessui-popover-panel"]',
+            dict: {
+                'All time': '所有时间',
+                'From': '起始日期',
+                'To': '截止日期',
+                'From date': '起始日期',
+                'To date': '截止日期',
+                'Go': '跳转',
+            },
+            patterns: NX_TIME_OPTION_PATTERNS,
+        },
+        {
+            pages: ['browse'],
+            selector: '[class~="group/select"]',
+            dict: { 'All time': '所有时间' },
+            patterns: NX_TIME_OPTION_PATTERNS,
+        },
+        {
+            pages: ['browse'],
+            selector: '[data-e2eid^="remove-filter-"], [data-e2eid="remove-all-filters"]',
+            dict: { 'Clear all': '全部清除', 'Remove filter for': '移除筛选' },
+            patterns: [[/^Time range: (.+)$/, nxTimeRangeChip]],
+            // "Title: <用户输入>"：按原始文本匹配，冒号后的值一位不动
+            rawPatterns: [[/^(Title|Description|Author|Uploader): ([\s\S]*)$/, nxSearchChipLabel]],
+        },
+        {
+            /* 页大小下拉里的固定营销说明（实机三节点拆分，见取证文件的 md:hidden 块）：
+             *   <div class="mt-4 md:hidden"><p><span>View more results … with </span><a>premium</a><span>.</span></p></div>
+             * 选择器钉在 md:hidden 营销块上，mod 标题/描述里的同串不受影响。 */
+            pages: ['browse'],
+            selector: '[id^="headlessui-listbox-options"] div[class~="md:hidden"][class~="mt-4"]',
+            rawPatterns: [
+                [/^View more results for mods, collections and media with\s*$/, '查看更多模组、合集与媒体结果，需升级为 '],
+                [/^premium$/, '高级会员'],
+                [/^\.$/, '。'],
+            ],
+        },
+        {
+            /* 页大小控件（实机 browse 页 `[data-e2eid="select-mods-per-page"]` + 它的
+             * `[id^="headlessui-listbox-options"]` 面板）。本轮新增的大小写/单数扩展只在这里生效；
+             * 全局仍保留 HEAD 的小写 `20 items` 词条行为（collections / media / news 旧前端走那条）。 */
+            pages: ['browse'],
+            selector: '[class~="group/select"], [id^="headlessui-listbox-options"]',
+            patterns: [[/^([\d,]+)\s+items?$/i, '每页 $1 项']],
+        },
+        {
+            /* 站点级会员横幅（实机 `p.text-body-md.text-neutral-moderate.min-w-0`）：
+             * 粗体 span 与尾部说明各是一个文本节点，只在横幅容器内翻译。
+             * 普通正文/标题里恰好写 "Try Premium free" 时不翻（见 jsdom 负向用例）。 */
+            pages: 'all',
+            selector: 'p[class~="min-w-0"][class~="text-neutral-moderate"]',
+            dict: { 'Try Premium free': '免费试用 Premium' },
+            patterns: [[/^([-\u2013\u2014])?\s*unlock faster downloads\s*&\s*1-click installs$/i, nxPremiumBannerTail]],
+        },
+        {
+            // 页头 "7 Days To Die mods"：只换固定后缀，游戏名一个字节都不动
+            pages: ['browse'],
+            selector: 'h1',
+            patterns: [[/^(.+?) mods$/, '$1 模组']],
+        },
     ],
 });
