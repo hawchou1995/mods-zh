@@ -1,0 +1,436 @@
+# Thunderstore 固定枚举快照（2026-11-16 当次 371 个社区 SSR 社区页逐社区提取，去重）
+# 来源：https://thunderstore.io/c/<slug>/ 的 <summary>Sections</summary> 单选组与 <summary>Categories</summary> 勾选组
+# 清单与逐社区状态：docs/evidence/thunderstore-communities-2026-11-16.md
+
+# --- 分区（55 条，全站固定集合） ---
+0.62 Branch
+0.62 Branch Modpacks
+0.66 Branch
+0.66 Branch Modpacks
+0.70 Branch
+0.70 Branch Modpacks
+1.0 Classic Branch
+1.0 Classic Branch Modpacks
+APIs & Libraries
+Act I
+Act II
+Act III
+All
+All Mods
+All Versions
+Asset Packs
+Asset Replacements
+Assets & Cosmetics
+Bundles
+Cars
+Clientside Mods
+Combos
+Custom Cards
+Deep North Update
+Dev Tools and Libraries
+Developer Tools
+Experimental
+Gameplay
+Grimora Mod
+Host Only Mods
+Kaycee's Mod
+Magnificus Mod
+Main Branch
+Main Branch Modpacks
+Maps
+Missions
+Modpacks
+Modpacks & Soundpacks
+Mods
+Mods (excluding AI)
+Mods (including AI)
+Mono Modpacks
+Mono Mods
+Oakveil Update
+Other
+P03 In Kaycee's Mod
+Plugins
+Resource Packs
+Rundowns
+Saves
+Sound Packs
+Translations
+Universes
+Vanilla Compatible Mods
+Worlds
+
+# --- 分类（370 条，社区自定义） ---
+(Deprecated category) Audio
+(Deprecated category) Misc
+(Deprecated category) Tools
+0.62 Branch
+0.66 Branch
+0.70 Branch
+1.0 Classic Branch
+1.0 Update
+AI
+AI & NPCs
+AI Generated
+AI Generated Content
+APIs
+Abilities
+Acceleracers
+Accessibility
+Accolades
+Act I
+Act II
+Act III
+Addons
+Afflictions
+All Clients
+All Clients Required
+All Required
+Alloyed Collective
+Ammo
+Animation
+Animation Packs
+Apps
+Arenas
+Artifacts
+Ashlands Update
+Asphalt
+Assembling Machines
+Asset Importing
+Asset Packs
+Asset Replacement
+Asset Replacements
+Assets
+Audio
+Balance
+Balancing
+Battle Force 5
+Battles
+Belts and Sorters
+BepInEx
+Biomes
+Blaster Master
+Blueprints
+Bog Witch Update
+Boombox Music
+Boss
+Bosses
+Bros
+Buffs
+Bug Fixes
+Bug Workaround
+Build Models
+Building
+Bundles
+Burnout
+Camera Mods
+Campaigns
+Car
+Cards
+Carryables
+Cars (film)
+Cases
+Characters
+Charms
+Cheats
+Christmas
+City Generation
+Clans
+Classes
+Client
+Client Mods
+Client Side
+Client-Only
+Client-Side
+Client-side
+Code Mods
+Combos
+Commands
+Companions
+Components
+Console
+Content
+Content Mods
+Context Menu
+Contracts
+Controls
+Cosmetic
+Cosmetics
+Costs
+Costumes
+Courses
+Crafting
+Crafts
+Custom Audio
+Custom Cards
+Custom Crests
+Custom Items
+Custom Maps
+Custom Menus
+Custom NPCs
+Custom Player Models
+Custom Skins
+Custom Tools
+Custom Weapons
+Customisation
+DDS
+Dashboard
+DataBlocks (MTFO)
+Decor
+Decoration
+Decorations
+Dedicated Server
+Deep North Update
+Developer Tools
+Difficulty
+Disables Progression
+Display
+Drones
+Dyson
+Early Plugins
+Effects
+Elites
+Emotes
+Encounters
+Enemies
+Environment
+Equipment
+Events
+Exhibits
+Expansion
+Expansions
+Experimental
+F-Zero
+Faces
+Factions
+Farming
+Fish
+Fixes
+Floors
+Framework
+Frameworks
+Furniture
+Game Breaking
+Game Modes
+Game mechanics
+Gamemode
+Gamemodes
+Gameplay
+Gameplay Tweaks
+Gameplay mechanics
+Gear
+Gear and Armor
+Gloomrot Update
+Graphics
+Grimora Mod
+Gungeoneers
+Guns
+Halloween
+Halloween Modjam 2022
+Halo
+Hand Cosmetics
+Hand Packs
+Hardware Integration
+Hats
+Hazards
+Hildir's Request Update
+Host Only
+Host-Only
+Host-Side
+Hot Wheels
+IL2CPP
+Info
+Inspectors
+Integration
+Interactables
+Interiors
+Inventory Modifications
+Items
+Kaycee's Mod
+Kerfur
+LEGO
+Language
+Language: CN
+Language: EN
+Languages
+Leaderboard Legal
+Legend
+Levels
+Libraries
+Localization
+Locations
+Logic Mod
+Logic Nodes
+Logistics
+Magic
+Magnificus Mod
+Map
+Maps
+Mecha
+Mechanics
+MelonLoader
+Meme
+Memes
+Memory Packs
+Merchants
+Minis
+Misc
+Missions & Campaigns
+Mistlands Update
+Mixtapes
+Mobs
+Mod Jam 1 - Void
+Mod_Session Required
+Model
+Model Replacements
+Models
+Modifiers
+Modpack
+Modpacks
+Mods
+Mono
+Monster Truck
+Monsters
+Moons
+Moves
+Music
+Mutators
+NPC
+NPCs
+NSFW
+Nebula Compatible
+Networked
+New Mechanics
+Nitronic Rush
+Oakveil Update
+Objectives
+Optimization
+Original Car
+Overrides
+P03 In Kaycee's Mod
+Patapon 1
+Patapon 2
+Patch
+Patterns
+Pelts
+Performance
+Perks
+Phone Options
+Phone Related
+Placeables
+Player Characters
+Plugins
+Police
+Posters
+Power
+Pre-Release
+Props
+Protoflux
+PvP
+QOL
+QoL
+Quality Of Life
+Quality of Life
+Quests
+Real Car
+Rebalance
+Regions
+Release
+Requires Manual Dependencies
+Reskins
+Resources
+Robes
+Rocket League
+Rooms
+Ruleset
+Run Modifiers
+Rundown Tools
+Rundowns
+Runner
+Sandbox
+Saves
+Scene File
+Scrybes
+Seekers of the Storm Update
+Sellables
+Server
+Server Side
+Server-Side
+Server-side
+Sets
+Shaders
+Ships
+Shop
+Sigils
+Signals
+Single Player
+Skateboards
+Skills
+Skins
+Sonic
+Sound
+Sound Packs
+Soundpack
+Space Ship
+Special Abilities
+Species
+Speed Racer
+Speedrunning
+Stages
+Storage
+Suits
+Survivors
+Survivors of the Void
+Symbols
+TV Videos
+Tapes
+Technical Tweaks
+Technology
+Text Changes
+Texture Replacements
+Textures
+Themes
+Tiles
+Tools
+Trackmania
+Traits
+Translation
+Translations
+Transportation
+Tribes
+Tweaks
+Tweaks & Quality Of Life
+UE4SS Mod
+UI
+UI & HUD
+Units
+Universes
+Upgrades
+Utilities
+Utility
+Utils
+Valuables
+Vanilla Compatible
+Vanilla compatible
+Vault File
+Vehicle Parts
+Vehicles
+Visual Effects
+Visual Tweaks
+Voicepacks
+Wacky Races
+Wands
+Weapon
+Weapons
+Weapons & Equipment
+Wearables
+Weather
+Wizards
+World
+World Generation
+World Race
+Worldgen
+Worlds
+
+# --- 其他筛选（371/371 社区相同） ---
+Deprecated
+NSFW

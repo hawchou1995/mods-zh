@@ -302,3 +302,144 @@ Review 指出的五项全部按「先加失败测试 → 最小修复 → 回归
 - **守卫有效性佐证（未改仓库文件）**：把 `restoreAll` 单点回退成旧实现（refreshOriginal 保持新实现）后跑「立刻关闭」竞态 → 输出 `Author: Vehicles`（复活旧原文）；新实现 → `immediate site value`。说明该断言确实锁住 `restoreAll` 的守卫，而不是靠 `refreshOriginal` 顺带通过。
 - **顺带发现的既有问题（本轮不改，仅记录）**：`translateAttributes()` 里的 `el.tagName !== 'TEXTAREA'` 豁免在 `scanRoot()` 的 `isIgnored(el)` 过滤之后**不可达**（`TEXTAREA` 在 `SKIP_TAGS` 中），因此 `textarea` 的 `placeholder` 一直不会被翻译。属本次改动之前就存在的行为，本轮未改；新增用例只锁定"开关往返不会损坏 textarea 上的属性"，并断言 `input` 的 `aria-label`/`title` 仍各自独立翻译还原。
 - **验证**：`npm run verify` rc=0 —— smoke 20 + jsdom 60 全过；覆盖率静态口径不变（203/203、100/100、37/37、230/230、210/210、浏览页 66/66）；改动文件 `node --check` 全 rc=0；`git diff --check` rc=0；两次 build 产物 SHA256 一致；HEAD 仍 `16bd784`，版本仍 `1.0.5`（未提交、未推送、未发布）。
+
+## 20. Thunderstore 全社区固定分区/分类枚举补齐（v1.0.7，2026-11-16）
+
+用户要求「补齐 Thunderstore 各社区固定界面汉化，含 GTFO 的 `Mods (excluding AI)` / `Mods (including AI)` /
+`AI Generated`」，并在真实浏览器里更新已安装的油猴脚本。本轮把「分区」「分类」当作**可枚举的固定界面**
+逐社区盘点，而不是只补 GTFO。
+
+### A. 全社区盘点（可核查清单）
+
+- **社区清单**：`https://thunderstore.io/api/experimental/community/`（cursor 分页 4 页，去重 371 条）
+  与站点页面 `https://thunderstore.io/communities/`、`https://old.thunderstore.io/communities/` 的
+  `href="/c/<slug>/"` 集合交叉核对，三方均 371 条、无差异。
+- **逐社区页面**：`https://thunderstore.io/c/<slug>/` 371/371 全部 HTTP 200 并落盘（scratch，约 60 MB），
+  逐页解析 `<details><summary>Sections|Categories|Other filters>` 结构。
+- **结果**：分区去重 **55** 条（固定集合，全站共享）、分类去重 **370** 条（社区自定义）、
+  其他筛选 **2** 条（`Deprecated` / `NSFW`，371/371 社区相同）。
+- 逐社区状态（社区 → 页面标题 / 分区数 / 分类数 / 结果计数）与去重英中对照表：`docs/evidence/thunderstore-communities-2026-11-16.md`；
+  纯枚举快照（喂 `tools/coverage.mjs`）：`docs/evidence/thunderstore-enums.txt`。
+- 分类徽标交叉核对：抓取页面里 `href="/c/<社区>/?includedCategories=<id>"` 共 1386 个 URL，
+  同一 URL 只有一个文案（0 冲突），文案集合与筛选器分类集合完全一致。
+
+### B. GTFO 线上现状与 v1.0.6 漏翻原因
+
+真实浏览器（bsk Agent Window + 用户 Chrome，已装 v1.0.6）读取 `/c/gtfo/?section=all`：
+
+- 分区：`全部`（已翻）＋ `Mods (excluding AI)`、`Mods (including AI)`、`远征序列`、`整合包`、`Developer Tools`
+- 分类：`AI 生成`、`缺陷修复`、`客户端模组`、`DataBlocks (MTFO)`、`Developer Tools`、`Asset Packs`、`库`、`整合包`、`Quality of Life`、`Rebalance`、`Rundown Tools`、`远征序列`
+- 搜索框、分页、结果计数（`1-20，共 922 条结果`）、`作者` 前缀均已翻 —— 说明脚本在跑，缺的是枚举本身。
+
+根因两条：① 线上分区/分类是服务端下发的动态 UUID 列表，v1.0.6 只收录了 GTFO 的 4 条分类，
+且没有 `Mods (excluding AI)` / `Mods (including AI)`（线上 2026-11 新增）；② `Developer Tools` 在 GTFO
+既是分区又是分类，`Libraries` 等名字又常被 mod 当标题，**不能**进全局字典。
+
+### C. 实现（最小改动）
+
+- `src/locals/thunderstore.js`：顶部 `const TS_ENUM_ZH = Object.freeze({…})`（398 条）是**唯一来源**，
+  `scoped` 四条规则（`Sections` / `Categories` / `CardPackageTags` / `Filters`）都直接引用这个对象
+  （`dict: TS_ENUM_ZH`，不再各写一份）：
+  `include: 'Sections'`（分区单选组）、`include: 'Categories'`（分类勾选组）、
+  `include: 'CardPackageTags'`（卡片分类徽标，结构性锚点：容器内必须有 `a[href*="includedCategories="]`）、
+  `include: 'Filters'`（移动端筛选抽屉 `<h3>Filters</h3>`，容器 `[id="package-search-filters-drawer"]`）。
+  本轮新收录的 UI 键：`Filters`（筛选器）、`Language: CN`（语言：中文）、`Language: EN`（语言：英文）；
+  `Listing` 经查是**作者名**（`/c/gtfo/p/Listing/` 的 `card-package__link`），属 UGC，不收录、不翻译。
+- `src/engine.js`：`buildScopedRules()` 支持 `include`；新增 `scopedIncludeHit()`（标题锚点对照当前文本
+  **和** `State.originals` 里的原文，因为标题自己也会被翻译）；scoped 规则允许「译文 = 原文」的显式同值键；
+  `translateTextNode()` 改为**先查 scoped、再查全局字典**，否则全局 `Cards → 卡片` 会抢在分类规则
+  `Cards → 卡牌` 之前命中。
+- `tools/coverage.mjs`：新增 `--scoped <下标>`，按规则分组体检，避免分区/分类表互相掩护。
+- 设计记录：`docs/adr/0003-context-anchored-enumeration.md`；术语：`CONTEXT.md` 新增「固定枚举」「标题锚点」。
+- **未动**：Nexus 词库、现有词条译文、`ignore` 规则、`patterns`。
+
+### D. 回归测试（先负后正）
+
+新增 `test/thunderstore-enums.test.mjs`（10 条，`npm run verify` 门禁）：
+
+| 用例 | 断言 |
+| --- | --- |
+| 静态装配 | 从证据文档解析出的 55 条分区、370 条分类全部在表里；分区表与分类表逐键译文全等；分区键只出现在带锚点的规则里 |
+| 真实 SSR 侧栏 ×4 | `/c/gtfo/`、`/c/inscryption/`、`/c/totally-accurate-battle-simulator/`、`/c/lethal-company/` 的原始侧栏 HTML（含 SVG、`<!-- -->` 注释节点），分区与分类逐条落在词库译文中 |
+| GTFO 定点 | 分区 `Developer Tools → 开发者工具`、`Mods (excluding AI) → 模组（不含 AI）`、`Mods (including AI) → 模组（含 AI）`；分类 `数据块（MTFO）`；卡片徽标 `库` / `模组` |
+| UGC 负向 | 同一页里 `<p>` 正文、`<h1>` 标题、`.package-description`、`.markdown`、`.changelog`、作者名、`<input value>` 里的同串一律原样 |
+| 动态插入 | 后插入的 `<details>` 被 MutationObserver 接管；连续 `rescan()` 两次 `stats.nodes` 不增长 |
+| SPA 切社区 | gtfo → TABS → gtfo 后译文与首屏逐字一致；关闭开关回到 `Sections/Categories/Other filters` 原文，再开启复原 |
+| 卡片徽标 | 徽标翻译、同名 mod 标题不翻，开关往返逐字还原 |
+| 共享表不变式 | 4 条 scoped 规则 `dict` 严格同一对象、`Object.freeze`、共 398 条 |
+
+修前记录（关键失败，用于证明用例有效）：`分区未翻译：Mods (excluding AI)`、
+`分类未翻译：卡片`（全局字典抢在 scoped 之前命中）、`mod 标题被翻译`、`分区专用键混进分类规则`、
+`SPA 切社区后 TABS 分区未翻译`、`动态插入后仍缺译文`。修复过程中另外发现并修掉 3 个真实缺陷：
+
+1. `buildScopedRules()` 丢弃「译文 = 原文」的键（`if (val !== key)`），导致 `Developer Tools`、
+   `DataBlocks (MTFO)`、`BepInEx` 这类品牌名枚举在筛选器里不被 scoped 认领，反而被全局规则或 UGC
+   规则处理；scoped 现在保留同值键，命中即原样保留。
+2. 标题锚点在**二次扫描**时失效：首个文本节点遍历把 `<summary>Sections</summary>` 翻成「分区」，
+   之后 `scopedIncludeHit()` 只看当前文本就找不到锚点，整组规则掉线（表现为「关掉再打开后
+   `Mods (excluding AI)` 又变英文」）。锚点判定改为同时对照 `State.originals` 里的原文。
+3. 全局字典先于 scoped 命中：`Cards` 在全局是「卡片」（展示控件 header），在分类里应是「卡牌」，
+   原顺序让 scoped 规则形同虚设。`translateTextNode()` 改为 scoped 优先、全局兜底。
+
+### E. 验证
+
+- `npm run verify` rc=0：smoke 20 条、jsdom 60 条、固定枚举 10 条全过；覆盖率（静态口径）
+  Thunderstore 203/203、动态 100/100、作者页 37/37（`--page author`）、Nexus 230/230 / 210/210 / 66/66（`--page browse`）、
+  全社区枚举 427/427（快照 427 行 = 分区 55 + 分类 370 + 其他筛选 2，`docs/evidence/thunderstore-enums.txt`）。
+- `node --check dist/mods-zh.user.js` rc=0；`git diff --check` rc=0。
+- 两次 `node build.mjs` 产物 SHA256 一致；版本 `1.0.7` 在 `package.json` / `@version` / 运行时 `VERSION` 三处一致。
+
+### F. 真实浏览器（bsk Agent Window + 用户 Chrome）
+
+Chrome 157 / 默认 profile（`...\Google\Chrome\User Data\Default`），Tampermonkey 5.5.1
+（`dhdgffkkebhmkfjojejmpbldmpobfkfo`）已启用，同机还有 read-frog 等翻译扩展在跑。
+
+- **改动前基线（已装 v1.0.6）**：`/c/gtfo/?section=all` 的分区仍是
+  `Mods (excluding AI)` / `Mods (including AI)` / `Developer Tools`，分类里 `DataBlocks (MTFO)` /
+  `Developer Tools` / `Asset Packs` / `Quality of Life` / `Rebalance` / `Rundown Tools` 也是英文 ——
+  与本轮修复目标一致（同页搜索框、分页、结果计数、`作者` 前缀已是中文，说明脚本在跑）。
+- **v1.0.7 构建注入同机真实页面**（base64 分块 + `<script>` 注入，dist 与仓库产物同哈希）：
+  - `/c/gtfo/?section=all`：分区 `全部 | 模组（不含 AI） | 模组（含 AI） | 远征序列 | 整合包 | 开发者工具`；
+    分类 `AI 生成 | 缺陷修复 | 客户端模组 | 数据块（MTFO） | 开发者工具 | 资源包 | 库 | 整合包 | 体验优化 | 平衡性调整 | 远征序列工具 | 远征序列`；
+    卡片徽标 `库`；同页 mod 标题（`BepInExPack GTFO`、`r2modman`）、作者名（`BepInEx`、`ebkr`）、描述保持原文。
+  - `/c/inscryption/`（线上 2026-11 用 `All Mods`，v1.0.6 词库没有）：分区
+    `全部 | 全部模组 | 第一章 | 第二章 | 第三章 | 凯西的模组 | Magnificus 模组 | Grimora 模组 | 凯西的模组中的 P03 | 开发者工具 | 整合包`。
+  - `/c/riskofrain2/`：分区 `全部 | 模组（不含 AI） | 模组（含 AI） | 整合包`；分类 `AI 生成 | Alloyed Collective | 神器 | … | 虚空幸存者`；
+    卡片徽标 `工具 / 库 / 模组 / 客户端`，卡片标题 `r2modman / BepInExPack / R2API` 保持原文。
+  - 开关：`setEnabled(false)` 后分区/分类逐字回到 `Sections/Categories/Other filters` 与英文枚举，
+    再开启复原；连续两次 `rescan()` 的 `stats.nodes` 不变（幂等）。
+- **归因**：注入前先用 `window.__MODS_ZH__.setEnabled(false)` 关掉 v1.0.6 并确认 DOM 回到英文，
+  再注入 v1.0.7；关掉 v1.0.7 后英文逐字回来 —— 上述中文由本脚本产生。
+- **实测限制（未解释，不归因）**：本轮只验证了「打开页面 → 注入 → 读 DOM」这一时刻的译文，**没有**验证
+  站内 SPA 切换社区后的表现。本轮实测里，点站内链接切到 Inscryption/Risk of Rain 2 后 DOM 回到英文，
+  且 `window.__MODS_ZH__` 变成 `undefined`（整页重载、注入丢失）；**为什么重载、以及已安装（`@run-at
+  document-start`）形态下切社区是否正常，本轮都没有取证**，因此不作任何结论。已知的两处相关代码事实：
+  `src/bootstrap.js` 的 `watchUrl()` 除包装 `pushState/replaceState` 外还有 700ms `setInterval` 兜底；
+  `src/engine.js` 的 `onLocationChange()` 在页型未变（community → community）时提前 return、不重扫。
+  这两点意味着「切社区后不重扫」可能出现在任何注入时机下，需要有事实的最小复现才能判定。
+- **因此 SPA 交互本轮记为未完成**，不以任何措辞计入「交互达标」；见 G 节。
+
+- **最小复现（jsdom，真实 dist）**：页面加载 → 注入 → 把筛选器容器换成另一个社区的内容 + `history.pushState`
+  → 等 1200ms（覆盖 700ms 兜底）：新内容被 MutationObserver 正常翻译（`资源替换 / 音频 / BepInEx`），
+  说明「同页型切换后容器被换掉」本身能翻；再 `pushState` 到第三个社区（DOM 不变）→ `page` 仍是 `community`，
+  `onLocationChange()` 提前 return，不重扫。**结论只到这一步**：真实站点的客户端路由到底会不会重建容器、
+  重建后是否触发 MutationObserver，需已安装形态实测，本轮没有证据。
+
+### G. 本地油猴脚本安装：未完成（GUI 路径已穷尽，阻塞如实登记）
+
+用户要求「实际更新本机现有油猴脚本并读回核对」。本轮**没有完成**。已尝试的正常路径与真实返回：
+
+| 路径 | 结果 |
+| --- | --- |
+| bsk Agent Window 打开 `chrome-extension://<TM>/options.html#nav=new-user-script+editor` | `navigate` → CDP `-32000 Not allowed`；`get-html` → `operation denied by the Agent Window sandbox` |
+| bsk `tab create --url chrome-extension://…` | 建出标签但「No observable document」，无法注入/读回 |
+| bsk `tab borrow`（借用用户标签，需人工确认） | 90s `confirmation_timeout`，按约定不再重复请求 |
+| Python + win32com 直连 UIAutomation（`UIAutomationClient.CUIAutomation` / CLSID `{FF48DBA4-…}` / `gencache.EnsureDispatch` / `DispatchEx`） | 全部 `-2147221005 无效的类字符串` 或 `-2147467262 不支持此接口`（缺 comtypes 代理） |
+| oleacc `AccessibleObjectFromWindow(hwnd, OBJID_CLIENT, IID_IAccessible)` | `hr = -2147467262`（Chrome 不暴露 MSAA 客户端对象） |
+| Chrome 原生键盘驱动 | 前台是 PI-Desktop，按前台守卫**未抢焦点、未发键**；Chrome 是自绘工具栏，`WM_GETOBJECT`/旧工具栏均返回 0，无可靠键盘锚点 |
+| 同机扩展（Read Frog）设置面板当导航 | UI 在封闭 shadow root 内（`read-frog` 的 `shadowRoot.querySelectorAll` 为空），不可达 |
+
+未采用的替代：写 `Local Extension Settings` / 改扩展数据库 / 装 ScriptCat 当垫片 / 重启浏览器换 profile /
+新装代理扩展 —— 均越权或触碰其它扩展与全局设置，**没有做**。因此本轮**没有**「管理器读回 == 构建产物」证据，
+也**没有**以已安装脚本形态的三社区验收；F 节结论来自同机真实页面 + 手动注入同一份 dist，不等于安装完成。
+（因未取得原条目源码与设置的可读备份，按合同**没有**做任何覆盖性写入。）

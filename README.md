@@ -4,10 +4,11 @@
 
 只翻界面，不碰内容：模组名称、作者、描述正文、评论、文件名一律保持英文原样 —— 这些是你要复制去搜索、对比、报错的东西，翻了只会碍事。
 
-- 词条：**677 个去重原文键**（Thunderstore 201 / Nexus Mods 476），**45 组**动态规则（17 / 28）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
+- 词条：**695 个去重原文键**（Thunderstore 215 / Nexus Mods 478），**45 组**动态规则（17 / 28）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
+- Thunderstore 固定枚举独立成表：`const TS_ENUM_ZH = Object.freeze({…})`，**分区 55 + 分类 370 + 分组标题 4（Sections / Categories / Other filters / Filters）= 398 条**（当次 371 个社区逐个抓取后去重，见 `docs/evidence/thunderstore-communities-2026-11-16.md`），四条 scoped 规则共享这一张表、按 `<summary>` 标题锚定生效，不进全局字典
 - 覆盖：`thunderstore.io`；Nexus Mods 根域及 `www`、`next`、`forums`、`help`、`api-docs`、`users` 一方子域路由
 - 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
-- 当前发布版本：`v1.0.6`
+- 当前版本：`v1.0.7`
 
 ## 安装
 
@@ -34,7 +35,7 @@
 
 - **界面中文化：已开启 / 已关闭** —— 一键切回英文原文（原文逐字存于 WeakMap，关闭即还原），状态会记住
 - **重新扫描当前页面** —— 站点改版后手动补扫
-- **版本 v1.0.6（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
+- **版本 v1.0.7（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
 
 ## 项目结构
 
@@ -52,8 +53,9 @@ mods-zh/
 ├── test/
 │   ├── smoke.test.mjs         最小 DOM：词条完整性、查表、开关还原
 │   └── browser.test.mjs       jsdom：真实 DOM + 真实 MutationObserver + 属性翻译
+│       thunderstore-enums.test.mjs  全社区固定枚举：静态装配 + 真实 SSR 侧栏 + SPA/开关/幂等
 ├── tools/
-│   ├── coverage.mjs           词条覆盖率体检（快照 vs 字典）
+│   ├── coverage.mjs           词条覆盖率体检（快照 vs 字典，--page / --scoped 分组口径）
 │   └── collect-ui-text.js     在真实页面控制台导出 UI 文本快照
 └── docs/
     ├── evidence/              取证快照（两站真实页面文本）
@@ -69,7 +71,7 @@ mods-zh/
 4. `MutationObserver` + 80ms 防抖接管动态渲染的节点；写入用 `State.writing` 标记，且译文本身不会再命中字典，因此扫描天然幂等、不会被自身写入喂成死循环
 5. UGC 防护走三层：站点级 `ignore` 选择器（`closest` 判定整棵子树跳过）、标签黑名单（`CODE/PRE/TEXTAREA…`）、`contenteditable` 判定
 6. 属性翻译同样查表，只处理 `placeholder` / `aria-label` / `title`
-7. **上下文规则（`site.scoped`）**：同一串在不同 DOM 上下文里含义不同的，写在 `scoped: [{ pages, selector, dict, patterns }]` 里，引擎只在 `rule.selector` 命中的子树内查表（`closest` 判定，命中即停，结果不进全局缓存）。典型例子：Nexus 浏览页的分类名 `Vehicles` 要翻，卡片里恰好叫 `Vehicles` 的 mod 标题不能翻；`28 Days` 作为时间范围选项要翻，作为 UGC 文本不能翻。出了上下文一个字节都不动，`pages` 限定页型避免溢出（如 mod 详情页的 `<h1>` 标题）。需要「固定前缀 + 用户输入值」同节点的场景（如已选筛选 chip 的 `Title: <用户输入>`）用 `rawPatterns`：按文本节点**原始值**匹配（不归一化空白），替换走函数形式，值里的 `$1` / `$&` / 反引号与多空格都逐字节保留
+7. **上下文规则（`site.scoped`）**：容器选择器之外还可以写 `include`（标题锚点）——同一层 `<details>` 承载多组枚举时（Thunderstore 的 `Sections` / `Categories`），只有容器内存在文本等于 `include` 的标题元素才启用该规则，见 `docs/adr/0003-context-anchored-enumeration.md`。同一串在不同 DOM 上下文里含义不同的，写在 `scoped: [{ pages, selector, dict, patterns }]` 里，引擎只在 `rule.selector` 命中的子树内查表（`closest` 判定，命中即停，结果不进全局缓存）。典型例子：Nexus 浏览页的分类名 `Vehicles` 要翻，卡片里恰好叫 `Vehicles` 的 mod 标题不能翻；`28 Days` 作为时间范围选项要翻，作为 UGC 文本不能翻。出了上下文一个字节都不动，`pages` 限定页型避免溢出（如 mod 详情页的 `<h1>` 标题）。需要「固定前缀 + 用户输入值」同节点的场景（如已选筛选 chip 的 `Title: <用户输入>`）用 `rawPatterns`：按文本节点**原始值**匹配（不归一化空白），替换走函数形式，值里的 `$1` / `$&` / 反引号与多空格都逐字节保留
 
 因为匹配靠**文本**而不是 CSS 类名，两站前端用 React + 哈希类名（`css-1x2y3z`）改版时不会一改就崩。
 
@@ -78,7 +80,7 @@ mods-zh/
 ```bash
 npm install
 npm run build      # src/ → dist/mods-zh.user.js
-npm test           # 20 条最小 DOM 测试 + 60 条 jsdom 测试
+npm test           # 20 条最小 DOM + 60 条 jsdom + 10 条固定枚举测试
 npm run coverage   # 对照 docs/evidence/ 快照算词条覆盖率（静态匹配，不验证 selector/ignore/DOM）
 npm run verify     # 以上全套
 ```
@@ -105,7 +107,8 @@ npm run verify     # 以上全套
 - **Wiki 页面未验证**：`wiki.nexusmods.com` 于 2026-10-22 返回 HTTP 403，因此没有加入 Wiki 专属词条；`www.nexusmods.com/community` 与 `/support` 实测为 404，社区与支持页按 `forums` / `help` 一方子域路由处理
 - **Thunderstore 旧站 / Legacy 页面未纳入**：现行 `thunderstore.io` 已覆盖全部主要路径
 - 词条按取证到的原文**精确匹配**：站点改文案（哪怕加一个句号）就会漏翻，需要按上面的流程补词条 —— 这是文本驱动方案的代价，也是它抗改版的原因
-- Nexus 基线快照抓取于 2026-10-20，扩展固定 UI 快照抓取于 2026-10-22；Nexus 快照覆盖 440/440 行（100%），Thunderstore 快照覆盖 340/340 行（100%）；其中作者列表页快照（37 行）按 `--page author` 页型门禁体检，不是合并词库口径
+- Nexus 基线快照抓取于 2026-10-20，扩展固定 UI 快照抓取于 2026-10-22；Nexus 快照覆盖 230/230、210/210、66/66 行（100%），Thunderstore 快照覆盖 203/203、100/100、37/37 行（100%），全社区枚举快照覆盖 427/427 行（100%）；其中作者列表页快照（37 行）按 `--page author` 页型门禁体检，枚举快照按 `--scoped` 分组口径分别体检，都不是合并词库口径
+- 枚举快照是**静态**口径：只证明「按该容器装配后能产出译文」，不验证 `summary` 锚点一定命中；运行期由 `test/thunderstore-enums.test.mjs` 的真实 SSR 侧栏用例与实机复验负责
 
 ## 许可
 

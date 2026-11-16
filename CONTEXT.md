@@ -17,3 +17,14 @@
 **覆盖率（coverage）** —— 取证快照里被词条与正则命中的行数占比。口径与运行期一致，未命中即失败。
 
 **幂等扫描（idempotent scan）** —— 译文本身不会再命中词条，因此重复扫描同一段 DOM 不产生新写入，MutationObserver 不会被自身写入喂成死循环。
+
+**固定枚举（enumerated UI）** —— 站点服务端下发的、跨社区共享的界面值：Thunderstore 的分区（Sections）、
+分类（Categories）、其他筛选（Deprecated / NSFW）。与 UGC 同名时（`Developer Tools` 既是分区也是分类，
+`Libraries` 既是分类也常是 mod 名）必须靠 DOM 上下文区分，不能进全局字典。
+
+**标题锚点（include）** —— `site.scoped` 规则的额外判定：容器选择器命中后，容器内还要存在文本等于
+`include` 的标题元素（`<summary>Sections</summary>`）规则才生效。用来在同一层 `<details>` 里隔离
+「分区」与「分类」两组枚举，见 `docs/adr/0003-context-anchored-enumeration.md`。
+
+**共享枚举表（shared table）** —— Thunderstore 的四条 `scoped` 规则都写 `dict: TS_ENUM_ZH`，指向同一个
+`Object.freeze` 对象（398 条）；测试断言 `r.dict === rules[0].dict`，防止哪一天有人又复制一份。

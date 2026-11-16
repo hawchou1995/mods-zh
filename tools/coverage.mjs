@@ -17,7 +17,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const [siteId, file] = process.argv.slice(2);
 
 if (!siteId || !file) {
-    console.error('用法: node tools/coverage.mjs <site-id> <snapshot.txt> [--page <页型>]');
+    console.error('用法: node tools/coverage.mjs <site-id> <snapshot.txt> [--page <页型>] [--scoped <下标>]');
     process.exit(2);
 }
 
@@ -58,7 +58,13 @@ for (const [, group] of scope) {
 /* 页型上下文规则（site.scoped）：运行期只有落在 rule.selector 子树里才会命中。
  * 这里把它们算进「该页型可命中集合」，否则分类标签、时间枚举、chip 这类
  * 只允许在固定 UI 上下文里翻的词条会被误报成缺口。 */
-const scopedRules = (site.scoped || []).filter(r => !page || !r.pages || r.pages === 'all' || r.pages.indexOf(page) !== -1);
+/* --scoped <下标>:N 只装配 site.scoped[N]（运行期按 include 锚点分组装配的同构口径），
+ * 用于把「分区枚举」「分类枚举」这类同名不同义的分组分别体检，不让并集口径互相掩护。 */
+const scopedArgIdx = process.argv.indexOf('--scoped');
+const scopedOnly = scopedArgIdx > 0 ? Number(process.argv[scopedArgIdx + 1]) : -1;
+const scopedRules = (site.scoped || []).filter((r, i) =>
+    (scopedOnly < 0 || i === scopedOnly) &&
+    (!page || !r.pages || r.pages === 'all' || r.pages.indexOf(page) !== -1));
 const scopedDict = new Map();
 const scopedPatterns = [];
 for (const rule of scopedRules) {
@@ -97,7 +103,13 @@ const total = lines.length;
 const pct = total ? (hit / total * 100).toFixed(1) : '0.0';
 console.log('站点     : ' + siteId);
 console.log('词条口径 : ' + (page ? '页型 ' + page + '（' + scope.map(s => s[0]).join(' + ') + '）' : '全部分组并集'));
-console.log('上下文规则: ' + scopedRules.length + ' 条（' + (page ? '按页型装配' : '全部页型并集') + '）');
+console.log('上下文规则: ' + scopedRules.length + ' 条（' +
+    (scopedOnly >= 0 ? '仅 scoped[' + scopedOnly + ']'
+        : page ? '按页型装配' : '全部页型并集') + '）');
+if (scopedOnly >= 0) {
+    const r = (site.scoped || [])[scopedOnly];
+    console.log('该规则   : selector=' + r.selector + ' include=' + (r.include || '-') + ' 词条 ' + Object.keys(r.dict || {}).length + ' 条');
+}
 console.log('口径说明 : 静态规则匹配（按页型展平 dict / patterns / scoped），不验证 selector 是否命中、');
 console.log('           ignore 是否生效、真实 DOM 结构与弹层是否出现；它只能证明"词条存在且可被规则产出译文"，');
 console.log('           不能当作页面运行覆盖。运行期覆盖以 test/browser.test.mjs 的真实 DOM 用例与实机注入复验为准。');

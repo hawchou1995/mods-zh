@@ -2,7 +2,7 @@
 // @name         Thunderstore & Nexus Mods 中文化
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
-// @version      1.0.6
+// @version      1.0.7
 // @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
 // @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
@@ -27,7 +27,7 @@
 (function () {
     'use strict';
 
-    const VERSION = "1.0.6";
+    const VERSION = "1.0.7";
 
 /* =============================================================================
  * _registry.js —— 站点注册表
@@ -67,6 +67,413 @@ const SITES = [];
  *   社区总览       https://thunderstore.io/communities/
  *   包详情页       https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/
  * ========================================================================== */
+
+/* ---------------- 固定枚举英中对照表（唯一来源） ----------------
+ * 分区（55 条）+ 分类（370 条）+ 分组标题（3 条）：Thunderstore 服务端把分区与分类放在同一张枚举表里，
+ * 同一名字在不同社区可能当分区、也可能当分类，译文必须一致。
+ * 下方三条 scoped 规则通过 include 锚点分组，引用**同一个** Object.freeze 对象（不复制、注册后不可改写）；
+ * 改一条译文只改这里一处；test/thunderstore-enums.test.mjs 断言三条规则引用同一张表。
+ * 设计见 docs/adr/0003-context-anchored-enumeration.md。 */
+const TS_ENUM_ZH = Object.freeze({
+    '(Deprecated category) Audio': '（已弃用的分类）音频',
+    '(Deprecated category) Misc': '（已弃用的分类）杂项',
+    '(Deprecated category) Tools': '（已弃用的分类）工具',
+    '0.62 Branch': '0.62 分支',
+    '0.62 Branch Modpacks': '0.62 分支整合包',
+    '0.66 Branch': '0.66 分支',
+    '0.66 Branch Modpacks': '0.66 分支整合包',
+    '0.70 Branch': '0.70 分支',
+    '0.70 Branch Modpacks': '0.70 分支整合包',
+    '1.0 Classic Branch': '1.0 经典分支',
+    '1.0 Classic Branch Modpacks': '1.0 经典分支整合包',
+    '1.0 Update': '1.0 更新',
+    'Abilities': '能力',
+    'Acceleracers': '加速车手',
+    'Accessibility': '无障碍',
+    'Accolades': '荣誉',
+    'Act I': '第一章',
+    'Act II': '第二章',
+    'Act III': '第三章',
+    'Addons': '附加组件',
+    'Afflictions': '苦难',
+    'AI': 'AI',
+    'AI & NPCs': 'AI 与 NPC',
+    'AI Generated': 'AI 生成',
+    'AI Generated Content': 'AI 生成内容',
+    'All': '全部',
+    'All Clients': '所有客户端',
+    'All Clients Required': '所有客户端必装',
+    'All Mods': '全部模组',
+    'All Required': '全部必需',
+    'All Versions': '所有版本',
+    'Alloyed Collective': 'Alloyed Collective',
+    'Ammo': '弹药',
+    'Animation': '动画',
+    'Animation Packs': '动画包',
+    'APIs': 'API',
+    'APIs & Libraries': 'API 与库',
+    'Apps': '应用',
+    'Arenas': '竞技场',
+    'Artifacts': '神器',
+    'Ashlands Update': '灰烬之地更新',
+    'Asphalt': '柏油',
+    'Assembling Machines': '组装机',
+    'Asset Importing': '资源导入',
+    'Asset Packs': '资源包',
+    'Asset Replacement': '资源替换',
+    'Asset Replacements': '资源替换',
+    'Assets': '资源',
+    'Assets & Cosmetics': '资源与外观',
+    'Audio': '音频',
+    'Balance': '平衡',
+    'Balancing': '平衡调整',
+    'Battle Force 5': '战斗力量 5',
+    'Battles': '对战',
+    'Belts and Sorters': '传送带与分拣器',
+    'BepInEx': 'BepInEx',
+    'Biomes': '生物群系',
+    'Blaster Master': '爆破大师',
+    'Blueprints': '蓝图',
+    'Bog Witch Update': '沼泽女巫更新',
+    'Boombox Music': '音箱音乐',
+    'Boss': '首领',
+    'Bosses': 'Boss',
+    'Bros': '兄弟',
+    'Buffs': '增益',
+    'Bug Fixes': '缺陷修复',
+    'Bug Workaround': '缺陷规避',
+    'Build Models': '建造模型',
+    'Building': '建造',
+    'Bundles': '捆绑包',
+    'Burnout': '狂飙',
+    'Camera Mods': '镜头模组',
+    'Campaigns': '战役',
+    'Car': '汽车',
+    'Cards': '卡牌',
+    'Carryables': '可搬运物',
+    'Cars': '车辆',
+    'Cars (film)': '汽车（电影）',
+    'Cases': '箱体',
+    'Categories': '分类',
+    'Characters': '角色',
+    'Charms': '护符',
+    'Cheats': '作弊',
+    'Christmas': '圣诞节',
+    'City Generation': '城市生成',
+    'Clans': '氏族',
+    'Classes': '职业',
+    'Client': '客户端',
+    'Client Mods': '客户端模组',
+    'Client Side': '客户端',
+    'Client-Only': '仅客户端',
+    'Client-side': '客户端',
+    'Client-Side': '客户端',
+    'Clientside Mods': '客户端模组',
+    'Code Mods': '代码模组',
+    'Combos': '组合',
+    'Commands': '命令',
+    'Companions': '同伴',
+    'Components': '组件',
+    'Console': '控制台',
+    'Content': '内容',
+    'Content Mods': '内容模组',
+    'Context Menu': '右键菜单',
+    'Contracts': '契约',
+    'Controls': '操作',
+    'Cosmetic': '外观',
+    'Cosmetics': '外观',
+    'Costs': '消耗',
+    'Costumes': '服装',
+    'Courses': '赛道',
+    'Crafting': '制作',
+    'Crafts': '制作',
+    'Custom Audio': '自定义音频',
+    'Custom Cards': '自定义卡牌',
+    'Custom Crests': '自定义纹章',
+    'Custom Items': '自定义物品',
+    'Custom Maps': '自定义地图',
+    'Custom Menus': '自定义菜单',
+    'Custom NPCs': '自定义 NPC',
+    'Custom Player Models': '自定义玩家模型',
+    'Custom Skins': '自定义皮肤',
+    'Custom Tools': '自定义工具',
+    'Custom Weapons': '自定义武器',
+    'Customisation': '自定义',
+    'Dashboard': '仪表盘',
+    'DataBlocks (MTFO)': '数据块（MTFO）',
+    'DDS': 'DDS',
+    'Decor': '装饰',
+    'Decoration': '装饰',
+    'Decorations': '装饰',
+    'Dedicated Server': '专用服务器',
+    'Deep North Update': '极北之地更新',
+    'Dev Tools and Libraries': '开发工具与库',
+    'Developer Tools': '开发者工具',
+    'Difficulty': '难度',
+    'Disables Progression': '禁用进度',
+    'Display': '显示',
+    'Drones': '无人机',
+    'Dyson': '戴森',
+    'Early Plugins': '早期插件',
+    'Effects': '效果',
+    'Elites': '精英',
+    'Emotes': '表情动作',
+    'Encounters': '遭遇',
+    'Enemies': '敌人',
+    'Environment': '环境',
+    'Equipment': '装备',
+    'Events': '活动',
+    'Exhibits': '展品',
+    'Expansion': '扩展',
+    'Expansions': '扩展',
+    'Experimental': '实验性',
+    'F-Zero': 'F-Zero',
+    'Faces': '面孔',
+    'Factions': '阵营',
+    'Farming': '农耕',
+    'Fish': '鱼类',
+    'Fixes': '修复',
+    'Floors': '楼层',
+    'Framework': '框架',
+    'Frameworks': '框架',
+    'Furniture': '家具',
+    'Game Breaking': '破坏游戏性',
+    'Game mechanics': '游戏机制',
+    'Game Modes': '游戏模式',
+    'Gamemode': '游戏模式',
+    'Gamemodes': '游戏模式',
+    'Gameplay': '玩法',
+    'Gameplay mechanics': '玩法机制',
+    'Gameplay Tweaks': '玩法调整',
+    'Gear': '装备',
+    'Gear and Armor': '装备与护甲',
+    'Gloomrot Update': '幽暗腐化更新',
+    'Graphics': '画面',
+    'Grimora Mod': 'Grimora 模组',
+    'Gungeoneers': '地牢枪手',
+    'Guns': '枪械',
+    'Halloween': '万圣节',
+    'Halloween Modjam 2022': '2022 万圣节模组创作活动',
+    'Halo': '光环',
+    'Hand Cosmetics': '手部外观',
+    'Hand Packs': '手部包',
+    'Hardware Integration': '硬件集成',
+    'Hats': '帽子',
+    'Hazards': '危险',
+    "Hildir's Request Update": '希尔德请求更新',
+    'Host Only': '仅主机端',
+    'Host Only Mods': '仅主机端模组',
+    'Host-Only': '仅主机端',
+    'Host-Side': '仅主机端',
+    'Hot Wheels': '风火轮',
+    'IL2CPP': 'IL2CPP',
+    'Info': '信息',
+    'Inspectors': '检查器',
+    'Integration': '整合',
+    'Interactables': '可交互物',
+    'Interiors': '室内',
+    'Inventory Modifications': '背包修改',
+    'Items': '物品',
+    "Kaycee's Mod": '凯西的模组',
+    'Kerfur': 'Kerfur 机器人',
+    'Language': '语言',
+    'Language: EN': '语言：英文',
+    'Languages': '语言',
+    'Leaderboard Legal': '排行榜可用',
+    'Legend': '传奇',
+    'LEGO': '乐高',
+    'Levels': '关卡',
+    'Libraries': '库',
+    'Localization': '本地化',
+    'Locations': '地点',
+    'Logic Mod': '逻辑模组',
+    'Logic Nodes': '逻辑节点',
+    'Logistics': '物流',
+    'Magic': '魔法',
+    'Magnificus Mod': 'Magnificus 模组',
+    'Main Branch': '主分支',
+    'Main Branch Modpacks': '主分支整合包',
+    'Map': '地图',
+    'Maps': '地图',
+    'Mecha': '机甲',
+    'Mechanics': '机制',
+    'MelonLoader': 'MelonLoader',
+    'Meme': '梗',
+    'Memes': '梗',
+    'Memory Packs': '记忆包',
+    'Merchants': '商人',
+    'Minis': '迷你模型',
+    'Misc': '杂项',
+    'Missions': '任务',
+    'Missions & Campaigns': '任务与战役',
+    'Mistlands Update': '迷雾之地更新',
+    'Mixtapes': '混音磁带',
+    'Mobs': '生物',
+    'Mod Jam 1 - Void': '模组创作活动 1 - 虚空',
+    'Mod_Session Required': '需要 Mod_Session',
+    'Model': '模型',
+    'Model Replacements': '模型替换',
+    'Models': '模型',
+    'Modifiers': '修正项',
+    'Modpack': '整合包',
+    'Modpacks': '整合包',
+    'Modpacks & Soundpacks': '整合包与音效包',
+    'Mods': '模组',
+    'Mods (excluding AI)': '模组（不含 AI）',
+    'Mods (including AI)': '模组（含 AI）',
+    'Mono': 'Mono 运行时',
+    'Mono Modpacks': 'Mono 整合包',
+    'Mono Mods': 'Mono 模组',
+    'Monster Truck': '怪物卡车',
+    'Monsters': '怪物',
+    'Moons': '星球',
+    'Moves': '招式',
+    'Music': '音乐',
+    'Mutators': '变异器',
+    'Nebula Compatible': '兼容 Nebula',
+    'Networked': '联网',
+    'New Mechanics': '新机制',
+    'Nitronic Rush': '氮气狂飙',
+    'NPC': 'NPC',
+    'NPCs': 'NPC',
+    'NSFW': '成人内容',
+    'Oakveil Update': 'Oakveil 更新',
+    'Objectives': '目标',
+    'Optimization': '优化',
+    'Original Car': '原版汽车',
+    'Other': '其他',
+    'Other filters': '其他筛选',
+    'Overrides': '覆盖修改',
+    "P03 In Kaycee's Mod": '凯西的模组中的 P03',
+    'Patapon 1': '啪嗒砰 1',
+    'Patapon 2': '啪嗒砰 2',
+    'Patch': '补丁',
+    'Patterns': '图案',
+    'Pelts': '毛皮',
+    'Performance': '性能',
+    'Perks': '专长',
+    'Phone Options': '手机选项',
+    'Phone Related': '手机相关',
+    'Placeables': '可放置物',
+    'Player Characters': '玩家角色',
+    'Plugins': '插件',
+    'Police': '警车',
+    'Posters': '海报',
+    'Power': '能力',
+    'Pre-Release': '预发布',
+    'Props': '道具',
+    'Protoflux': 'ProtoFlux',
+    'PvP': 'PvP',
+    'QoL': '体验优化',
+    'QOL': '体验优化',
+    'Quality of Life': '体验优化',
+    'Quality Of Life': '体验优化',
+    'Quests': '任务',
+    'Real Car': '真实车辆',
+    'Rebalance': '平衡性调整',
+    'Regions': '地区',
+    'Release': '正式版',
+    'Requires Manual Dependencies': '需手动安装依赖',
+    'Reskins': '重新贴图',
+    'Resource Packs': '资源包',
+    'Resources': '资源',
+    'Robes': '法袍',
+    'Rocket League': '火箭联盟',
+    'Rooms': '房间',
+    'Ruleset': '规则集',
+    'Run Modifiers': '对局修正',
+    'Rundown Tools': '远征序列工具',
+    'Rundowns': '远征序列',
+    'Runner': '跑酷',
+    'Sandbox': '沙盒',
+    'Saves': '存档',
+    'Scene File': '场景文件',
+    'Scrybes': '布道者',
+    'Sections': '分区',
+    'Seekers of the Storm Update': '风暴追寻者更新',
+    'Sellables': '可售物品',
+    'Server': '服务端',
+    'Server Side': '服务端',
+    'Server-side': '服务端',
+    'Server-Side': '服务端',
+    'Sets': '套装',
+    'Shaders': '着色器',
+    'Ships': '飞船',
+    'Shop': '商店',
+    'Sigils': '印记',
+    'Signals': '信号',
+    'Single Player': '单人游戏',
+    'Skateboards': '滑板',
+    'Skills': '技能',
+    'Skins': '皮肤',
+    'Sonic': '索尼克',
+    'Sound': '音效',
+    'Sound Packs': '音效包',
+    'Soundpack': '音效包',
+    'Space Ship': '太空飞船',
+    'Special Abilities': '特殊能力',
+    'Species': '物种',
+    'Speed Racer': '极速赛车手',
+    'Speedrunning': '速通',
+    'Stages': '关卡',
+    'Storage': '存储',
+    'Suits': '服装',
+    'Survivors': '幸存者',
+    'Survivors of the Void': '虚空幸存者',
+    'Symbols': '符号',
+    'Tapes': '磁带',
+    'Technical Tweaks': '技术调整',
+    'Technology': '科技',
+    'Text Changes': '文本改动',
+    'Texture Replacements': '贴图替换',
+    'Textures': '贴图',
+    'Themes': '主题',
+    'Tiles': '地块',
+    'Tools': '工具',
+    'Trackmania': '赛道狂飙',
+    'Traits': '特质',
+    'Translation': '翻译',
+    'Translations': '翻译',
+    'Transportation': '交通工具',
+    'Tribes': '部族',
+    'TV Videos': '电视视频',
+    'Tweaks': '调整',
+    'Tweaks & Quality Of Life': '调整与体验优化',
+    'UE4SS Mod': 'UE4SS 模组',
+    'UI': '界面',
+    'UI & HUD': '界面与 HUD',
+    'Units': '单位',
+    'Universes': '宇宙',
+    'Upgrades': '升级',
+    'Utilities': '实用工具',
+    'Utility': '实用工具',
+    'Utils': '实用工具',
+    'Valuables': '贵重物品',
+    'Vanilla compatible': '原版兼容',
+    'Vanilla Compatible': '原版兼容',
+    'Vanilla Compatible Mods': '原版兼容模组',
+    'Vault File': '避难所文件',
+    'Vehicle Parts': '车辆部件',
+    'Vehicles': '载具',
+    'Visual Effects': '视觉效果',
+    'Visual Tweaks': '视觉调整',
+    'Voicepacks': '语音包',
+    'Wacky Races': '疯狂赛车',
+    'Wands': '法杖',
+    'Weapon': '武器',
+    'Weapons': '武器',
+    'Weapons & Equipment': '武器与装备',
+    'Wearables': '可穿戴物',
+    'Weather': '天气',
+    'Wizards': '法师',
+    'World': '世界',
+    'World Generation': '世界生成',
+    'World Race': '世界竞速',
+    'Worldgen': '世界生成',
+    'Worlds': '世界',
+    'Filters': '筛选器',
+    'Language: CN': '语言：中文',
+});
 
 SITES.push({
     id: 'thunderstore',
@@ -277,6 +684,16 @@ SITES.push({
             'Thunderstore development is made possible with ads. Please consider making an exception to your adblock.':
                 'Thunderstore 依靠广告维持开发，请考虑对本站关闭广告拦截。',
 
+            /* ---------------- v1.0.7：Thunderstore 全社区固定分区枚举 ---------------- */
+            /* 取证（2026-11-16 一轮）：当次 371 个社区的 SSR 社区页 /c/<社区>/ 逐个抓取，
+             * 渲染结构里 <details><summary>Sections</summary><div role="radiogroup"> 是固定分区，
+             * <summary>Categories</summary><ol class="checkbox-list"> 是社区自定义分类。
+             * 全社区去重：分区 55 条、分类 370 条（逐社区清单见
+             * docs/evidence/thunderstore-communities-2026-11-16.md）。
+             * 这批枚举统一放在文件末尾的 scoped 规则里（按 <summary> 标题锚定），不写进全局字典：
+             * 55 条分区名里有 31 条同时是某个社区的分类名（§证据文档）；这些词也常被用作 mod 标题或作者名
+             * （Libraries / Tools / Audio / Misc / Maps …，正是 v1.0.6 里 `[class*="author"]` 保护的那批），
+             * 一条进全局字典就会把卡片标题、描述里的同串一起翻掉，所以全部走 scoped 表。 */
             /* GTFO 分类枚举（GTFO 社区页与截图核对） */
             'Client Mods': '客户端模组',
             'Dev Tools': '开发工具',
@@ -420,6 +837,44 @@ SITES.push({
             'Unknown error': '未知错误',
         },
     },
+
+
+    /* ---------------- 页型上下文规则（v1.0.7） ----------------
+     * 分区/分类都从下面的 TS_ENUM_ZH 取词，靠 include 锚点分组：
+     *   include=Sections    → <details><summary>Sections</summary> 里的单选组（分区）
+     *   include=Categories  → <details><summary>Categories</summary> 里的勾选组（分类）
+     *   include=CardPackageTags → 卡片上的分类徽标（结构性锚点：容器内含 ?includedCategories= 链接）
+     * 三条规则里只有一个字段不同（include），dict 都是同一个冻结对象。
+     * 出了这三类容器一个字节都不动（mod 标题、作者名、描述、评论里同串保持原文）。 */
+    scoped: [
+        {
+            pages: 'all',
+            selector: '[class*="package-search__filters"] details',
+            include: 'Sections',
+            dict: TS_ENUM_ZH,
+        },
+        {
+            pages: 'all',
+            selector: '[class*="package-search__filters"] details',
+            include: 'Categories',
+            dict: TS_ENUM_ZH,
+        },
+        {
+            /* 卡片徽标：限定在卡片内（.card-package）+ 标签容器，链接里带的是分类 UUID。 */
+            pages: 'all',
+            selector: '.card-package [class*="card-package__tags"]',
+            include: 'CardPackageTags',
+            dict: TS_ENUM_ZH,
+        },
+        {
+            /* 移动端筛选抽屉：<div class="drawer__header-content"><h3>Filters</h3></div>。
+             * 容器是 drawer，不在 .package-search__filters 里，所以单独一条规则，同样只指向 TS_ENUM_ZH。 */
+            pages: 'all',
+            selector: '[id="package-search-filters-drawer"] .drawer__header-content',
+            include: 'Filters',
+            dict: TS_ENUM_ZH,
+        },
+    ],
 
     /* ---------------- 正则组 ---------------- */
     patterns: [
@@ -1400,15 +1855,23 @@ function buildScopedRules(site, page) {
         if (!rule || !rule.selector) continue;
         // pages: 'all' 表示站点级组件（横幅等）在所有页型生效；数组则按页型精确装配
         if (rule.pages && rule.pages !== 'all' && rule.pages.indexOf(page) === -1) continue;
+        /* 与全局词库不同，上下文规则里的「同值键」必须保留：Thunderstore 的分区/分类里
+         * Developer Tools、DataBlocks (MTFO)、BepInEx 这类品牌名译文就是原文本身，
+         * 但它们在筛选组里**不能**再被别的规则或 UGC 处理影响；
+         * 保留后 lookupScoped 命中即返回同值，translateTextNode 的 hit === key 分支会原样跳过。 */
         const dict = new Map();
         const source = rule.dict || {};
         for (const key of Object.keys(source)) {
             const val = source[key];
-            if (typeof val === 'string' && val && val !== key) dict.set(key, val);
+            if (typeof val === 'string' && val) dict.set(key, val);
         }
         rules.push({
             selector: rule.selector,
             exclude: rule.exclude || '',
+            // include：可选的上下文标题锚点。同一种容器（如 Thunderstore 的 <details>）
+            // 承载多组枚举（Sections / Categories），光靠容器选择器分不开；只有容器内存在
+            // 与 include 完全一致的标题元素时才启用本条规则，避免同名串跨组误翻。
+            include: rule.include || '',
             dict,
             patterns: rule.patterns || [],
             // rawPatterns：按**原始文本**匹配（不归一化空白），用于"固定前缀 + 用户输入值"这类
@@ -1537,6 +2000,7 @@ function translateScopedRaw(node, el) {
             try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
             if (blocked) continue;
         }
+        if (rule.include && !scopedIncludeHit(host, rule.include)) continue;
         for (const [re, to] of rule.rawPatterns) {
             if (!re.test(raw)) continue;
             const out = raw.replace(re, to);
@@ -1548,6 +2012,52 @@ function translateScopedRaw(node, el) {
             State.lastWritten.set(node, out);
             State.stats.nodes++;
             return true;
+        }
+    }
+    return false;
+}
+
+/* include 锚点：宿主容器内必须有一个元素，其 aria-label（若有）或归一化文本
+ * 与 rule.include 完全一致（Thunderstore 的 <summary class="collapsible__header">Sections</summary>）。
+ * 找不到就不启用该规则——分区（Sections）与分类（Categories）共用同一层 <details>。
+ * host 取自 closest(rule.selector)：普通场景返回第二个参数元素本身，
+ * 因此这里按 Element 处理（querySelectorAll 必须有）。 */
+const INCLUDED_ANCHOR = 'summary, [aria-label], h1, h2, h3, h4, legend, .collapsible__header';
+const INCLUDE_TARGETS = [
+    ['Sections', '分区'],
+    ['Categories', '分类'],
+    ['Other filters', '其他筛选'],
+];
+/* 结构性锚点：容器自身就是稳定的 DOM 语义，没有可见标题可对照。
+ *   CardPackageTags —— 卡片分类徽标容器（链接里带 includedCategories=<uuid>） */
+const STRUCTURAL_INCLUDE = {
+    CardPackageTags: (host) => !!host.querySelector && !!host.querySelector('a[href*="includedCategories="]'),
+};
+/* 锚点文本先看**本脚本记录过的原文**（State.originals），再看当前文本：
+ * 标题本身也会被翻译（Sections → 分区），而逐节点扫描时锚点往往已经写过一遍，
+ * 只看 textContent 会让二次扫描误判「找不到锚点」而丢规则。 */
+function scopedIncludeHit(host, include) {
+    if (!host || typeof host.querySelectorAll !== 'function') return false;
+    if (STRUCTURAL_INCLUDE[include]) return STRUCTURAL_INCLUDE[include](host);
+    const wanted = [include];
+    for (const [en, zh] of INCLUDE_TARGETS) {
+        if (include === en && zh !== en) { wanted.push(zh); break; }
+    }
+    const nodes = host.querySelectorAll(INCLUDED_ANCHOR);
+    for (const node of nodes) {
+        const aria = node.getAttribute && node.getAttribute('aria-label');
+        const texts = [aria, node.textContent];
+        const walker = node.nodeType === 1 && node.ownerDocument
+            ? node.ownerDocument.createTreeWalker(node, 4 /* SHOW_TEXT */, null)
+            : null;
+        if (walker) {
+            let n = walker.nextNode();
+            while (n) { if (State.originals.has(n)) texts.push(State.originals.get(n)); n = walker.nextNode(); }
+        }
+        for (const raw of texts) {
+            if (!raw) continue;
+            const text = raw.replace(/\s+/g, ' ').trim();
+            if (wanted.indexOf(text) !== -1) return true;
         }
     }
     return false;
@@ -1571,6 +2081,7 @@ function lookupScoped(el, key) {
             try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
             if (blocked) continue;
         }
+        if (rule.include && !scopedIncludeHit(host, rule.include)) continue;
         if (rule.dict.has(key)) return rule.dict.get(key);
         for (const [re, to] of rule.patterns) {
             if (!re.test(key)) continue;
@@ -1606,7 +2117,10 @@ function translateTextNode(node) {
     const parent = node.parentElement;
     // 上下文 raw 规则（固定前缀 + 需逐字节保留的值）优先；忽略区域不参与
     if (!isIgnored(parent) && translateScopedRaw(node, parent)) return true;
-    let hit = lookup(key) || lookupScoped(parent, key);
+    /* 顺序：上下文规则优先、全局词库兜底。同一串在固定 UI 容器里可能是站点枚举
+     * （Thunderstore 分类 Cards → 卡牌），在别处是同形的展示控件 header（Cards → 卡片）；
+     * 反过来先查全局字典会把枚举吃掉，前面的 scoped 规则就形同虚设。 */
+    let hit = lookupScoped(parent, key) || lookup(key);
     let authorPrefix = false;
 
     // Thunderstore 的卡片常把静态 "by" 前缀包在 author 容器里；
@@ -1626,6 +2140,9 @@ function translateTextNode(node) {
     }
 
     if (!hit || (!authorPrefix && hit === key)) return false;
+    /* 上下文规则明确声明「原文即译文」（Thunderstore 分区/分类里的品牌名）时，
+     * 该文本已经在正确的固定 UI 位置，不再做任何改写。 */
+    if (State.scoped.length && hit === key) return false;
     if (isIgnored(parent) && !authorPrefix) return false;
 
     if (!State.originals.has(node)) State.originals.set(node, raw);

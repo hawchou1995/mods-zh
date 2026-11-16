@@ -53,15 +53,23 @@ function buildScopedRules(site, page) {
         if (!rule || !rule.selector) continue;
         // pages: 'all' 表示站点级组件（横幅等）在所有页型生效；数组则按页型精确装配
         if (rule.pages && rule.pages !== 'all' && rule.pages.indexOf(page) === -1) continue;
+        /* 与全局词库不同，上下文规则里的「同值键」必须保留：Thunderstore 的分区/分类里
+         * Developer Tools、DataBlocks (MTFO)、BepInEx 这类品牌名译文就是原文本身，
+         * 但它们在筛选组里**不能**再被别的规则或 UGC 处理影响；
+         * 保留后 lookupScoped 命中即返回同值，translateTextNode 的 hit === key 分支会原样跳过。 */
         const dict = new Map();
         const source = rule.dict || {};
         for (const key of Object.keys(source)) {
             const val = source[key];
-            if (typeof val === 'string' && val && val !== key) dict.set(key, val);
+            if (typeof val === 'string' && val) dict.set(key, val);
         }
         rules.push({
             selector: rule.selector,
             exclude: rule.exclude || '',
+            // include：可选的上下文标题锚点。同一种容器（如 Thunderstore 的 <details>）
+            // 承载多组枚举（Sections / Categories），光靠容器选择器分不开；只有容器内存在
+            // 与 include 完全一致的标题元素时才启用本条规则，避免同名串跨组误翻。
+            include: rule.include || '',
             dict,
             patterns: rule.patterns || [],
             // rawPatterns：按**原始文本**匹配（不归一化空白），用于"固定前缀 + 用户输入值"这类
@@ -190,6 +198,7 @@ function translateScopedRaw(node, el) {
             try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
             if (blocked) continue;
         }
+        if (rule.include && !scopedIncludeHit(host, rule.include)) continue;
         for (const [re, to] of rule.rawPatterns) {
             if (!re.test(raw)) continue;
             const out = raw.replace(re, to);
@@ -201,6 +210,52 @@ function translateScopedRaw(node, el) {
             State.lastWritten.set(node, out);
             State.stats.nodes++;
             return true;
+        }
+    }
+    return false;
+}
+
+/* include 锚点：宿主容器内必须有一个元素，其 aria-label（若有）或归一化文本
+ * 与 rule.include 完全一致（Thunderstore 的 <summary class="collapsible__header">Sections</summary>）。
+ * 找不到就不启用该规则——分区（Sections）与分类（Categories）共用同一层 <details>。
+ * host 取自 closest(rule.selector)：普通场景返回第二个参数元素本身，
+ * 因此这里按 Element 处理（querySelectorAll 必须有）。 */
+const INCLUDED_ANCHOR = 'summary, [aria-label], h1, h2, h3, h4, legend, .collapsible__header';
+const INCLUDE_TARGETS = [
+    ['Sections', '分区'],
+    ['Categories', '分类'],
+    ['Other filters', '其他筛选'],
+];
+/* 结构性锚点：容器自身就是稳定的 DOM 语义，没有可见标题可对照。
+ *   CardPackageTags —— 卡片分类徽标容器（链接里带 includedCategories=<uuid>） */
+const STRUCTURAL_INCLUDE = {
+    CardPackageTags: (host) => !!host.querySelector && !!host.querySelector('a[href*="includedCategories="]'),
+};
+/* 锚点文本先看**本脚本记录过的原文**（State.originals），再看当前文本：
+ * 标题本身也会被翻译（Sections → 分区），而逐节点扫描时锚点往往已经写过一遍，
+ * 只看 textContent 会让二次扫描误判「找不到锚点」而丢规则。 */
+function scopedIncludeHit(host, include) {
+    if (!host || typeof host.querySelectorAll !== 'function') return false;
+    if (STRUCTURAL_INCLUDE[include]) return STRUCTURAL_INCLUDE[include](host);
+    const wanted = [include];
+    for (const [en, zh] of INCLUDE_TARGETS) {
+        if (include === en && zh !== en) { wanted.push(zh); break; }
+    }
+    const nodes = host.querySelectorAll(INCLUDED_ANCHOR);
+    for (const node of nodes) {
+        const aria = node.getAttribute && node.getAttribute('aria-label');
+        const texts = [aria, node.textContent];
+        const walker = node.nodeType === 1 && node.ownerDocument
+            ? node.ownerDocument.createTreeWalker(node, 4 /* SHOW_TEXT */, null)
+            : null;
+        if (walker) {
+            let n = walker.nextNode();
+            while (n) { if (State.originals.has(n)) texts.push(State.originals.get(n)); n = walker.nextNode(); }
+        }
+        for (const raw of texts) {
+            if (!raw) continue;
+            const text = raw.replace(/\s+/g, ' ').trim();
+            if (wanted.indexOf(text) !== -1) return true;
         }
     }
     return false;
@@ -224,6 +279,7 @@ function lookupScoped(el, key) {
             try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
             if (blocked) continue;
         }
+        if (rule.include && !scopedIncludeHit(host, rule.include)) continue;
         if (rule.dict.has(key)) return rule.dict.get(key);
         for (const [re, to] of rule.patterns) {
             if (!re.test(key)) continue;
@@ -259,7 +315,10 @@ function translateTextNode(node) {
     const parent = node.parentElement;
     // 上下文 raw 规则（固定前缀 + 需逐字节保留的值）优先；忽略区域不参与
     if (!isIgnored(parent) && translateScopedRaw(node, parent)) return true;
-    let hit = lookup(key) || lookupScoped(parent, key);
+    /* 顺序：上下文规则优先、全局词库兜底。同一串在固定 UI 容器里可能是站点枚举
+     * （Thunderstore 分类 Cards → 卡牌），在别处是同形的展示控件 header（Cards → 卡片）；
+     * 反过来先查全局字典会把枚举吃掉，前面的 scoped 规则就形同虚设。 */
+    let hit = lookupScoped(parent, key) || lookup(key);
     let authorPrefix = false;
 
     // Thunderstore 的卡片常把静态 "by" 前缀包在 author 容器里；
@@ -279,6 +338,9 @@ function translateTextNode(node) {
     }
 
     if (!hit || (!authorPrefix && hit === key)) return false;
+    /* 上下文规则明确声明「原文即译文」（Thunderstore 分区/分类里的品牌名）时，
+     * 该文本已经在正确的固定 UI 位置，不再做任何改写。 */
+    if (State.scoped.length && hit === key) return false;
     if (isIgnored(parent) && !authorPrefix) return false;
 
     if (!State.originals.has(node)) State.originals.set(node, raw);
