@@ -1,14 +1,14 @@
 # Thunderstore & Nexus Mods 中文化
 
-把 Thunderstore 与 Nexus Mods 的**界面元素**翻成简体中文的油猴脚本（userscript）。
+把 Thunderstore 与 Nexus Mods 的**界面元素**翻成简体中文的脚本猫 / 油猴兼容 userscript（userscript）。
 
 只翻界面，不碰内容：模组名称、作者、描述正文、评论、文件名一律保持英文原样 —— 这些是你要复制去搜索、对比、报错的东西，翻了只会碍事。
 
-- 词条：**695 个去重原文键**（Thunderstore 215 / Nexus Mods 478），**45 组**动态规则（17 / 28）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
+- 词条（按站点各自去重，同一英文键跨页型只计一次）：**Thunderstore 572 键**（`dict` 合并去重 215 + 固定枚举表 `TS_ENUM_ZH` 398）+ **Nexus Mods 549 键**（`dict` 合并去重 501 + 上下文词表去重 118），按站点去重合计 **1121 键**（这只是两个站点各自去重后相加，**不是**跨站并集）；`scoped` 规则表内的同键按上下文重复生效，不另计入。**66 条**正则规则（Thunderstore 20 / Nexus 46）；Nexus 扩展覆盖游戏、合集、媒体、新闻、论坛、帮助、API 文档与账户固定 UI
 - Thunderstore 固定枚举独立成表：`const TS_ENUM_ZH = Object.freeze({…})`，**分区 55 + 分类 370 + 分组标题 4（Sections / Categories / Other filters / Filters）= 398 条**（当次 371 个社区逐个抓取后去重，见 `docs/evidence/thunderstore-communities-2026-11-16.md`），四条 scoped 规则共享这一张表、按 `<summary>` 标题锚定生效，不进全局字典
 - 覆盖：`thunderstore.io`；Nexus Mods 根域及 `www`、`next`、`forums`、`help`、`api-docs`、`users` 一方子域路由
-- 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求、无权限索取
-- 当前版本：`v1.0.7`
+- 产物：单文件 `dist/mods-zh.user.js`，无外部依赖、无网络请求；GM 接口只用 `GM_getValue/GM_setValue/GM_registerMenuCommand/GM_unregisterMenuCommand/GM_openInTab/unsafeWindow`（`unsafeWindow` 仅用于检测兼容读写页面标记）
+- 当前版本：`v1.0.8`
 
 ## 安装
 
@@ -31,11 +31,17 @@
 
 ## 菜单
 
-装好后在油猴面板里对本脚本点右键，有三项：
+装好后在油猴面板里对本脚本点右键，有三个**互相独立**的开关，各自持久化、互不替代：
 
 - **界面中文化：已开启 / 已关闭** —— 一键切回英文原文（原文逐字存于 WeakMap，关闭即还原），状态会记住
+- **广告净化：已开启 / 已关闭**（v1.0.8 新增）—— 只隐藏已取证的广告与营销条（Nexus 旧文件页 `.ads-holder` / `#billboard_*` / `#mpu_bottom` / `#nonPremiumBanner` / `#freeTrialBanner` / `#adBlockingBanner` 与新前端促销文本容器，Thunderstore 的 `.ad-container[data-cid^="nimbus-v2-"]` 与悬浮视频广告位）。实现方式是注入一张自有样式表 + 给命中的节点打标记属性，**不删除任何 React 节点**，关闭时样式表移除、属性逐条还原。默认开启
+- **检测兼容：已开启 / 已关闭**（v1.0.8，旧 Nexus 上默认开启）—— 沿站点自己的广告拦截检测函数（动态命名，按源码形态识别：`window.blockingAds` 赋值 + `Cookies.get('ab')` + `Cookies.set('ab')`）做可逆包装：检测参数固定为 **false** 后调用原函数，保留它自己的 expiry 与 `NexusConsent` 门禁，因此写入的是 `ab=0|<exp>` 而不是 `1|<exp>`。关闭后函数与 `areAdsBlocked` 恢复原实现，已写过的 cookie 状态与已渲染档位需要刷新（状态会提示 `needsReload`）。**不碰**随机 probe（`/api/scripts/adsservice.js` 的 `window.<token> = true` 只代表脚本已执行，不改写）、`adShieldActive`（AdShield 灰度总开关）与新前端 React context 的 `adsBlockedByUser`；**不 mock/替换 Cookies、fetch、XHR、定时器，不伪造 Premium，不改 `download-url` 或 DOM 上的 `download-speed`**。拿不到页面主 realm（`unsafeWindow`）或本页没有该检测脚本时，菜单如实显示「不可用 / 等待检测脚本」，不会假装成功
 - **重新扫描当前页面** —— 站点改版后手动补扫
-- **版本 v1.0.7（站点名）** —— 显示当前站点、页型、生效词条数与已替换计数
+- **版本 v1.0.8（站点名）** —— 显示当前站点、页型、词条数、替换计数与两个新开关的状态
+
+测试：`npm run verify` 共 115 项（原有 90 项回归 + 多游戏固定 UI 8 项 + 广告净化/检测兼容 17 项）。
+
+关于「下载档位」的边界：一组同账号、同文件（74231）、同入口的 200 对照显示，`ab` 不存在时服务端渲染 `download-speed="reduced"`，`ab=0|<exp>` 时为 `standard`；随后 3 次对照均返回 HTTP 403（风控/限流），因此这只是**一组观测**，不等于稳定可复现。另有一点必须说清：两种状态下 `download-url` 都是站点自己输出的 `#ERROR-download-location-not-found` 占位符，本次观察到的可用 CDN 下载由既有第三方扩展发起，**真实大流量速度对照仍未完成**（唯一一次 Range 样本 1024 B / 612 ms / HTTP 206，不能代表任何档位）。本脚本不改 `download-url`、不改 DOM 档位伪装成功，也不承诺任何实际网速。
 
 ## 项目结构
 

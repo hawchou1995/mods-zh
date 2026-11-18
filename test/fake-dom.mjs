@@ -79,6 +79,24 @@ export class Element {
         return null;
     }
 
+    querySelector(selector) {
+        const list = this.querySelectorAll(selector);
+        return list.length ? list[0] : null;
+    }
+
+    remove() {
+        const p = this.parentElement;
+        this.removed = true;
+        if (!p) return;
+        const i = p.childNodes.indexOf(this);
+        if (i !== -1) p.childNodes.splice(i, 1);
+        this.parentElement = null;
+    }
+
+    removeAttribute(name) {
+        this.attrs.delete(name);
+    }
+
     querySelectorAll(selector) {
         const out = [];
         const walk = (node) => {
@@ -106,6 +124,7 @@ export function createDocument() {
     const body = new Element('body');
     const doc = {
         body,
+        documentElement: body,
         createTreeWalker(root) {
             const stack = [];
             const collect = (node) => {
@@ -119,6 +138,9 @@ export function createDocument() {
             return { nextNode: () => (i < stack.length ? stack[i++] : null) };
         },
         querySelectorAll(sel) { return body.querySelectorAll(sel); },
+        querySelector(sel) { return body.querySelector(sel); },
+        createElement(tag) { return new Element(tag); },
+        createTextNode(value) { return new TextNode(String(value), null); },
         addEventListener() { },
     };
     body.ownerDocument = doc;

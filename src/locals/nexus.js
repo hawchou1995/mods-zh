@@ -49,6 +49,15 @@ function nxCountedLabel(all, label, count) {
     return event ? '截图社区活动 #' + event[1] + ' (' + count + ')' : all;
 }
 
+/* 导航 / 页脚 / 门户里的「标签 (计数)」：计数原样保留，只翻标签。
+ * 只对这些容器生效（见 scoped），并且在词表里查不到就原样返回。 */
+function nxNavCounted(all, label, count) {
+    if (Object.prototype.hasOwnProperty.call(NX_NAV_VOCAB, label)) {
+        return NX_NAV_VOCAB[label] + ' (' + count + ')';
+    }
+    return all;
+}
+
 /* ---- 模组浏览页（2026 新前端）固定 UI 枚举 ----
  * 取证：docs/evidence/nexus-browse-2026-10-27.txt
  *   · 实机 DOM 里分类名与计数是两个相邻 span：
@@ -125,10 +134,149 @@ const NX_TIME_OPTION_PATTERNS = [
     [/^([\d,]+)\s*years?$/i, (all, n) => n + ' 年'],
 ];
 
+/* ---- 站点导航固定 UI（2026-11-18 取证，证据见 docs/evidence/nexus-multigame-2026-11-18.md）----
+ * 页头 GAMES 门户 [data-e2eid="games-sub-nav"] 与页脚 <footer aria-label="Desktop footer"> 的
+ * 固定词条。这些链接的 href 都属于 /games/... 一族，被 ignore 里的
+ *   [href*="/games/"]:not([data-e2eid="mod-tile-category"])
+ * 整棵保护（该保护同时挡住了真实游戏名链接，必须保留）。所以这里按「真实取证到的固定导航容器」
+ * 放行：只有落在这些容器里的文本才参与查表，游戏名链接、模组标题、作者名一律不在容器内。
+ * 词条与游戏名同形（游戏可能叫 New / Trending / Tools），因此绝不进全局 dict。 */
+const NX_NAV_VOCAB = Object.freeze({
+    'My games': '我的游戏',
+    'Mod updates': '模组更新',
+    'Tracked mods': '追踪的模组',
+    'My stuff': '我的内容',
+    'My mods': '我的模组',
+    'Mod rewards': '模组奖励',
+    'Download history': '下载历史',
+    'Upload mod': '上传模组',
+    'My images': '我的图片',
+    'Upload image': '上传图片',
+    'My videos': '我的视频',
+    'Upload video': '上传视频',
+    'Supporter images': '支持者图片',
+    'Recently added': '最近添加',
+    'All mods': '所有模组',
+    'All collections': '所有合集',
+    'All games': '所有游戏',
+    'All news': '所有新闻',
+    'Site news': '站点新闻',
+    'New mods': '新模组',
+    'Popular mods': '热门模组',
+    'Trending mods': '趋势模组',
+    'All images': '所有图片',
+    'Vortex mod manager': 'Vortex 模组管理器',
+    'Discover Vortex': '了解 Vortex',
+    'Collections tutorials': '合集教程',
+    "Explore this month's nominated mods.": '浏览本月获得提名的模组。',
+    'The elegant, powerful and open-source mod manager.': '优雅、强大、开源的模组管理器。',
+    'Learn from the community with tutorials and guides.': '通过教程与指南向社区学习。',
+    'Share your ideas, discuss them with the community, and cast your vote on feedback provided.': '分享你的想法，与社区讨论，并为你看到的反馈投票。',
+    'Upgrade your account to unlock all media content.': '升级账户以解锁全部媒体内容。',
+    'Give Feedback': '提交反馈',
+    'Highest rated': '评分最高',
+    'Most endorsed': '认可最多',
+    'Add': '添加',
+    'Remove': '移除',
+});
+
+/* 排序下拉（HeadlessUI Listbox portal）与上面的导航词表分开：Date Published / Mod Name
+ * 这类枚举只可能在排序面板里是固定 UI，在别处（模组名、作者名）必须是原文。 */
+const NX_SORT_VOCAB = Object.freeze({
+    'Date Published': '发布日期',
+    'Unique Downloads': '独立下载量',
+    'Last Updated': '最后更新',
+    'Mod Name': '模组名称',
+    'File Size': '文件大小',
+    'Last Comment': '最后评论',
+    'Total Downloads': '总下载量',
+    'Endorsements': '认可数',
+    'Trending': '热门趋势',
+});
+
+/* 分类容器：实机是 [data-e2eid="category-filter"] 里一组 checkbox 标签 + 计数 span。
+ * 各游戏社区的分类集合不同（HD2 的 Animations/Visuals，其他社区 Bodyslide/Characters/
+ * Items/Monsters/Skills 等），这里统一维护一份，只在分类容器里生效。 */
+const NX_CATEGORY_VOCAB = Object.freeze({
+    'Animations': '动画',
+    'Visuals': '视觉',
+    'Audio': '音频',
+    'Armour': '护甲',
+    'Body': '身形',
+    'BodySlide': 'BodySlide 工具',
+    'Crafting': '制作',
+    'Environment': '环境',
+    'Gameplay': '玩法',
+    'Items': '物品',
+    'Locations': '地点',
+    'Magic': '魔法',
+    'Monsters': '怪物',
+    'NPC': 'NPC 角色',
+    'Overhauls': '大修',
+    'Skills': '技能',
+    'Textures': '材质',
+    'User Interface': '用户界面',
+    'Weapons': '武器',
+    'Miscellaneous': '杂项',
+    'Immersion': '沉浸感',
+    'Buildings': '建筑',
+    'Models and Textures': '模型与材质',
+    'Utilities': '实用工具',
+    'Vehicles': '载具',
+    'Cheats': '作弊',
+    'Creatures': '生物',
+    'Maps': '地图',
+    'Quests': '任务',
+    'Zombies': '僵尸',
+    'Prefabs': '预制建筑',
+    'Avatars': '头像',
+    'Clothing': '服装',
+    'Hair': '发型',
+    'Poses': '姿势',
+    'Power Armor': '动力装甲',
+    'Settlements': '聚落',
+    'Player': '玩家',
+    'Characters': '角色',
+    'Companions': '同伴',
+});
+
+/* 语言筛选（browse 页 Language 组）。只翻语言枚举；模组里写的同名词不受影响。 */
+const NX_LANGUAGE_VOCAB = Object.freeze({
+    'Thai': '泰语',
+    'Hindi': '印地语',
+    'Bulgarian': '保加利亚语',
+    'Hebrew': '希伯来语',
+    'Romanian': '罗马尼亚语',
+    'Vietnamese': '越南语',
+    'Indonesian': '印度尼西亚语',
+    'Ukrainian': '乌克兰语',
+    'Turkish': '土耳其语',
+    'Arabic': '阿拉伯语',
+    'Korean': '韩语',
+    'Japanese': '日语',
+    'Spanish': '西班牙语',
+    'French': '法语',
+    'German': '德语',
+    'Italian': '意大利语',
+    'Polish': '波兰语',
+    'Portuguese': '葡萄牙语',
+    'Russian': '俄语',
+    'Chinese': '中文',
+});
+
 SITES.push({
     id: 'nexus',
     name: 'Nexus Mods',
     match: /(^|\.)nexusmods\.com$/,
+
+    /* 硬 UGC：即便落在被 allow 放行的固定容器（页头门户 / 页脚）里，也一律保持原文。
+     * 模组标题、作者链接、描述/README 正文、文件名、代码块都是用户内容。 */
+    hardUgc: [
+        '[data-e2eid="mod-tile-title"]', '[data-e2eid="mod-tile-summary"]', '[data-e2eid="user-link"]',
+        '[class*="mod-description"]', '[class*="description-wrapper"]', '[class*="markdown"]',
+        '[class*="prose"]', '[class*="mod-title"]', '[class*="file-name"]',
+        'pre', 'code', 'kbd',
+    ].join(','),
 
     /* 忽略区域：
      *  - Cookiebot 同意弹窗（第三方，自带多语言，且节点量巨大）
@@ -287,6 +435,36 @@ SITES.push({
             'Tutorial': '教程',
             'Tools': '工具',
             'Collections': '合集',
+
+            /* ---- 2026-11 新前端账户/导航下拉（证据：docs/evidence/nexus-multigame-2026-11-18.md）----
+             * 这些串只在 [data-e2eid="games-sub-nav"] 门户里翻（见下方 scoped 规则）：
+             * 它们与游戏名/模组名同形（游戏可能就叫 Mod updates），不得进 global 词库。
+             * 页型组只在对应页型装载；导航/页脚上的同一批词条由下方 scoped 规则
+             * （NX_NAV_VOCAB，只在门户与页脚容器内生效）负责，两边取值必须一致。 */
+            'Mod updates': '模组更新',
+            'Tracked mods': '追踪的模组',
+            'My stuff': '我的内容',
+            'My mods': '我的模组',
+            'Mod rewards': '模组奖励',
+            'Upload mod': '上传模组',
+            'My images': '我的图片',
+            'Upload image': '上传图片',
+            'My videos': '我的视频',
+            'Upload video': '上传视频',
+            'Supporter images': '支持者图片',
+            'Upgrade your account to unlock all media content.': '升级账户以解锁全部媒体内容。',
+            'Upgrade': '升级',
+            'Give Feedback': '提交反馈',
+            'Share your ideas, discuss them with the community, and cast your vote on feedback provided.': '分享你的想法，与社区讨论，并为你看到的反馈投票。',
+            "Explore this month's nominated mods.": '浏览本月获得提名的模组。',
+            'Vortex mod manager': 'Vortex 模组管理器',
+            'The elegant, powerful and open-source mod manager.': '优雅、强大、开源的模组管理器。',
+            'Discover Vortex': '了解 Vortex',
+            'Collections tutorials': '合集教程',
+            'Learn from the community with tutorials and guides.': '通过教程与指南向社区学习。',
+            'Explore': '探索',
+            'Remove': '移除',
+            'Add': '添加',
 
             /* 账号区 */
             'Vortex help': 'Vortex 帮助',
@@ -810,8 +988,24 @@ SITES.push({
         {
             pages: ['browse'],
             selector: '[data-e2eid="category-filter"], [data-e2eid="mod-tile-category"]',
-            dict: NX_BROWSE_CATEGORY_ZH,
+            dict: Object.assign({}, NX_BROWSE_CATEGORY_ZH, NX_CATEGORY_VOCAB),
             patterns: [[/^(.+) \(([\d,]+)\)$/, nxCategoryCounted]],
+        },
+        {
+            /* 语言筛选组：容器是 browse 页 Language 折叠块，内部一组 checkbox 标签。
+             * 只在容器里翻；模组描述里写的 "Thai" / "Hebrew" 不在容器内，保持原文。 */
+            pages: ['browse'],
+            selector: '[data-e2eid="language-filter"], [data-e2eid^="checkbox-filter-language"], [class*="group/checkbox"]',
+            dict: NX_LANGUAGE_VOCAB,
+            patterns: [[/^(.+) \(([\d,]+)\)$/, nxCategoryCounted]],
+        },
+        {
+            /* 排序下拉：HeadlessUI Listbox 的 portal 挂在 body 上（id 前缀 headlessui-listbox-options），
+             * 首次打开与关闭后重开都是同一个 portal，规则跟着 DOM 走，不依赖菜单状态。 */
+            pages: ['browse'],
+            selector: '[id^="headlessui-listbox-options"], [role="listbox"]',
+            dict: NX_SORT_VOCAB,
+            exclude: '[data-e2eid^="remove-filter-"]',
         },
         {
             pages: ['browse'],
@@ -874,6 +1068,41 @@ SITES.push({
             pages: ['browse'],
             selector: 'h1',
             patterns: [[/^(.+?) mods$/, '$1 模组']],
+        },
+        {
+            /* 页头 GAMES 门户（portal 挂 body，id 前缀 headlessui-popover-panel）：
+             * 容器本身带 data-e2eid="games-sub-nav"。只放行该容器，游戏名 <img alt> /
+             * <span>7 Days To Die</span> 仍在 ignore 的 [href*="/games/"] 保护里不被翻。 */
+            pages: 'all',
+            // 后代选择器写全：每个文本节点先匹配到 <li>，再向上确认真在门户容器里
+            selector: '[data-e2eid="games-sub-nav"], [data-e2eid="games-sub-nav"] li',
+            // 门户里的链接 href 也在 /games/ 族里、被全局 ignore 整族保护：只在这里放行
+            allow: '[data-e2eid="games-sub-nav"] a[href*="/mods"]:not([href*="/mods/"]), ' +
+                '[data-e2eid="games-sub-nav"] a[href$="/games"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="/collections"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="/images"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="/videos"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="/tracked"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="/premium"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="/account"], ' +
+                '[data-e2eid="games-sub-nav"] a[href*="users.nexusmods.com"]',
+            dict: NX_NAV_VOCAB,
+            patterns: [[/^(.+) \(([\d,]+)\)$/, nxNavCounted]],
+        },
+        {
+            /* 页脚：<footer aria-label="Desktop footer">。All mods / New mods / Popular mods /
+             * Trending mods / All images 的 href 是 /games/<当前游戏>/mods…，被全局 ignore 挡下。
+             * 这里只放行页脚内部；页脚外的同名游戏链接（导航里指向真实游戏）不受影响。 */
+            pages: 'all',
+            selector: 'footer[aria-label="Desktop footer"] a, footer[aria-label="Desktop footer"] summary',
+            allow: 'footer[aria-label="Desktop footer"] a[href*="/mods"]:not([href*="/mods/"]), ' +
+                'footer[aria-label="Desktop footer"] a[href$="/games"], ' +
+                'footer[aria-label="Desktop footer"] a[href*="/collections"], ' +
+                'footer[aria-label="Desktop footer"] a[href*="/images"], ' +
+                'footer[aria-label="Desktop footer"] a[href*="/videos"], ' +
+                'footer[aria-label="Desktop footer"] a[href*="/news"]',
+            dict: NX_NAV_VOCAB,
+            patterns: [[/^(.+) \(([\d,]+)\)$/, nxNavCounted]],
         },
     ],
 });

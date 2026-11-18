@@ -17,6 +17,7 @@ const PARTS = [
     'src/locals/thunderstore.js',
     'src/locals/nexus.js',
     'src/engine.js',
+    'src/cleanup.js',
     'src/bootstrap.js',
 ];
 
@@ -25,8 +26,8 @@ const HEADER = `// ==UserScript==
 // @name:en      Thunderstore & Nexus Mods Chinese
 // @namespace    https://github.com/hawchou1995/mods-zh
 // @version      ${pkg.version}
-// @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
-// @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Dynamic mod content stays untranslated. Feedback: https://qingju.me/
+// @description  中文化 Thunderstore 与 Nexus Mods 的界面元素：导航、按钮、筛选器、分类、语言、排序、下载区、面包屑、相对时间与日期。含可独立开关的广告净化与广告拦截检测兼容（不伪造 Premium、不改下载地址）。不翻译模组名称、作者、描述与评论。问题反馈：https://qingju.me/
+// @description:en  Localize Thunderstore and Nexus Mods UI into Simplified Chinese. Includes separately switchable ad cleanup and adblock-detection compatibility (no fake Premium, no download URL changes, no speed promise). Mod names, authors and descriptions stay untranslated. Feedback: https://qingju.me/
 // @author       hawchou1995
 // @license      GPL-3.0
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=thunderstore.io
@@ -40,6 +41,7 @@ const HEADER = `// ==UserScript==
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_openInTab
+// @grant        unsafeWindow
 // @homepageURL  https://github.com/hawchou1995/mods-zh
 // @supportURL   https://github.com/hawchou1995/mods-zh/issues
 // @downloadURL  https://raw.githubusercontent.com/hawchou1995/mods-zh/main/dist/mods-zh.user.js

@@ -66,6 +66,7 @@ function buildScopedRules(site, page) {
         rules.push({
             selector: rule.selector,
             exclude: rule.exclude || '',
+            allow: rule.allow || '',
             // include：可选的上下文标题锚点。同一种容器（如 Thunderstore 的 <details>）
             // 承载多组枚举（Sections / Categories），光靠容器选择器分不开；只有容器内存在
             // 与 include 完全一致的标题元素时才启用本条规则，避免同名串跨组误翻。
@@ -264,16 +265,28 @@ function scopedIncludeHit(host, include) {
 /**
  * 页型上下文查表：只有当 rule.selector 命中 el 的祖先子树时才生效，命中即停。
  * 结果依赖上下文，因此不写 State.cache（缓存是「原文 -> 译文」的全局单值）。
+ * allow：可选「放行选择器」。站点 ignore 把整个 /games/ 链接族保护起来后，
+ * 固定导航/页脚里的同 href 链接也会被一起吞掉；规则声明 allow 时，命中 allow 的元素
+ * 允许绕过 ignore（只用于这条规则自己的 selector 子树，ignore 本身不做任何删改）。
  * @param {Element|null} el 文本节点的父元素 / 属性宿主
  * @param {string} key 归一化后的原文
+ * @param {boolean} mayIgnore 该节点是否已在 ignore 区（true 时只认带 allow 的规则）
  * @returns {string|null} 译文；无命中返回 null
  */
-function lookupScoped(el, key) {
+function lookupScoped(el, key, mayIgnore) {
     if (!State.scoped.length || !el || typeof el.closest !== 'function') return null;
     for (const rule of State.scoped) {
         let host = null;
         try { host = el.closest(rule.selector); } catch (e) { host = null; }
         if (!host) continue;
+        if (mayIgnore) {
+            if (!rule.allow) continue;
+            // 硬 UGC（嵌套在容器里的 UGC 结构）永远优先：任何 allow 都不能穿过它
+            if (siteHardUgcHit(el)) continue;
+            let ok = false;
+            try { ok = !!el.closest(rule.allow); } catch (e) { ok = false; }
+            if (!ok) continue;
+        }
         if (rule.exclude) {
             let blocked = false;
             try { blocked = !!el.closest(rule.exclude); } catch (e) { blocked = false; }
@@ -302,6 +315,28 @@ function isIgnored(el) {
     return false;
 }
 
+/* 硬 UGC：这些结构无论在哪个固定 UI 容器里都保持原文。
+ * 与站点 ignore 的区别：ignore 是「默认不翻」，allow 可以在已取证的固定容器里放行；
+ * 硬 UGC 则**不可被 allow 穿透**（模组标题、作者链接、描述正文、文件名、代码）。
+ * 由站点声明 site.hardUgc；未声明时为空（不影响任何既有站点行为）。 */
+function siteHardUgcSelector() {
+    return (State.site && State.site.hardUgc) || '';
+}
+
+function siteHardUgcHit(el) {
+    const sel = siteHardUgcSelector();
+    if (!sel || !el || typeof el.closest !== 'function') return false;
+    try { return !!el.closest(sel); } catch (e) { return false; }
+}
+
+/* 所有带 allow 的上下文规则的放行选择器并集：文本节点是否落在「被显式放行的固定 UI」里。
+ * 没有规则声明 allow 时返回空串，closest('') 会抛错，调用处按 try/catch 处理为不放行。 */
+function scopedAllowSelector() {
+    const list = [];
+    for (const rule of State.scoped) if (rule.allow) list.push(rule.allow);
+    return list.join(',');
+}
+
 function translateTextNode(node) {
     // 动态名称（作者/团队名）节点整节点跳过：名称可能正好等于某条界面词条
     if (State.protectedNodes.has(node)) return false;
@@ -318,7 +353,10 @@ function translateTextNode(node) {
     /* 顺序：上下文规则优先、全局词库兜底。同一串在固定 UI 容器里可能是站点枚举
      * （Thunderstore 分类 Cards → 卡牌），在别处是同形的展示控件 header（Cards → 卡片）；
      * 反过来先查全局字典会把枚举吃掉，前面的 scoped 规则就形同虚设。 */
-    let hit = lookupScoped(parent, key) || lookup(key);
+    // ignore 区（导航/页脚被整族保护的 /games/ 链接）：只认规则显式放行的那一层
+    const ignored = isIgnored(parent);
+    let hit = lookupScoped(parent, key, ignored);
+    if (!hit && !ignored) hit = lookup(key);
     let authorPrefix = false;
 
     // Thunderstore 的卡片常把静态 "by" 前缀包在 author 容器里；
@@ -341,7 +379,14 @@ function translateTextNode(node) {
     /* 上下文规则明确声明「原文即译文」（Thunderstore 分区/分类里的品牌名）时，
      * 该文本已经在正确的固定 UI 位置，不再做任何改写。 */
     if (State.scoped.length && hit === key) return false;
-    if (isIgnored(parent) && !authorPrefix) return false;
+    // 硬 UGC 无论是否在放行容器里都保持原文
+    if (siteHardUgcHit(parent)) return false;
+    // 放行只对带 allow 的上下文规则成立；其他情况仍按原 ignore 口径拒绝
+    if (isIgnored(parent) && !authorPrefix) {
+        let allowed = false;
+        try { allowed = !!parent && !!parent.closest(scopedAllowSelector()); } catch (e) { allowed = false; }
+        if (!allowed) return false;
+    }
 
     if (!State.originals.has(node)) State.originals.set(node, raw);
     const lead = raw.match(/^\s*/)[0];
@@ -378,7 +423,7 @@ function translateAttributes(el) {
         }
         const key = normalize(raw);
         if (!key) continue;
-        const hit = lookup(key) || lookupScoped(el, key);
+        const hit = lookup(key) || lookupScoped(el, key, false);
         if (!hit || hit === key) continue;
         // Also honor ignore selectors on the attribute host itself, without suppressing textarea placeholders.
         if ((isIgnored(el) && el.tagName !== 'TEXTAREA') || isIgnored(el.parentElement)) continue;

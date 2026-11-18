@@ -443,3 +443,35 @@ Chrome 157 / 默认 profile（`...\Google\Chrome\User Data\Default`），Tamperm
 新装代理扩展 —— 均越权或触碰其它扩展与全局设置，**没有做**。因此本轮**没有**「管理器读回 == 构建产物」证据，
 也**没有**以已安装脚本形态的三社区验收；F 节结论来自同机真实页面 + 手动注入同一份 dist，不等于安装完成。
 （因未取得原条目源码与设置的可读备份，按合同**没有**做任何覆盖性写入。）
+
+## v1.0.8 · 广告净化 / 检测兼容 / 下载档位（2026-11-18）
+
+### A. 代码与测试（本地可复现）
+
+| 项 | 结果 |
+| --- | --- |
+| `npm run verify` | rc=0，115 项（原 90 项回归零改动 + 多游戏固定 UI 8 项 + 广告净化/检测兼容 17 项） |
+| `node --check dist/mods-zh.user.js` | rc=0 |
+| `git diff --check` | rc=0 |
+| 两次 `npm run build --silent` | SHA256 一致，见提交前门禁记录 |
+
+新增测试覆盖：真实源码形态的检测 writer（基线 `call(true)` → `ab=1|<exp>`，开启后 → `ab=0|<exp>` 且
+`blockingAds=false`）、关闭后函数/描述符还原并能再次写回 `1`、晚定义 writer 的有界时序捕获与关闭后不再重挂、
+`NexusConsent.preferences=false` 时不写并保持 `pending`、非 Nexus 域与未匹配站点不跑检测兼容、
+随机 probe 开关前后恒为 `true`、无 writer 时 `pending` 而非 `on`。
+
+### B. 下载档位对照（一组 200 + 后续 403）
+
+- 同账号、同文件（74231）、同入口的一组 SSR 对照：`ab` 不存在 → `download-speed="reduced"`；
+  `ab=0|<exp>` → `standard`。两种状态 `download-url` 都是 `#ERROR-download-location-not-found`。
+- 随后 3 次对照全部 **HTTP 403**（约 6.3 KB），属风控/限流，未复现 200 → 只有一组观测。
+- 唯一一次真实字节样本：`Range: bytes=0-1023` → 206，1024 B / 612 ms（文件 568 KB）。
+  **不足以代表任何档位速度，不计为测速成功。**
+- 本次观察到的有效 CDN 下载由既有第三方扩展发起，不是页面原生流程。
+
+### C. 未验证 / 未承诺
+
+- 真实大流量速度对照未完成；不承诺「解除限速」「恢复 3MB/s」。
+- `ab` 的读取/服务端可见机制未验证，不作 httpOnly 之类的推断。
+- 未核对站点是否存在其它（含未公开）的链接生成入口，不作「不存在任何 API」的断言。
+- ScriptCat 实装形态（真实沙箱 document-start realm）仍由用户侧安装后验证；本轮只有 jsdom 契约测试。

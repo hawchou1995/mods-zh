@@ -1,6 +1,6 @@
 {
   "name": "mods-zh",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Thunderstore & Nexus Mods 界面中文化油猴脚本（单文件构建）",
   "private": true,
   "type": "module",
@@ -8,12 +8,12 @@
   "homepage": "https://github.com/hawchou1995/mods-zh",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node test/smoke.test.mjs && node test/browser.test.mjs && node test/thunderstore-enums.test.mjs",
+    "test": "node test/smoke.test.mjs && node test/browser.test.mjs && node test/thunderstore-enums.test.mjs && node test/nexus-multigame.test.mjs && node test/cleanup.test.mjs",
     "test:smoke": "node test/smoke.test.mjs",
     "test:dom": "node test/browser.test.mjs",
     "test:enums": "node test/thunderstore-enums.test.mjs",
     "coverage": "node tools/coverage.mjs thunderstore docs/evidence/thunderstore.txt && node tools/coverage.mjs thunderstore docs/evidence/thunderstore-dynamic.txt && node tools/coverage.mjs thunderstore docs/evidence/thunderstore-author.txt --page author && node tools/coverage.mjs nexus docs/evidence/nexus.txt && node tools/coverage.mjs nexus docs/evidence/nexus-expanded.txt && node tools/coverage.mjs nexus docs/evidence/nexus-browse-2026-10-27.txt --page browse && node tools/coverage.mjs thunderstore docs/evidence/thunderstore-enums.txt",
-    "verify": "node build.mjs && node test/smoke.test.mjs && node test/browser.test.mjs && node test/thunderstore-enums.test.mjs && npm run coverage --silent"
+    "verify": "node build.mjs && node test/smoke.test.mjs && node test/browser.test.mjs && node test/thunderstore-enums.test.mjs && node test/nexus-multigame.test.mjs && node test/cleanup.test.mjs && npm run coverage --silent"
   },
   "engines": {
     "node": ">=18"
